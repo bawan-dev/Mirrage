@@ -54,6 +54,8 @@ More detail is tracked in [docs/architecture.md](docs/architecture.md).
 
 The build plan is tracked in [docs/roadmap.md](docs/roadmap.md).
 
+The first backend contract is tracked in [docs/api.md](docs/api.md).
+
 ## Tech Stack
 
 Planned stack:
@@ -142,6 +144,7 @@ docker compose up --build
 - [x] Draft the project overview
 - [x] Document the architecture
 - [x] Document the roadmap
+- [x] Document the first API endpoints
 - [ ] Set up the React + Vite frontend
 - [ ] Build the first smart mirror dashboard screen
 - [ ] Set up the FastAPI backend

@@ -25,7 +25,7 @@ Goal: make the repository understandable before adding real app code.
 - [x] Draft the project overview
 - [x] Document the system architecture
 - [x] Create this roadmap
-- [ ] Write basic API documentation
+- [x] Write basic API documentation
 - [ ] Review and clean skeleton files before coding starts
 
 Why this matters:
