@@ -2,6 +2,8 @@
 
 from fastapi import FastAPI
 
+from backend.app.services.system import get_system_status
+
 app = FastAPI(
     title="Mirrage API",
     version="0.1.0",
@@ -23,3 +25,8 @@ def read_health() -> dict[str, str]:
         "service": "mirrage-api",
         "status": "online",
     }
+
+
+@app.get("/api/system/status")
+def read_system_status() -> dict[str, str]:
+    return get_system_status()
