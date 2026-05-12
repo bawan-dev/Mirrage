@@ -37,10 +37,7 @@ export default function App() {
       <section className="hero-panel" aria-labelledby="dashboard-title">
         <p className="eyebrow">Mirrage</p>
         <h1 id="dashboard-title">Smart Mirror Dashboard</h1>
-        <p>
-          A focused home display for time, status, voice, and assistant
-          interaction.
-        </p>
+        <p>Dashboard online. Local frontend session active.</p>
       </section>
 
       <section className="dashboard-grid" aria-label="Dashboard cards">
@@ -52,32 +49,32 @@ export default function App() {
 
         <article className="dashboard-card">
           <span>Weather</span>
-          <strong>Planned</strong>
-          <p>Local weather data will connect later.</p>
+          <strong>Forecast pending</strong>
+          <p>Local provider not connected.</p>
         </article>
 
         <article className="dashboard-card">
           <span>Assistant</span>
-          <strong>Ready to wire</strong>
-          <p>The assistant card will connect to the backend API.</p>
+          <strong>Standby</strong>
+          <p>Assistant route not connected.</p>
         </article>
 
         <article className="dashboard-card">
           <span>Voice</span>
           <strong>Not listening</strong>
-          <p>Voice status will start as a backend status check.</p>
+          <p>Microphone input inactive.</p>
         </article>
 
         <article className="dashboard-card">
           <span>System</span>
           <strong>Starting</strong>
-          <p>System state will come from the FastAPI backend.</p>
+          <p>Frontend running locally.</p>
         </article>
 
         <article className="dashboard-card">
           <span>Hardware</span>
           <strong>Planning</strong>
-          <p>Display, mirror, microphone, and sensor notes live in hardware docs.</p>
+          <p>Mirror hardware not connected.</p>
         </article>
       </section>
     </main>

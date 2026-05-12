@@ -40,9 +40,9 @@ Goal: get the smart mirror dashboard running in the browser.
 - [x] Add a clean app entry point
 - [x] Build the first dashboard layout
 - [x] Add clock and date display
-- [ ] Add first cards for weather, assistant, voice, system, and hardware
-- [ ] Make the layout responsive
-- [ ] Polish the dark mirror visual style
+- [x] Add first cards for weather, assistant, voice, system, and hardware
+- [x] Make the layout responsive
+- [x] Polish the dark mirror visual style
 
 Done when:
 
