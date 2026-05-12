@@ -54,7 +54,7 @@ Goal: get a small FastAPI backend running locally.
 
 - [x] Add backend dependencies
 - [x] Create the FastAPI app
-- [ ] Add a health endpoint
+- [x] Add a health endpoint
 - [ ] Add a system status endpoint
 - [ ] Add a voice status endpoint
 - [ ] Add an assistant message endpoint

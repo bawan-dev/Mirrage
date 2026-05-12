@@ -15,3 +15,11 @@ def read_root() -> dict[str, str]:
         "service": "mirrage-api",
         "status": "online",
     }
+
+
+@app.get("/health")
+def read_health() -> dict[str, str]:
+    return {
+        "service": "mirrage-api",
+        "status": "online",
+    }
