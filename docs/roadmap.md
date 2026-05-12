@@ -86,9 +86,9 @@ Goal: create a clean assistant boundary without adding a real model too early.
 
 - [x] Define a simple assistant request and response shape
 - [x] Add an initial AI provider stub
-- [ ] Add provider selection config
+- [x] Add provider selection config
 - [x] Route assistant messages through the AI service layer
-- [ ] Document where Ollama or OpenAI support will fit later
+- [x] Document where Ollama or OpenAI support will fit later
 
 Done when:
 
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Current focus is Phase 5: AI Service Layer.
+Phase 5 is complete enough for now. Current focus is Phase 6: Voice Status.

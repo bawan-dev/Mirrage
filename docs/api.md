@@ -122,6 +122,8 @@ Expected response:
 
 For now, this returns a fixed response through the AI service layer. The provider is named `stub` because no local or remote model is connected yet.
 
+The active provider is selected with `MIRRAGE_AI_PROVIDER`. Right now, `stub` is the only supported value. Later, this same setting can point to a local or remote model provider.
+
 ## First Backend Target
 
 The first backend version should be able to:
