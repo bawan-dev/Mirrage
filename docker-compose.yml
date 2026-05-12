@@ -1,0 +1,3 @@
+# Placeholder Docker Compose file.
+name: mirrage
+services: {}

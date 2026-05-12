@@ -1,16 +1,5 @@
 # Mirrage
 
-An AI-powered smart mirror assistant combining voice control, local AI, and a real-time dashboard interface.
+Placeholder README for the Mirrage AI smart mirror project.
 
-## Project structure
-
-Mirrage/
-├── backend/
-├── frontend/
-├── ai/
-├── hardware/
-├── docs/
-├── assets/
-├── .gitignore
-└── README.md
-
+This repository is being structured first. Full documentation and implementation will be added in later stages.

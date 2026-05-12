@@ -1,0 +1,10 @@
+# Placeholder Docker ignore file.
+.git
+.env
+.env.*
+node_modules
+dist
+build
+__pycache__
+.venv
+venv
