@@ -68,13 +68,13 @@ The backend runs locally and returns JSON from the first planned endpoints.
 
 Goal: make the dashboard read backend status instead of only static text.
 
-- [ ] Add frontend API configuration
-- [ ] Fetch backend health/status data
-- [ ] Show loading states
-- [ ] Show basic error states
-- [ ] Connect voice status card
-- [ ] Connect system status card
-- [ ] Keep planned AI and hardware fields clearly marked
+- [x] Add frontend API configuration
+- [x] Fetch backend health/status data
+- [x] Show loading states
+- [x] Show basic error states
+- [x] Connect voice status card
+- [x] Connect system status card
+- [x] Keep planned AI and hardware fields clearly marked
 
 Done when:
 
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Current focus is Phase 3: Backend Foundation.
+Current focus is Phase 5: AI Service Layer.
