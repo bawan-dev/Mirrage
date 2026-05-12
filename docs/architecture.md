@@ -1,6 +1,6 @@
 # Architecture
 
-This document explains how Mirrage is planned to fit together. It is a living document, so it should change as the project becomes more real.
+This document explains how Mirrage is planned to fit together.
 
 ## System Overview
 
@@ -60,7 +60,7 @@ The AI layer will hold provider routing and model-related code.
 Its job:
 
 - define a common interface for assistant responses
-- start with a placeholder provider
+- start with a simple provider stub
 - later support providers like Ollama, OpenAI-compatible APIs, or local models
 - keep provider details away from the frontend
 
@@ -75,7 +75,7 @@ Its job:
 - describe architecture decisions
 - track the roadmap
 - document API behavior
-- keep future contributors and recruiters oriented
+- keep project decisions recorded
 
 ### `hardware/`
 
@@ -105,7 +105,7 @@ The first real version should follow this path:
 React dashboard
   -> FastAPI endpoint
   -> backend service
-  -> placeholder or real data source
+  -> static or real data source
   -> JSON response
   -> dashboard card
 ```
@@ -116,7 +116,7 @@ Example:
 Dashboard voice card
   -> GET /api/voice/status
   -> voice service
-  -> returns listening=false, status=placeholder
+  -> returns listening=false, status=planned
   -> frontend displays voice state
 ```
 
@@ -147,7 +147,7 @@ input message -> assistant response
 
 The backend should not care if the response comes from:
 
-- a placeholder provider
+- a provider stub
 - Ollama
 - OpenAI
 - another local model runtime
@@ -188,7 +188,7 @@ To keep the project clean, the first stages should avoid:
 - hardware code before hardware decisions are documented
 - voice pipeline work before basic backend endpoints exist
 - large abstractions before the project needs them
-- fake claims about features that are not built yet
+- treating planned features as finished features
 
 ## First Implementation Target
 
@@ -197,7 +197,7 @@ The first working system should be simple:
 1. React dashboard loads in the browser.
 2. FastAPI backend runs locally.
 3. Dashboard calls backend status endpoints.
-4. Backend returns placeholder status data.
+4. Backend returns initial status data.
 5. README and docs clearly explain what is real and what is planned.
 
 That gives Mirrage a real full-stack foundation without pretending the advanced features are finished.
