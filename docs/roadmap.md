@@ -112,7 +112,7 @@ The app has a clear place for voice work before microphone features are added.
 Goal: make the project easier to run as a full stack.
 
 - [ ] Add frontend Dockerfile
-- [ ] Add backend Dockerfile
+- [x] Add backend Dockerfile
 - [ ] Wire services in Docker Compose
 - [ ] Document Docker run commands
 - [ ] Confirm frontend and backend ports
