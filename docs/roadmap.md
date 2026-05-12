@@ -37,7 +37,7 @@ The project should have a clear base before app code is added.
 Goal: get the smart mirror dashboard running in the browser.
 
 - [x] Set up React + Vite
-- [ ] Add a clean app entry point
+- [x] Add a clean app entry point
 - [ ] Build the first dashboard layout
 - [ ] Add clock and date display
 - [ ] Add first cards for weather, assistant, voice, system, and hardware
