@@ -84,10 +84,10 @@ The dashboard proves that the full stack is connected.
 
 Goal: create a clean assistant boundary without adding a real model too early.
 
-- [ ] Define a simple assistant request and response shape
-- [ ] Add an initial AI provider stub
+- [x] Define a simple assistant request and response shape
+- [x] Add an initial AI provider stub
 - [ ] Add provider selection config
-- [ ] Route assistant messages through the AI service layer
+- [x] Route assistant messages through the AI service layer
 - [ ] Document where Ollama or OpenAI support will fit later
 
 Done when:

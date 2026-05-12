@@ -120,7 +120,7 @@ Expected response:
 
 ### Notes
 
-For now, this returns a fixed response from the backend assistant service. The next AI step is to move the response behind the provider layer so local or remote models can be added without changing this endpoint.
+For now, this returns a fixed response through the AI service layer. The provider is named `stub` because no local or remote model is connected yet.
 
 ## First Backend Target
 
