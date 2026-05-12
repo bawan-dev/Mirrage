@@ -146,7 +146,7 @@ docker compose up --build
 - [x] Document the roadmap
 - [x] Document the first API endpoints
 - [x] Review and clean starter files
-- [ ] Set up the React + Vite frontend
+- [x] Set up the React + Vite frontend
 - [ ] Build the first smart mirror dashboard screen
 - [ ] Set up the FastAPI backend
 - [ ] Add health and status endpoints
