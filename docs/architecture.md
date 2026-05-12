@@ -154,6 +154,8 @@ The backend should not care if the response comes from:
 
 That detail belongs inside `ai/`.
 
+Provider selection starts with `MIRRAGE_AI_PROVIDER`. Today, `stub` is the only supported provider. Later, the AI layer can add providers such as `ollama` or `openai` behind the same backend route.
+
 ## Voice Boundary
 
 Voice should start as status only.
