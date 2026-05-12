@@ -21,13 +21,13 @@ The long-term version includes:
 
 This project is in the foundation stage.
 
-Right now, the project structure is in place and the main areas of the system have been separated into folders. The next step is to replace the starter files with working code one piece at a time.
+Right now, the dashboard, backend, and first assistant boundary are in place. Voice is status-only, and hardware is still in the planning stage.
 
 Current foundation:
 
 - `frontend/` for the React dashboard
 - `backend/` for the FastAPI service
-- `ai/` for future AI provider routing
+- `ai/` for AI provider routing
 - `docs/` for architecture and planning
 - `hardware/` for the physical mirror build notes
 - `assets/` for screenshots, diagrams, and visual material
@@ -56,15 +56,17 @@ The build plan is tracked in [docs/roadmap.md](docs/roadmap.md).
 
 The first backend contract is tracked in [docs/api.md](docs/api.md).
 
+Voice planning is tracked in [docs/voice.md](docs/voice.md).
+
 ## Tech Stack
 
-Planned stack:
+Current stack:
 
 | Area | Tooling |
 | --- | --- |
 | Frontend | React, Vite, CSS |
 | Backend | Python, FastAPI |
-| AI | Provider layer for local and remote models |
+| AI | Provider layer with a stub provider |
 | Voice | Status layer first, speech pipeline later |
 | Dev setup | Docker Compose |
 | Docs | Markdown |
@@ -75,15 +77,12 @@ Mirrage will be built in small daily steps. Each step should have one clear purp
 
 Near-term order:
 
-- Draft the project overview
-- Define the architecture
-- Define the roadmap
-- Set up the frontend package
-- Build the first dashboard screen
-- Add backend API basics
-- Add AI and voice status layers
+- Keep the dashboard and backend connected
+- Add features in small testable steps
+- Keep planned features clearly marked
 - Add Docker wiring
 - Add hardware build notes
+- Add real voice and AI support only after the boundaries are stable
 
 ## Project Structure
 
@@ -103,7 +102,7 @@ mirrage/
 
 ## What Is Not Built Yet
 
-This project does not currently claim to have:
+This project does not currently include:
 
 - A working AI assistant
 - A working voice pipeline
@@ -115,9 +114,7 @@ Those pieces will be added deliberately as the project develops.
 
 ## Local Development
 
-The exact setup commands will be updated as the frontend and backend are built.
-
-Planned local workflow:
+Local workflow:
 
 ```bash
 # frontend
@@ -128,6 +125,7 @@ npm run dev
 
 ```bash
 # backend
+.\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload
 ```
@@ -148,10 +146,10 @@ docker compose up --build
 - [x] Review and clean starter files
 - [x] Set up the React + Vite frontend
 - [x] Build the first smart mirror dashboard screen
-- [ ] Set up the FastAPI backend
-- [ ] Add health and status endpoints
-- [ ] Add AI provider routing
-- [ ] Add voice service status
+- [x] Set up the FastAPI backend
+- [x] Add health and status endpoints
+- [x] Add AI provider routing
+- [x] Add voice service status
 - [ ] Add Docker development setup
 - [ ] Add hardware planning details
 

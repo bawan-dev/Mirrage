@@ -169,6 +169,8 @@ Early voice state can include:
 
 Actual microphone handling should come later, after the frontend and backend are stable.
 
+The current voice plan is tracked in [voice.md](voice.md).
+
 ## Hardware Boundary
 
 Hardware integration should also start as status only.

@@ -98,10 +98,10 @@ The assistant endpoint works through the AI layer, even if the answer is still a
 
 Goal: prepare for voice without jumping into microphone complexity too early.
 
-- [ ] Define voice status fields
-- [ ] Return voice status from the backend
-- [ ] Display voice status in the dashboard
-- [ ] Document future wake word, speech-to-text, and text-to-speech options
+- [x] Define voice status fields
+- [x] Return voice status from the backend
+- [x] Display voice status in the dashboard
+- [x] Document future wake word, speech-to-text, and text-to-speech options
 
 Done when:
 
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Phase 5 is complete enough for now. Current focus is Phase 6: Voice Status.
+Phase 6 is complete enough for now. Current focus is Phase 7: Docker Development Setup.
