@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 
 from backend.app.services.system import get_system_status
+from backend.app.services.voice import get_voice_status
 
 app = FastAPI(
     title="Mirrage API",
@@ -30,3 +31,8 @@ def read_health() -> dict[str, str]:
 @app.get("/api/system/status")
 def read_system_status() -> dict[str, str]:
     return get_system_status()
+
+
+@app.get("/api/voice/status")
+def read_voice_status() -> dict[str, str | bool]:
+    return get_voice_status()
