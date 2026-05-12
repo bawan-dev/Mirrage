@@ -57,7 +57,7 @@ Goal: get a small FastAPI backend running locally.
 - [x] Add a health endpoint
 - [x] Add a system status endpoint
 - [x] Add a voice status endpoint
-- [ ] Add an assistant message endpoint
+- [x] Add an assistant message endpoint
 - [ ] Keep route code and service code separate
 
 Done when:

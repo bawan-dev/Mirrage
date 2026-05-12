@@ -101,9 +101,26 @@ Sends a message to the assistant layer.
 }
 ```
 
+### Manual Test
+
+```powershell
+$body = @{ message = "hello" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected response:
+
+```json
+{
+  "reply": "Assistant routing is ready, but no model is connected yet.",
+  "provider": "stub",
+  "model": null
+}
+```
+
 ### Notes
 
-This endpoint should go through the AI service layer even before a real model is added. That keeps the backend route stable when local or remote model support is introduced.
+For now, this returns a fixed response from the backend assistant service. The next AI step is to move the response behind the provider layer so local or remote models can be added without changing this endpoint.
 
 ## First Backend Target
 
