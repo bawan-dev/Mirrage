@@ -52,7 +52,7 @@ The frontend runs locally and shows the first version of the dashboard, even if 
 
 Goal: get a small FastAPI backend running locally.
 
-- [ ] Add backend dependencies
+- [x] Add backend dependencies
 - [ ] Create the FastAPI app
 - [ ] Add a health endpoint
 - [ ] Add a system status endpoint
