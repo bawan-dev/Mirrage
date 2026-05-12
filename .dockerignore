@@ -1,4 +1,3 @@
-# Placeholder Docker ignore file.
 .git
 .env
 .env.*

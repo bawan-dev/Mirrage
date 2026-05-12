@@ -1,1 +1,1 @@
-"""Placeholder API routes file."""
+"""API route definitions."""

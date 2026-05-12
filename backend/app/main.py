@@ -1,1 +1,1 @@
-"""Placeholder FastAPI application entry file."""
+"""FastAPI application entry point."""

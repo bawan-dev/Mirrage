@@ -1,3 +1,3 @@
 # Assets
 
-Placeholder for screenshots, diagrams, and visual assets.
+Screenshots, diagrams, and visual assets for Mirrage.

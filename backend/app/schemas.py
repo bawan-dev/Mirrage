@@ -1,1 +1,1 @@
-"""Placeholder API schemas file."""
+"""API request and response schemas."""

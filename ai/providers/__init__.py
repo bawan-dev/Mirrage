@@ -1,1 +1,1 @@
-"""Placeholder AI providers package."""
+"""AI provider implementations."""

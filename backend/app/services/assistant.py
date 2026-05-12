@@ -1,1 +1,1 @@
-"""Placeholder assistant service file."""
+"""Assistant service boundary."""

@@ -1,1 +1,1 @@
-"""Placeholder AI package."""
+"""Mirrage AI package."""

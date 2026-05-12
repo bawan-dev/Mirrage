@@ -1,1 +1,3 @@
-// Placeholder React app component file.
+export default function App() {
+  return null;
+}

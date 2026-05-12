@@ -21,7 +21,7 @@ The long-term version includes:
 
 This project is in the foundation stage.
 
-Right now, the project structure is in place and the main areas of the system have been separated into folders. The next step is to replace the skeleton files with working code one piece at a time.
+Right now, the project structure is in place and the main areas of the system have been separated into folders. The next step is to replace the starter files with working code one piece at a time.
 
 Current foundation:
 
@@ -140,11 +140,12 @@ docker compose up --build
 ## Roadmap
 
 - [x] Create repository structure
-- [x] Add skeleton files for the main system areas
+- [x] Add starter files for the main system areas
 - [x] Draft the project overview
 - [x] Document the architecture
 - [x] Document the roadmap
 - [x] Document the first API endpoints
+- [x] Review and clean starter files
 - [ ] Set up the React + Vite frontend
 - [ ] Build the first smart mirror dashboard screen
 - [ ] Set up the FastAPI backend

@@ -1,3 +1,3 @@
 # Components
 
-Placeholder hardware component list for Mirrage.
+Hardware component list for Mirrage.

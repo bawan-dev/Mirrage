@@ -1,3 +1,3 @@
 # Wiring Notes
 
-Placeholder wiring notes for Mirrage.
+Wiring notes for Mirrage.

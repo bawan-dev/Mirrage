@@ -1,3 +1,3 @@
 # Mirrage Backend
 
-Placeholder for the FastAPI backend API.
+FastAPI service for Mirrage.

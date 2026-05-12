@@ -1,1 +1,1 @@
-"""Placeholder voice service file."""
+"""Voice service boundary."""

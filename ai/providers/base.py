@@ -1,1 +1,1 @@
-"""Placeholder base AI provider file."""
+"""Base AI provider interface."""

@@ -1,1 +1,1 @@
-"""Placeholder AI data models file."""
+"""AI data models."""

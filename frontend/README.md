@@ -1,3 +1,3 @@
 # Mirrage Frontend
 
-Placeholder for the React + Vite smart mirror dashboard.
+React + Vite dashboard for the mirror interface.

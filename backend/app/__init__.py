@@ -1,1 +1,1 @@
-"""Placeholder backend package."""
+"""Mirrage backend package."""

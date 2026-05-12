@@ -1,1 +1,1 @@
-"""Placeholder AI configuration file."""
+"""AI provider configuration."""

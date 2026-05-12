@@ -1,1 +1,1 @@
-"""Placeholder AI service file."""
+"""AI service boundary."""

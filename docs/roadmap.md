@@ -8,7 +8,7 @@ Small steps, clear purpose.
 
 Each session should do one of these:
 
-- turn a skeleton file into working code or useful documentation
+- turn a starter file into working code or useful documentation
 - connect two parts of the system
 - document a decision
 - improve the dashboard
@@ -21,12 +21,12 @@ If a step needs more than one file, that is fine, but it should still have one c
 Goal: make the repository understandable before adding real app code.
 
 - [x] Create the main folder structure
-- [x] Add skeleton files so every planned area can be committed
+- [x] Add starter files so every planned area can be committed
 - [x] Draft the project overview
 - [x] Document the system architecture
 - [x] Create this roadmap
 - [x] Write basic API documentation
-- [ ] Review and clean skeleton files before coding starts
+- [x] Review and clean starter files before coding starts
 
 Why this matters:
 
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Current focus is Phase 1.
+Current focus is Phase 2: Frontend Foundation.

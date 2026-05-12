@@ -1,1 +1,1 @@
-"""Placeholder backend settings file."""
+"""Backend configuration."""

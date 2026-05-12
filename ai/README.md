@@ -1,3 +1,3 @@
 # Mirrage AI Layer
 
-Placeholder for future local and remote AI provider integration.
+Provider layer for local and remote assistant models.

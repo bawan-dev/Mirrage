@@ -1,1 +1,1 @@
-"""Placeholder system status service file."""
+"""System status service boundary."""

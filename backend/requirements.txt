@@ -1,1 +1,1 @@
-# Placeholder Python dependency file.
+# Backend dependencies will be added with the FastAPI setup.
