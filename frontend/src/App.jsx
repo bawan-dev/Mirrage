@@ -1,4 +1,37 @@
+import { useEffect, useMemo, useState } from 'react';
+
 export default function App() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const currentTime = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }).format(now),
+    [now],
+  );
+
+  const currentDate = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(now),
+    [now],
+  );
+
   return (
     <main className="mirror-dashboard">
       <section className="hero-panel" aria-labelledby="dashboard-title">
@@ -13,8 +46,8 @@ export default function App() {
       <section className="dashboard-grid" aria-label="Dashboard cards">
         <article className="dashboard-card">
           <span>Time</span>
-          <strong>--:--</strong>
-          <p>Date and clock display will be added next.</p>
+          <strong>{currentTime}</strong>
+          <p>{currentDate}</p>
         </article>
 
         <article className="dashboard-card">

@@ -39,7 +39,7 @@ Goal: get the smart mirror dashboard running in the browser.
 - [x] Set up React + Vite
 - [x] Add a clean app entry point
 - [x] Build the first dashboard layout
-- [ ] Add clock and date display
+- [x] Add clock and date display
 - [ ] Add first cards for weather, assistant, voice, system, and hardware
 - [ ] Make the layout responsive
 - [ ] Polish the dark mirror visual style
