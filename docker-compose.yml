@@ -1,2 +1,25 @@
 name: mirrage
-services: {}
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: mirrage-backend
+    environment:
+      MIRRAGE_AI_PROVIDER: stub
+      MIRRAGE_ALLOWED_ORIGINS: '["http://localhost:5173","http://127.0.0.1:5173"]'
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: mirrage-frontend
+    environment:
+      VITE_API_BASE_URL: http://127.0.0.1:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend

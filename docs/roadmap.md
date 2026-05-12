@@ -113,9 +113,9 @@ Goal: make the project easier to run as a full stack.
 
 - [x] Add frontend Dockerfile
 - [x] Add backend Dockerfile
-- [ ] Wire services in Docker Compose
+- [x] Wire services in Docker Compose
 - [ ] Document Docker run commands
-- [ ] Confirm frontend and backend ports
+- [x] Confirm frontend and backend ports
 
 Done when:
 
