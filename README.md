@@ -50,6 +50,8 @@ FastAPI Backend
 
 The system will be built in layers so each part can improve independently. The frontend should not need to know which AI provider is being used. The backend should expose clean status and assistant endpoints. Hardware support should be documented before it is wired into code.
 
+More detail is tracked in [docs/architecture.md](docs/architecture.md).
+
 ## Tech Stack
 
 Planned stack:
@@ -136,7 +138,7 @@ docker compose up --build
 - [x] Create repository structure
 - [x] Add placeholder files for the main system areas
 - [x] Write the first real README
-- [ ] Document the architecture
+- [x] Document the architecture
 - [ ] Document the roadmap
 - [ ] Set up the React + Vite frontend
 - [ ] Build the first smart mirror dashboard screen
