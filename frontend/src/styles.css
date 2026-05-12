@@ -97,11 +97,12 @@ p {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
 }
 
 .dashboard-card {
+  grid-column: span 2;
   min-height: 180px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -128,7 +129,7 @@ p {
 }
 
 .dashboard-card:first-child {
-  grid-column: span 2;
+  grid-column: span 4;
   background:
     linear-gradient(135deg, rgba(109, 215, 232, 0.16), transparent 48%),
     var(--panel-strong);
@@ -137,7 +138,12 @@ p {
 .dashboard-card:first-child strong {
   font-size: 4rem;
   font-variant-numeric: tabular-nums;
-  min-width: 9ch;
+  min-width: 5ch;
+}
+
+.dashboard-card:nth-child(6) {
+  grid-column: span 6;
+  min-height: 140px;
 }
 
 .dashboard-card:nth-child(2) strong {
@@ -167,6 +173,8 @@ p {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-card,
+  .dashboard-card:nth-child(6),
   .dashboard-card:first-child {
     grid-column: auto;
   }
