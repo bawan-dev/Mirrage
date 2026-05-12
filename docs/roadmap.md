@@ -53,7 +53,7 @@ The frontend runs locally and shows the first version of the dashboard, even if 
 Goal: get a small FastAPI backend running locally.
 
 - [x] Add backend dependencies
-- [ ] Create the FastAPI app
+- [x] Create the FastAPI app
 - [ ] Add a health endpoint
 - [ ] Add a system status endpoint
 - [ ] Add a voice status endpoint
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Current focus is Phase 2: Frontend Foundation.
+Current focus is Phase 3: Backend Foundation.
