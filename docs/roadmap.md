@@ -140,7 +140,7 @@ There is enough hardware planning to build a rough first prototype.
 
 Goal: make Mirrage easy to run, explain, and improve.
 
-- [ ] Add dashboard screenshots
+- [x] Add dashboard screenshots
 - [ ] Add architecture diagram assets
 - [ ] Improve project visuals
 - [ ] Add short run notes

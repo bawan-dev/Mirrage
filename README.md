@@ -21,7 +21,7 @@ The long-term version includes:
 
 This project is in the foundation stage.
 
-Right now, the dashboard, backend, and first assistant boundary are in place. Voice is status-only, and hardware is still in the planning stage.
+Right now, the dashboard, backend, and first assistant boundary are in place. Voice is status-only. Hardware planning notes are started, but no physical build exists yet.
 
 Current foundation:
 
@@ -32,6 +32,10 @@ Current foundation:
 - `hardware/` for the physical mirror build notes
 - `assets/` for screenshots, diagrams, and visual material
 - Docker and environment setup files
+
+## Screenshot
+
+![Mirrage dashboard](assets/screenshots/dashboard.png)
 
 ## Planned Architecture
 
@@ -196,7 +200,7 @@ docker compose down
 - [x] Add AI provider routing
 - [x] Add voice service status
 - [x] Add Docker development setup
-- [ ] Add hardware planning details
+- [x] Add hardware planning details
 
 ## Why Mirrage
 
