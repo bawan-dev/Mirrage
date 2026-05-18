@@ -129,7 +129,7 @@ Goal: figure out the first physical version before buying parts.
 - [x] List mirror material options
 - [x] Plan compute device choices
 - [x] Plan microphone and speaker options
-- [ ] Write first wiring notes
+- [x] Write first wiring notes
 - [x] Track open hardware risks
 
 Done when:
