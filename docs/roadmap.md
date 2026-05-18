@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Current focus is Phase 8: Hardware Planning.
+Phase 8 is complete enough for now. Current focus is Phase 9: Project Polish.
