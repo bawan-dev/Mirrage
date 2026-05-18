@@ -6,6 +6,8 @@ This document explains how Mirrage is planned to fit together.
 
 Mirrage is split into layers instead of one large app. That keeps the dashboard, API, AI logic, voice work, and hardware planning separate enough to build safely over time.
 
+![Mirrage architecture](../assets/diagrams/architecture.svg)
+
 ```text
 User
   |

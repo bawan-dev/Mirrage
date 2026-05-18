@@ -141,7 +141,7 @@ There is enough hardware planning to build a rough first prototype.
 Goal: make Mirrage easy to run, explain, and improve.
 
 - [x] Add dashboard screenshots
-- [ ] Add architecture diagram assets
+- [x] Add architecture diagram assets
 - [ ] Improve project visuals
 - [ ] Add short run notes
 - [ ] Add setup troubleshooting
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Phase 8 is complete enough for now. Current focus is Phase 9: Project Polish.
+Current focus is Phase 9: Project Polish.

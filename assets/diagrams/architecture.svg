@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620" role="img" aria-labelledby="title desc">
+  <title id="title">Mirrage architecture</title>
+  <desc id="desc">A simple diagram showing the mirror dashboard calling the FastAPI backend, which owns the AI, voice, hardware, and documentation boundaries.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6ee7ff" />
+    </marker>
+    <style>
+      .bg { fill: #06090d; }
+      .panel { fill: #0d1117; stroke: #27313d; stroke-width: 2; rx: 18; }
+      .core { fill: #101923; stroke: #6ee7ff; stroke-width: 2; rx: 18; }
+      .label { fill: #f5f7fb; font: 700 26px Arial, sans-serif; }
+      .small { fill: #9eb7ca; font: 500 16px Arial, sans-serif; }
+      .tag { fill: #6ee7ff; font: 700 14px Arial, sans-serif; letter-spacing: 1px; }
+      .line { stroke: #6ee7ff; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .muted-line { stroke: #344554; stroke-width: 2; fill: none; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1000" height="620" />
+
+  <text x="70" y="70" class="tag">MIRRAGE</text>
+  <text x="70" y="108" class="label">Current System Shape</text>
+  <text x="70" y="136" class="small">Frontend stays focused on the mirror UI. The backend owns the service boundaries.</text>
+
+  <rect x="310" y="180" width="380" height="105" class="panel" />
+  <text x="500" y="222" text-anchor="middle" class="label">Mirror Dashboard</text>
+  <text x="500" y="252" text-anchor="middle" class="small">React + Vite</text>
+
+  <path d="M 500 285 L 500 350" class="line" />
+
+  <rect x="310" y="350" width="380" height="105" class="core" />
+  <text x="500" y="392" text-anchor="middle" class="label">FastAPI Backend</text>
+  <text x="500" y="422" text-anchor="middle" class="small">health, status, assistant routes</text>
+
+  <path d="M 310 405 L 185 405" class="line" />
+  <path d="M 500 455 L 500 520" class="line" />
+  <path d="M 690 405 L 815 405" class="line" />
+
+  <rect x="60" y="360" width="220" height="90" class="panel" />
+  <text x="170" y="397" text-anchor="middle" class="label">AI Layer</text>
+  <text x="170" y="425" text-anchor="middle" class="small">stub provider now</text>
+
+  <rect x="390" y="520" width="220" height="80" class="panel" />
+  <text x="500" y="553" text-anchor="middle" class="label">Voice</text>
+  <text x="500" y="580" text-anchor="middle" class="small">status only</text>
+
+  <rect x="720" y="360" width="220" height="90" class="panel" />
+  <text x="830" y="397" text-anchor="middle" class="label">Hardware</text>
+  <text x="830" y="425" text-anchor="middle" class="small">planning notes</text>
+
+  <path d="M 170 360 L 170 305 L 500 305 L 500 350" class="muted-line" />
+  <path d="M 830 360 L 830 305 L 500 305" class="muted-line" />
+</svg>

@@ -39,6 +39,8 @@ Current foundation:
 
 ## Planned Architecture
 
+![Mirrage architecture](assets/diagrams/architecture.svg)
+
 ```text
 Mirror Dashboard
       |
