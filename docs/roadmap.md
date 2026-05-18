@@ -123,18 +123,18 @@ Done when:
 
 ## Phase 8: Hardware Planning
 
-Goal: turn the physical mirror idea into a real build plan.
+Goal: figure out the first physical version before buying parts.
 
-- [ ] List candidate display options
-- [ ] List mirror material options
-- [ ] Plan compute device choices
-- [ ] Plan microphone and speaker options
+- [x] List candidate display options
+- [x] List mirror material options
+- [x] Plan compute device choices
+- [x] Plan microphone and speaker options
 - [ ] Write first wiring notes
-- [ ] Track open hardware risks
+- [x] Track open hardware risks
 
 Done when:
 
-The hardware side has enough planning to guide a real prototype.
+There is enough hardware planning to build a rough first prototype.
 
 ## Phase 9: Project Polish
 
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Phase 7 is complete enough for now. Current focus is Phase 8: Hardware Planning.
+Current focus is Phase 8: Hardware Planning.
