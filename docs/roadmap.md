@@ -114,7 +114,7 @@ Goal: make the project easier to run as a full stack.
 - [x] Add frontend Dockerfile
 - [x] Add backend Dockerfile
 - [x] Wire services in Docker Compose
-- [ ] Document Docker run commands
+- [x] Document Docker run commands
 - [x] Confirm frontend and backend ports
 
 Done when:
@@ -153,4 +153,4 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 ## Current Focus
 
-Phase 6 is complete enough for now. Current focus is Phase 7: Docker Development Setup.
+Phase 7 is complete enough for now. Current focus is Phase 8: Hardware Planning.

@@ -116,23 +116,68 @@ Those pieces will be added deliberately as the project develops.
 
 Local workflow:
 
-```bash
+### Frontend
+
+```powershell
 # frontend
 cd frontend
 npm install
 npm run dev
 ```
 
-```bash
+Open:
+
+```text
+http://127.0.0.1:5173
+```
+
+### Backend
+
+```powershell
 # backend
 .\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload
 ```
 
-```bash
+Open:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+Expected response:
+
+```json
+{"service":"mirrage-api","status":"online"}
+```
+
+### Docker
+
+Docker runs the frontend and backend together.
+
+```powershell
 # docker
 docker compose up --build
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173
+http://127.0.0.1:8000/health
+```
+
+Expected:
+
+- the dashboard loads at `5173`
+- the backend health check returns `{"service":"mirrage-api","status":"online"}`
+
+Stop Docker:
+
+```powershell
+Ctrl + C
+docker compose down
 ```
 
 ## Roadmap
@@ -150,7 +195,7 @@ docker compose up --build
 - [x] Add health and status endpoints
 - [x] Add AI provider routing
 - [x] Add voice service status
-- [ ] Add Docker development setup
+- [x] Add Docker development setup
 - [ ] Add hardware planning details
 
 ## Why Mirrage
