@@ -73,7 +73,7 @@ Current stack:
 
 | Area | Tooling |
 | --- | --- |
-| Frontend | React, Vite, CSS |
+| Frontend | React, TypeScript, Tailwind CSS, Vite |
 | Backend | Python, FastAPI |
 | AI | Provider layer with a stub provider |
 | Voice | Status layer first, speech pipeline later |
@@ -207,7 +207,7 @@ docker compose down
 - [x] Add Docker development setup
 - [x] Add hardware planning details
 - [x] Finish project polish (run notes, troubleshooting, current roadmap)
-- [ ] Migrate frontend to TypeScript + Tailwind
+- [x] Migrate frontend to TypeScript + Tailwind
 - [ ] Add linting and formatting
 - [ ] Add tests and continuous integration
 - [ ] Connect a real AI provider

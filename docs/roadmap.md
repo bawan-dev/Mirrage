@@ -155,11 +155,11 @@ A new reader can understand what Mirrage is, what works, and what is coming next
 
 Goal: align the frontend with the advertised stack and make it type-safe.
 
-- [ ] Add TypeScript and convert the React entry points
-- [ ] Add Tailwind CSS and a Vite Tailwind setup
-- [ ] Port the dashboard styling to Tailwind utilities
-- [ ] Type the API client and backend response shapes
-- [ ] Confirm the dashboard still loads and reads backend status
+- [x] Add TypeScript and convert the React entry points
+- [x] Add Tailwind CSS and a Vite Tailwind setup
+- [x] Port the dashboard styling to Tailwind utilities
+- [x] Type the API client and backend response shapes
+- [x] Confirm the dashboard still loads and reads backend status
 
 Done when:
 
@@ -227,4 +227,4 @@ started until the core system is stable.
 
 ## Current Focus
 
-Current focus is Phase 10: Frontend TypeScript + Tailwind.
+Current focus is Phase 11: Code Quality.
