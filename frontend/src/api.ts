@@ -3,6 +3,7 @@ import type {
   HealthStatus,
   SystemStatus,
   VoiceStatus,
+  WeatherInfo,
 } from './types';
 
 const API_BASE_URL =
@@ -42,6 +43,10 @@ export function getVoiceStatus(): Promise<VoiceStatus> {
 
 export function getHealthStatus(): Promise<HealthStatus> {
   return fetchJson<HealthStatus>('/health');
+}
+
+export function getWeather(): Promise<WeatherInfo> {
+  return fetchJson<WeatherInfo>('/api/info/weather');
 }
 
 export function sendAssistantMessage(message: string): Promise<AssistantReply> {

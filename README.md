@@ -116,7 +116,6 @@ mirrage/
 This project does not currently include:
 
 - A working voice pipeline
-- Live weather data
 - Real hardware integration
 - A production deployment
 
@@ -247,7 +246,7 @@ backend, pytest, then ESLint, Prettier, type-check, and build on the frontend.
 - [x] Add linting and formatting
 - [x] Add tests and continuous integration
 - [x] Connect a real AI provider
-- [ ] Add live weather data
+- [x] Add live weather data
 
 The full phase breakdown lives in [docs/roadmap.md](docs/roadmap.md).
 

@@ -209,11 +209,11 @@ The assistant returns real model responses through the same backend route.
 
 Goal: replace the weather stub with real data.
 
-- [ ] Add a `GET /api/info/weather` endpoint
-- [ ] Fetch live data from Open-Meteo (no API key required)
-- [ ] Cache responses to avoid rate limits
-- [ ] Connect the weather card to live data
-- [ ] Keep a clear fallback when weather is unavailable
+- [x] Add a `GET /api/info/weather` endpoint
+- [x] Fetch live data from Open-Meteo (no API key required)
+- [x] Cache responses to avoid rate limits
+- [x] Connect the weather card to live data
+- [x] Keep a clear fallback when weather is unavailable
 
 Done when:
 
@@ -227,4 +227,5 @@ started until the core system is stable.
 
 ## Current Focus
 
-Current focus is Phase 14: Live Weather.
+All defined phases are complete. The next planned milestone is the Mobile Companion
+App; real voice and hardware integration follow once the core system is stable.

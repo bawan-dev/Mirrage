@@ -4,9 +4,15 @@ import {
   getHealthStatus,
   getSystemStatus,
   getVoiceStatus,
+  getWeather,
   sendAssistantMessage,
 } from './api';
-import type { HealthStatus, SystemStatus, VoiceStatus } from './types';
+import type {
+  HealthStatus,
+  SystemStatus,
+  VoiceStatus,
+  WeatherInfo,
+} from './types';
 
 interface BackendState {
   error: string | null;
@@ -34,6 +40,7 @@ export default function App() {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus | null>(null);
+  const [weather, setWeather] = useState<WeatherInfo | null>(null);
   const [backendState, setBackendState] = useState<BackendState>({
     error: null,
     isLoading: true,
@@ -56,10 +63,11 @@ export default function App() {
 
     async function loadBackendStatus() {
       try {
-        const [health, system, voice] = await Promise.all([
+        const [health, system, voice, currentWeather] = await Promise.all([
           getHealthStatus(),
           getSystemStatus(),
           getVoiceStatus(),
+          getWeather(),
         ]);
 
         if (!isActive) {
@@ -69,6 +77,7 @@ export default function App() {
         setHealthStatus(health);
         setSystemStatus(system);
         setVoiceStatus(voice);
+        setWeather(currentWeather);
         setBackendState({ error: null, isLoading: false });
       } catch {
         if (!isActive) {
@@ -139,6 +148,30 @@ export default function App() {
 
   const assistantDetail =
     assistantError ?? assistantReply ?? 'Ask the assistant a question.';
+
+  const weatherTitle = useMemo(() => {
+    if (backendState.isLoading) {
+      return 'Checking';
+    }
+
+    if (backendState.error || weather?.temperature_c == null) {
+      return 'Unavailable';
+    }
+
+    return `${Math.round(weather.temperature_c)}°C`;
+  }, [backendState.error, backendState.isLoading, weather]);
+
+  const weatherDetail = useMemo(() => {
+    if (backendState.isLoading) {
+      return 'Reading local conditions.';
+    }
+
+    if (backendState.error || !weather || weather.status !== 'online') {
+      return 'Weather unavailable.';
+    }
+
+    return `${weather.condition}. ${weather.location}.`;
+  }, [backendState.error, backendState.isLoading, weather]);
 
   const sessionMessage = useMemo(() => {
     if (backendState.isLoading) {
@@ -234,10 +267,8 @@ export default function App() {
 
         <article className={`${cardBase} md:col-span-2`}>
           <span className={labelClass}>Weather</span>
-          <strong className={`${valueClass} text-amber`}>
-            Forecast pending
-          </strong>
-          <p className={detailClass}>Local provider not connected.</p>
+          <strong className={`${valueClass} text-amber`}>{weatherTitle}</strong>
+          <p className={detailClass}>{weatherDetail}</p>
         </article>
 
         <article className={`${cardBase} md:col-span-2`}>

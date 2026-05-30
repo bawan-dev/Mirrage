@@ -79,6 +79,30 @@ Returns the current voice layer state.
 
 The first version should not try to access the microphone. It only needs to show where voice support will connect later.
 
+## `GET /api/info/weather`
+
+Returns current local weather from Open-Meteo (no API key required).
+
+### Example Response
+
+```json
+{
+  "status": "online",
+  "location": "Auckland",
+  "temperature_c": 16.9,
+  "condition": "Overcast",
+  "updated": "2026-05-31T08:00"
+}
+```
+
+### Notes
+
+The location is configured with `MIRRAGE_WEATHER_LATITUDE`,
+`MIRRAGE_WEATHER_LONGITUDE`, and `MIRRAGE_WEATHER_LOCATION`. Responses are cached for
+a few minutes. If the upstream service is unavailable, the endpoint serves the last
+good value, or returns `status: "unavailable"` with a null temperature, so the
+dashboard never breaks.
+
 ## `POST /api/assistant/message`
 
 Sends a message to the assistant layer.

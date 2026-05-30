@@ -2,10 +2,15 @@
 
 from fastapi import APIRouter
 
-from backend.app.schemas import AssistantMessageRequest, AssistantMessageResponse
+from backend.app.schemas import (
+    AssistantMessageRequest,
+    AssistantMessageResponse,
+    WeatherResponse,
+)
 from backend.app.services.assistant import create_assistant_reply
 from backend.app.services.system import get_system_status
 from backend.app.services.voice import get_voice_status
+from backend.app.services.weather import get_weather
 
 router = APIRouter()
 
@@ -34,6 +39,11 @@ def read_system_status() -> dict[str, str]:
 @router.get("/api/voice/status")
 def read_voice_status() -> dict[str, str | bool]:
     return get_voice_status()
+
+
+@router.get("/api/info/weather")
+def read_weather() -> WeatherResponse:
+    return get_weather()
 
 
 @router.post("/api/assistant/message")

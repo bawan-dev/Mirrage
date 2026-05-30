@@ -11,3 +11,11 @@ class AssistantMessageResponse(BaseModel):
     reply: str
     provider: str
     model: str | None
+
+
+class WeatherResponse(BaseModel):
+    status: str
+    location: str
+    temperature_c: float | None
+    condition: str
+    updated: str | None

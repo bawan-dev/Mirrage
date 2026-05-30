@@ -28,3 +28,11 @@ export interface AssistantReply {
   provider: string;
   model: string | null;
 }
+
+export interface WeatherInfo {
+  status: string;
+  location: string;
+  temperature_c: number | null;
+  condition: string;
+  updated: string | null;
+}
