@@ -20,7 +20,8 @@ class AssistantAIService:
         if provider_key not in PROVIDERS:
             supported = ", ".join(sorted(PROVIDERS))
             raise ValueError(
-                f"Unsupported AI provider '{provider_name}'. Supported providers: {supported}."
+                f"Unsupported AI provider '{provider_name}'. "
+                f"Supported providers: {supported}."
             )
 
         provider_class = PROVIDERS[provider_key]

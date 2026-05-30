@@ -194,7 +194,9 @@ export default function App() {
 
         <article className={`${cardBase} md:col-span-2`}>
           <span className={labelClass}>Weather</span>
-          <strong className={`${valueClass} text-amber`}>Forecast pending</strong>
+          <strong className={`${valueClass} text-amber`}>
+            Forecast pending
+          </strong>
           <p className={detailClass}>Local provider not connected.</p>
         </article>
 

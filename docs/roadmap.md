@@ -169,10 +169,10 @@ The frontend is TypeScript + Tailwind and matches the project overview.
 
 Goal: keep the codebase consistent and easy to maintain.
 
-- [ ] Add Ruff for Python linting and formatting
-- [ ] Add ESLint + Prettier for the frontend
-- [ ] Fix existing lint findings
-- [ ] Document the quality commands
+- [x] Add Ruff for Python linting and formatting
+- [x] Add ESLint + Prettier for the frontend
+- [x] Fix existing lint findings
+- [x] Document the quality commands
 
 Done when:
 
@@ -227,4 +227,4 @@ started until the core system is stable.
 
 ## Current Focus
 
-Current focus is Phase 11: Code Quality.
+Current focus is Phase 12: Testing And Continuous Integration.

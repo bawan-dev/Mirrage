@@ -1,0 +1,17 @@
+# Tooling configuration for the Mirrage backend and AI packages.
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+extend-exclude = [".venv", "frontend"]
+
+[tool.ruff.lint]
+# A pragmatic default set: pycodestyle, pyflakes, import sorting,
+# pyupgrade, flake8-bugbear, and comprehension checks.
+select = ["E", "F", "I", "UP", "B", "C4"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ai", "backend"]
+
+[tool.ruff.format]
+quote-style = "double"

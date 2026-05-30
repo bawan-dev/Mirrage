@@ -189,6 +189,25 @@ Ctrl + C
 docker compose down
 ```
 
+## Code Quality
+
+The backend uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+The frontend uses ESLint and Prettier.
+
+```powershell
+# backend (from the repo root, with the venv active)
+pip install -r backend/requirements-dev.txt
+ruff check .
+ruff format --check .
+
+# frontend
+cd frontend
+npm run lint
+npm run format:check
+```
+
+`ruff format .` and `npm run format` apply fixes in place.
+
 ## Roadmap
 
 - [x] Create repository structure
@@ -208,7 +227,7 @@ docker compose down
 - [x] Add hardware planning details
 - [x] Finish project polish (run notes, troubleshooting, current roadmap)
 - [x] Migrate frontend to TypeScript + Tailwind
-- [ ] Add linting and formatting
+- [x] Add linting and formatting
 - [ ] Add tests and continuous integration
 - [ ] Connect a real AI provider
 - [ ] Add live weather data
