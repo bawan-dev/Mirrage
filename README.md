@@ -64,6 +64,9 @@ The first backend contract is tracked in [docs/api.md](docs/api.md).
 
 Voice planning is tracked in [docs/voice.md](docs/voice.md).
 
+Quick run steps are in [docs/run-notes.md](docs/run-notes.md), and common setup
+problems are covered in [docs/troubleshooting.md](docs/troubleshooting.md).
+
 ## Tech Stack
 
 Current stack:
@@ -203,6 +206,14 @@ docker compose down
 - [x] Add voice service status
 - [x] Add Docker development setup
 - [x] Add hardware planning details
+- [x] Finish project polish (run notes, troubleshooting, current roadmap)
+- [ ] Migrate frontend to TypeScript + Tailwind
+- [ ] Add linting and formatting
+- [ ] Add tests and continuous integration
+- [ ] Connect a real AI provider
+- [ ] Add live weather data
+
+The full phase breakdown lives in [docs/roadmap.md](docs/roadmap.md).
 
 ## Why Mirrage
 

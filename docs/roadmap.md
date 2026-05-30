@@ -142,15 +142,89 @@ Goal: make Mirrage easy to run, explain, and improve.
 
 - [x] Add dashboard screenshots
 - [x] Add architecture diagram assets
-- [ ] Improve project visuals
-- [ ] Add short run notes
-- [ ] Add setup troubleshooting
-- [ ] Keep the roadmap current
+- [x] Improve project visuals
+- [x] Add short run notes
+- [x] Add setup troubleshooting
+- [x] Keep the roadmap current
 
 Done when:
 
 A new reader can understand what Mirrage is, what works, and what is coming next.
 
+## Phase 10: Frontend TypeScript + Tailwind
+
+Goal: align the frontend with the advertised stack and make it type-safe.
+
+- [ ] Add TypeScript and convert the React entry points
+- [ ] Add Tailwind CSS and a Vite Tailwind setup
+- [ ] Port the dashboard styling to Tailwind utilities
+- [ ] Type the API client and backend response shapes
+- [ ] Confirm the dashboard still loads and reads backend status
+
+Done when:
+
+The frontend is TypeScript + Tailwind and matches the project overview.
+
+## Phase 11: Code Quality
+
+Goal: keep the codebase consistent and easy to maintain.
+
+- [ ] Add Ruff for Python linting and formatting
+- [ ] Add ESLint + Prettier for the frontend
+- [ ] Fix existing lint findings
+- [ ] Document the quality commands
+
+Done when:
+
+Lint and format run cleanly across backend and frontend.
+
+## Phase 12: Testing And Continuous Integration
+
+Goal: prove the system works automatically on every change.
+
+- [ ] Add a real pytest suite for the backend endpoints and AI service
+- [ ] Add a frontend type-check and build check
+- [ ] Add a GitHub Actions workflow that runs lint, tests, and build
+- [ ] Add a status badge to the README
+
+Done when:
+
+Tests and checks run automatically in CI on every push.
+
+## Phase 13: Real AI Provider
+
+Goal: connect a real model behind the existing AI boundary.
+
+- [ ] Add an Ollama provider (local) behind the provider interface
+- [ ] Add an OpenAI-compatible provider option
+- [ ] Select the provider with `MIRRAGE_AI_PROVIDER` without frontend changes
+- [ ] Add an assistant chat input to the dashboard
+- [ ] Handle provider errors gracefully
+
+Done when:
+
+The assistant returns real model responses through the same backend route.
+
+## Phase 14: Live Weather
+
+Goal: replace the weather stub with real data.
+
+- [ ] Add a `GET /api/info/weather` endpoint
+- [ ] Fetch live data from Open-Meteo (no API key required)
+- [ ] Cache responses to avoid rate limits
+- [ ] Connect the weather card to live data
+- [ ] Keep a clear fallback when weather is unavailable
+
+Done when:
+
+The weather card shows real local conditions through the backend.
+
+## Future: Mobile Companion App
+
+Goal (planned, from the project overview): a companion mobile app for remote control
+and notifications. Tracked here so the roadmap matches the project vision, but not
+started until the core system is stable.
+
 ## Current Focus
 
-Current focus is Phase 9: Project Polish.
+Current focus is Phase 10: Frontend TypeScript + Tailwind.
