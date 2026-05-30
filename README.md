@@ -1,5 +1,7 @@
 # Mirrage
 
+[![CI](https://github.com/bawan-dev/Mirrage/actions/workflows/ci.yml/badge.svg)](https://github.com/bawan-dev/Mirrage/actions/workflows/ci.yml)
+
 Mirrage is an AI smart mirror project: a wall-mounted mirror display with a clean dashboard, voice interaction, and an assistant layer that can eventually run with local or remote models.
 
 The goal is to build the software and hardware plan together: dashboard first, backend next, then AI, voice, and physical mirror integration.
@@ -208,6 +210,19 @@ npm run format:check
 
 `ruff format .` and `npm run format` apply fixes in place.
 
+## Testing
+
+The backend has a pytest suite covering the API endpoints and the AI service layer.
+
+```powershell
+pip install -r backend/requirements-dev.txt
+pytest
+```
+
+Every push and pull request runs the full check suite in GitHub Actions
+([.github/workflows/ci.yml](.github/workflows/ci.yml)): Ruff lint and format on the
+backend, pytest, then ESLint, Prettier, type-check, and build on the frontend.
+
 ## Roadmap
 
 - [x] Create repository structure
@@ -228,7 +243,7 @@ npm run format:check
 - [x] Finish project polish (run notes, troubleshooting, current roadmap)
 - [x] Migrate frontend to TypeScript + Tailwind
 - [x] Add linting and formatting
-- [ ] Add tests and continuous integration
+- [x] Add tests and continuous integration
 - [ ] Connect a real AI provider
 - [ ] Add live weather data
 

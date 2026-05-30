@@ -182,10 +182,10 @@ Lint and format run cleanly across backend and frontend.
 
 Goal: prove the system works automatically on every change.
 
-- [ ] Add a real pytest suite for the backend endpoints and AI service
-- [ ] Add a frontend type-check and build check
-- [ ] Add a GitHub Actions workflow that runs lint, tests, and build
-- [ ] Add a status badge to the README
+- [x] Add a real pytest suite for the backend endpoints and AI service
+- [x] Add a frontend type-check and build check
+- [x] Add a GitHub Actions workflow that runs lint, tests, and build
+- [x] Add a status badge to the README
 
 Done when:
 
@@ -227,4 +227,4 @@ started until the core system is stable.
 
 ## Current Focus
 
-Current focus is Phase 12: Testing And Continuous Integration.
+Current focus is Phase 13: Real AI Provider.

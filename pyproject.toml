@@ -15,3 +15,7 @@ known-first-party = ["ai", "backend"]
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["backend/tests"]
