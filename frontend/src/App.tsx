@@ -1,6 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 
-import { getHealthStatus, getSystemStatus, getVoiceStatus } from './api';
+import {
+  getHealthStatus,
+  getSystemStatus,
+  getVoiceStatus,
+  sendAssistantMessage,
+} from './api';
 import type { HealthStatus, SystemStatus, VoiceStatus } from './types';
 
 interface BackendState {
@@ -33,6 +38,10 @@ export default function App() {
     error: null,
     isLoading: true,
   });
+  const [draft, setDraft] = useState('');
+  const [assistantReply, setAssistantReply] = useState<string | null>(null);
+  const [assistantBusy, setAssistantBusy] = useState(false);
+  const [assistantError, setAssistantError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -99,6 +108,37 @@ export default function App() {
       }).format(now),
     [now],
   );
+
+  async function handleAssistantSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const message = draft.trim();
+    if (!message || assistantBusy) {
+      return;
+    }
+
+    setAssistantBusy(true);
+    setAssistantError(null);
+
+    try {
+      const result = await sendAssistantMessage(message);
+      setAssistantReply(result.reply);
+      setDraft('');
+    } catch {
+      setAssistantError('Assistant unavailable.');
+    } finally {
+      setAssistantBusy(false);
+    }
+  }
+
+  const assistantTitle = assistantBusy
+    ? 'Thinking…'
+    : assistantReply
+      ? 'Reply'
+      : 'Standby';
+
+  const assistantDetail =
+    assistantError ?? assistantReply ?? 'Ask the assistant a question.';
 
   const sessionMessage = useMemo(() => {
     if (backendState.isLoading) {
@@ -202,8 +242,27 @@ export default function App() {
 
         <article className={`${cardBase} md:col-span-2`}>
           <span className={labelClass}>Assistant</span>
-          <strong className={`${valueClass} text-green`}>Standby</strong>
-          <p className={detailClass}>Assistant route not connected.</p>
+          <strong className={`${valueClass} text-green`}>
+            {assistantTitle}
+          </strong>
+          <p className={detailClass}>{assistantDetail}</p>
+          <form onSubmit={handleAssistantSubmit} className="flex gap-2">
+            <input
+              type="text"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Ask Mirrage…"
+              aria-label="Message the assistant"
+              className="min-w-0 flex-1 rounded-md border border-line bg-page/60 px-3 py-2 text-sm text-text outline-none placeholder:text-muted focus:border-cyan"
+            />
+            <button
+              type="submit"
+              disabled={assistantBusy}
+              className="rounded-md border border-line bg-panel-strong px-3 py-2 text-sm font-semibold text-cyan disabled:opacity-50"
+            >
+              Send
+            </button>
+          </form>
         </article>
 
         <article className={`${cardBase} md:col-span-2`}>

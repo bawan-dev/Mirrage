@@ -22,3 +22,9 @@ export interface VoiceStatus {
   speech_to_text: string;
   text_to_speech: string;
 }
+
+export interface AssistantReply {
+  reply: string;
+  provider: string;
+  model: string | null;
+}

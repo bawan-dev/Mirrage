@@ -195,11 +195,11 @@ Tests and checks run automatically in CI on every push.
 
 Goal: connect a real model behind the existing AI boundary.
 
-- [ ] Add an Ollama provider (local) behind the provider interface
-- [ ] Add an OpenAI-compatible provider option
-- [ ] Select the provider with `MIRRAGE_AI_PROVIDER` without frontend changes
-- [ ] Add an assistant chat input to the dashboard
-- [ ] Handle provider errors gracefully
+- [x] Add an Ollama provider (local) behind the provider interface
+- [x] Add an OpenAI-compatible provider option
+- [x] Select the provider with `MIRRAGE_AI_PROVIDER` without frontend changes
+- [x] Add an assistant chat input to the dashboard
+- [x] Handle provider errors gracefully
 
 Done when:
 
@@ -227,4 +227,4 @@ started until the core system is stable.
 
 ## Current Focus
 
-Current focus is Phase 13: Real AI Provider.
+Current focus is Phase 14: Live Weather.

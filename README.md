@@ -77,7 +77,7 @@ Current stack:
 | --- | --- |
 | Frontend | React, TypeScript, Tailwind CSS, Vite |
 | Backend | Python, FastAPI |
-| AI | Provider layer with a stub provider |
+| AI | Provider layer: stub, Ollama (local), OpenAI-compatible |
 | Voice | Status layer first, speech pipeline later |
 | Dev setup | Docker Compose |
 | Docs | Markdown |
@@ -115,11 +115,13 @@ mirrage/
 
 This project does not currently include:
 
-- A working AI assistant
 - A working voice pipeline
 - Live weather data
 - Real hardware integration
 - A production deployment
+
+The AI assistant works through a pluggable provider layer (`stub` by default, or a
+real Ollama / OpenAI-compatible model via `MIRRAGE_AI_PROVIDER`).
 
 Those pieces will be added deliberately as the project develops.
 
@@ -244,7 +246,7 @@ backend, pytest, then ESLint, Prettier, type-check, and build on the frontend.
 - [x] Migrate frontend to TypeScript + Tailwind
 - [x] Add linting and formatting
 - [x] Add tests and continuous integration
-- [ ] Connect a real AI provider
+- [x] Connect a real AI provider
 - [ ] Add live weather data
 
 The full phase breakdown lives in [docs/roadmap.md](docs/roadmap.md).

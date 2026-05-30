@@ -3,10 +3,14 @@
 from ai.config import ai_settings
 from ai.models import AssistantResult
 from ai.providers.base import AssistantProvider
+from ai.providers.ollama import OllamaProvider
+from ai.providers.openai import OpenAIProvider
 from ai.providers.stub import StubAssistantProvider
 
 PROVIDERS: dict[str, type[AssistantProvider]] = {
     "stub": StubAssistantProvider,
+    "ollama": OllamaProvider,
+    "openai": OpenAIProvider,
 }
 
 

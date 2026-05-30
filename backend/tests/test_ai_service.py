@@ -24,3 +24,11 @@ def test_provider_name_is_case_insensitive() -> None:
 def test_unsupported_provider_raises() -> None:
     with pytest.raises(ValueError, match="Unsupported AI provider"):
         AssistantAIService("does-not-exist")
+
+
+@pytest.mark.parametrize("name", ["stub", "ollama", "openai"])
+def test_known_providers_build(name: str) -> None:
+    # Construction must not require network access; only reply() makes calls.
+    service = AssistantAIService(name)
+
+    assert service.provider.name == name

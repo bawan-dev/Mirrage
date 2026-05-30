@@ -156,7 +156,11 @@ The backend should not care if the response comes from:
 
 That detail belongs inside `ai/`.
 
-Provider selection starts with `MIRRAGE_AI_PROVIDER`. Today, `stub` is the only supported provider. Later, the AI layer can add providers such as `ollama` or `openai` behind the same backend route.
+Provider selection is controlled by `MIRRAGE_AI_PROVIDER`. Supported providers are
+`stub` (default, no network), `ollama` (local and private), and `openai`
+(hosted, OpenAI-compatible). All sit behind the same backend route, and a provider
+failure degrades to a short fallback reply rather than an error page. See
+[../ai/README.md](../ai/README.md) for details.
 
 ## Voice Boundary
 

@@ -1,6 +1,10 @@
 """Tests for the dashboard-facing API endpoints."""
 
+import pytest
 from fastapi.testclient import TestClient
+
+from ai.providers.base import AIProviderError
+from backend.app.services import assistant as assistant_service
 
 
 def test_system_status_reports_all_layers(client: TestClient) -> None:
@@ -44,3 +48,17 @@ def test_assistant_message_requires_message_field(client: TestClient) -> None:
     response = client.post("/api/assistant/message", json={})
 
     assert response.status_code == 422
+
+
+def test_assistant_message_handles_provider_failure(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(_message: str) -> None:
+        raise AIProviderError("provider down")
+
+    monkeypatch.setattr(assistant_service.assistant_ai_service, "reply", fail)
+
+    response = client.post("/api/assistant/message", json={"message": "hi"})
+
+    assert response.status_code == 200
+    assert "unavailable" in response.json()["reply"].lower()

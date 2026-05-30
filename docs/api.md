@@ -120,9 +120,18 @@ Expected response:
 
 ### Notes
 
-For now, this returns a fixed response through the AI service layer. The provider is named `stub` because no local or remote model is connected yet.
+This routes the message through the AI service layer. With the default `stub`
+provider it returns a fixed response; with a real provider it returns a model reply.
 
-The active provider is selected with `MIRRAGE_AI_PROVIDER`. Right now, `stub` is the only supported value. Later, this same setting can point to a local or remote model provider.
+The active provider is selected with `MIRRAGE_AI_PROVIDER`:
+
+- `stub` — fixed response, no network (default; used in development and CI)
+- `ollama` — local, private model via an Ollama server
+- `openai` — hosted, OpenAI-compatible model (set `MIRRAGE_AI_API_KEY`)
+
+The response shape is identical for every provider, so the dashboard never changes.
+If a provider fails, the endpoint still returns `200` with a short fallback reply so
+the dashboard stays usable.
 
 ## First Backend Target
 
