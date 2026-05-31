@@ -236,10 +236,27 @@ Done when:
 The mirror UI feels like a calm home interface that can expand into focused views
 without pretending future voice, media, or smart home integrations are finished.
 
+## Phase 16: Real Voice Foundation
+
+Goal: talk to Mirrage without adding a wake word yet.
+
+- [x] Add browser microphone access
+- [x] Add push-to-talk in the assistant focus view
+- [x] Add browser speech-to-text
+- [x] Display the transcript in the assistant view
+- [x] Send the transcript to the existing assistant endpoint
+- [x] Display the assistant reply
+- [x] Document voice architecture, setup, and troubleshooting
+
+Done when:
+
+The assistant focus view accepts a spoken request through push-to-talk and routes
+the transcript through the existing assistant endpoint.
+
 ## Future: Voice Interaction
 
-- [ ] Wake phrase or button entry point
-- [ ] Speech-to-text
+- [ ] Wake phrase
+- [ ] Backend or local speech-to-text option
 - [ ] Assistant intent handling
 - [ ] Text-to-speech
 - [ ] Return-to-home voice flow
@@ -284,5 +301,5 @@ without pretending future voice, media, or smart home integrations are finished.
 
 ## Current Focus
 
-Phase 15 is complete enough for now. Current focus is testing and UI refinement
-before starting voice or third-party integrations.
+Phase 16 is complete enough for now. Current focus is testing and refinement
+before adding wake word or third-party integrations.

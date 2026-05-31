@@ -21,7 +21,7 @@ Planned direction:
 - minimal mirror home screen with clock, weather, and subtle system state
 - focus views for assistant, weather, media, calendar, and home controls
 - local-first AI support where possible
-- voice interaction after the UI and backend boundaries are stable
+- push-to-talk voice interaction first, with wake word and spoken replies later
 - physical mirror build after the display, material, audio, heat, and wiring choices are tested
 
 ## Current Build
@@ -33,13 +33,17 @@ What works now:
 - dashboard connected to backend status data
 - weather endpoint and card using Open-Meteo with a fallback state
 - AI provider boundary with `stub`, `ollama`, and `openai` provider options
+- browser push-to-talk voice input in the assistant focus view
+- speech transcripts sent through the existing assistant endpoint
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
 
 What is still planned:
 
-- real voice pipeline: wake word, speech-to-text, and text-to-speech
+- wake word support
+- backend or local speech-to-text option
+- text-to-speech for spoken assistant replies
 - Spotify or other music service integration
 - calendar integration
 - memory/context layer
@@ -65,12 +69,12 @@ FastAPI Backend
       |
       +-- AI Service Layer
       |
-      +-- Voice Status Layer
+      +-- Voice Input Layer
       |
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, and external data. AI providers, voice work, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, and external data. AI providers, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
 
 More detail:
 
@@ -95,7 +99,7 @@ Hardware notes:
 | Backend | Python, FastAPI |
 | AI | Provider boundary for stub, Ollama, and OpenAI-compatible APIs |
 | Weather | Backend Open-Meteo integration with fallback behavior |
-| Voice | Status layer only for now |
+| Voice | Browser push-to-talk speech recognition foundation |
 | Dev setup | Docker Compose |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
 | CI | GitHub Actions |
@@ -181,10 +185,13 @@ Current manual checks:
 - open `http://127.0.0.1:5173` and confirm the mirror UI loads
 - open `http://127.0.0.1:8000/health` and confirm the backend is online
 - check the dashboard system card shows backend status when the API is running
-- check the voice card stays status-only and does not imply microphone support
 - check the weather card either shows live data or a clear fallback
+- open the assistant focus view, press `Push to talk`, allow microphone access, and confirm the transcript appears
+- confirm the voice transcript is sent to `/api/assistant/message` and the assistant reply appears in the assistant view
 - send a message to `/api/assistant/message` and confirm the response shape stays stable
 - run `docker compose up --build` when Docker or shared run config changes
+
+Browser voice input works best in Chrome or Edge because it uses the browser speech recognition API. Wake word detection and spoken replies are not built yet.
 
 CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
@@ -208,17 +215,19 @@ Completed foundation work:
 - backend API
 - AI provider boundary
 - live weather endpoint and dashboard card
+- Ambient Interaction Layer with focus views
+- push-to-talk voice foundation
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- Ambient Interaction Layer: minimal home state, focus views, assistant focus view, weather focus view, and planned media placeholder
+- voice refinement: browser compatibility, clearer error states, and a decision on local/backend speech-to-text
 
 Future milestones:
 
-- Voice Interaction
+- Wake Word and Spoken Replies
 - Spotify Integration
 - Calendar Integration
 - Memory Layer

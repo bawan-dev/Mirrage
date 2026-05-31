@@ -54,6 +54,25 @@ Verify: http://127.0.0.1:5173 shows the dashboard. The System and Voice cards sh
 read live values from the backend; if the backend is not running they show
 "Backend unavailable".
 
+## Browser voice setup
+
+Voice input is push-to-talk inside the Assistant focus view.
+
+1. Open http://127.0.0.1:5173.
+2. Open the Assistant focus view.
+3. Press `Push to talk`.
+4. Allow microphone permission when the browser asks.
+5. Speak a short request.
+
+Expected result:
+
+- the transcript appears in the assistant view
+- the transcript is sent to the existing assistant endpoint
+- the assistant reply appears in the message thread
+
+This works best in Chrome or Edge because the current foundation uses browser
+speech recognition. There is no wake word yet.
+
 ## Configuration
 
 Copy the example environment file and adjust as needed:

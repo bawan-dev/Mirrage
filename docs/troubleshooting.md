@@ -76,3 +76,29 @@ through the backend and AI service layer.
 
 Use `MIRRAGE_AI_PROVIDER=ollama` for a local Ollama model or
 `MIRRAGE_AI_PROVIDER=openai` for an OpenAI-compatible API provider.
+
+## Push to talk says speech recognition is unsupported
+
+The current voice foundation uses browser speech recognition. Use Chrome or Edge
+for the first version. Some browsers do not expose the Web Speech API.
+
+Typed assistant input still works when speech recognition is unavailable.
+
+## Microphone permission is blocked
+
+The browser needs permission before push-to-talk can listen.
+
+- Open the site settings for `http://127.0.0.1:5173`.
+- Allow microphone access.
+- Refresh the page.
+- Open the Assistant focus view and press `Push to talk` again.
+
+If Windows blocks microphone access globally, enable microphone permission in
+Windows privacy settings and restart the browser.
+
+## Voice hears nothing
+
+- Confirm the correct microphone is selected in the browser or Windows.
+- Speak after pressing `Push to talk`.
+- Try a short phrase first.
+- Check that no other app is holding exclusive microphone access.

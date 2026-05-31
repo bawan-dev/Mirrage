@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 import {
   getHealthStatus,
@@ -26,6 +26,43 @@ interface AssistantMessage {
   role: 'user' | 'assistant';
   text: string;
   meta?: string;
+}
+
+interface BrowserSpeechRecognitionAlternative {
+  transcript: string;
+}
+
+interface BrowserSpeechRecognitionResult {
+  isFinal: boolean;
+  [index: number]: BrowserSpeechRecognitionAlternative | undefined;
+}
+
+interface BrowserSpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: BrowserSpeechRecognitionResult | undefined;
+  };
+}
+
+interface BrowserSpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface BrowserSpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onend: (() => void) | null;
+  onerror: ((event: BrowserSpeechRecognitionErrorEvent) => void) | null;
+  onresult: ((event: BrowserSpeechRecognitionEvent) => void) | null;
+  abort: () => void;
+  start: () => void;
+  stop: () => void;
+}
+
+interface BrowserSpeechRecognitionConstructor {
+  new (): BrowserSpeechRecognition;
 }
 
 const focusButtonBase =
@@ -74,8 +111,38 @@ function formatUpdated(value: string | null | undefined): string {
   }).format(parsed);
 }
 
+function getSpeechRecognitionConstructor(): BrowserSpeechRecognitionConstructor | null {
+  const speechWindow = window as Window & {
+    SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+  };
+
+  return (
+    speechWindow.SpeechRecognition ??
+    speechWindow.webkitSpeechRecognition ??
+    null
+  );
+}
+
+function getVoiceErrorMessage(error: string): string {
+  if (error === 'not-allowed' || error === 'service-not-allowed') {
+    return 'Microphone permission was blocked.';
+  }
+
+  if (error === 'no-speech') {
+    return 'No speech was detected.';
+  }
+
+  if (error === 'audio-capture') {
+    return 'No microphone was found.';
+  }
+
+  return `Speech recognition failed: ${error}.`;
+}
+
 export default function App() {
   const [activeView, setActiveView] = useState<FocusView>('home');
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
@@ -91,6 +158,12 @@ export default function App() {
   const [assistantProvider, setAssistantProvider] = useState<string | null>(
     null,
   );
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceInterimTranscript, setVoiceInterimTranscript] = useState('');
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [microphoneReady, setMicrophoneReady] = useState(false);
   const [assistantMessages, setAssistantMessages] = useState<
     AssistantMessage[]
   >([
@@ -107,6 +180,14 @@ export default function App() {
     }, 1000);
 
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    setVoiceSupported(getSpeechRecognitionConstructor() !== null);
+
+    return () => {
+      recognitionRef.current?.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -204,15 +285,21 @@ export default function App() {
     return `${weather.condition}. ${weather.location}.`;
   }, [backendState.error, backendState.isLoading, weather]);
 
-  const voiceLabel = voiceStatus?.listening ? 'Listening' : 'Voice planned';
+  const voiceLabel = voiceListening
+    ? 'Listening now'
+    : voiceSupported
+      ? 'Voice ready'
+      : voiceStatus?.listening
+        ? 'Listening'
+        : 'Voice planned';
   const systemLabel = backendState.error
     ? 'System offline'
     : formatStatus(systemStatus?.status);
 
-  async function handleAssistantSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const message = draft.trim();
+  async function sendAssistantRequest(
+    message: string,
+    source: 'typed' | 'voice',
+  ) {
     if (!message || assistantBusy) {
       return;
     }
@@ -221,7 +308,11 @@ export default function App() {
     setAssistantError(null);
     setAssistantMessages((messages) => [
       ...messages,
-      { role: 'user', text: message },
+      {
+        role: 'user',
+        text: message,
+        meta: source === 'voice' ? 'Voice transcript' : undefined,
+      },
     ]);
 
     try {
@@ -251,6 +342,106 @@ export default function App() {
     } finally {
       setAssistantBusy(false);
     }
+  }
+
+  async function handleAssistantSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    await sendAssistantRequest(draft.trim(), 'typed');
+  }
+
+  async function requestMicrophoneAccess() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error('Browser microphone access is unavailable.');
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((track) => track.stop());
+    setMicrophoneReady(true);
+  }
+
+  async function startVoiceCapture() {
+    if (assistantBusy || voiceListening) {
+      return;
+    }
+
+    const SpeechRecognition = getSpeechRecognitionConstructor();
+    if (!SpeechRecognition) {
+      setVoiceError('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    setVoiceError(null);
+    setVoiceTranscript('');
+    setVoiceInterimTranscript('');
+
+    try {
+      await requestMicrophoneAccess();
+
+      let capturedTranscript = '';
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-GB';
+
+      recognition.onresult = (event) => {
+        const finalParts: string[] = [];
+        const interimParts: string[] = [];
+
+        for (let index = 0; index < event.results.length; index += 1) {
+          const result = event.results[index];
+          const transcript = result?.[0]?.transcript.trim();
+
+          if (!result || !transcript) {
+            continue;
+          }
+
+          if (result.isFinal) {
+            finalParts.push(transcript);
+          } else {
+            interimParts.push(transcript);
+          }
+        }
+
+        capturedTranscript = [...finalParts, ...interimParts].join(' ').trim();
+        setVoiceTranscript(finalParts.join(' ').trim() || capturedTranscript);
+        setVoiceInterimTranscript(interimParts.join(' ').trim());
+      };
+
+      recognition.onerror = (event) => {
+        setVoiceError(getVoiceErrorMessage(event.error));
+        setVoiceListening(false);
+      };
+
+      recognition.onend = () => {
+        setVoiceListening(false);
+        recognitionRef.current = null;
+        setVoiceInterimTranscript('');
+
+        if (capturedTranscript) {
+          void sendAssistantRequest(capturedTranscript, 'voice');
+          return;
+        }
+
+        setVoiceError((currentError) => currentError ?? 'No speech was heard.');
+      };
+
+      recognitionRef.current = recognition;
+      setVoiceListening(true);
+      recognition.start();
+    } catch (error) {
+      setVoiceListening(false);
+      recognitionRef.current = null;
+      setVoiceError(
+        error instanceof Error
+          ? error.message
+          : 'Microphone access could not be started.',
+      );
+    }
+  }
+
+  function stopVoiceCapture() {
+    recognitionRef.current?.stop();
   }
 
   function openFocus(view: Exclude<FocusView, 'home'>) {
@@ -308,9 +499,17 @@ export default function App() {
             assistantMessages={assistantMessages}
             assistantProvider={assistantProvider}
             draft={draft}
+            microphoneReady={microphoneReady}
             onClose={closeFocus}
             onDraftChange={setDraft}
+            onStartVoice={startVoiceCapture}
+            onStopVoice={stopVoiceCapture}
             onSubmit={handleAssistantSubmit}
+            voiceError={voiceError}
+            voiceInterimTranscript={voiceInterimTranscript}
+            voiceListening={voiceListening}
+            voiceSupported={voiceSupported}
+            voiceTranscript={voiceTranscript}
           />
         )}
 
@@ -470,9 +669,17 @@ interface AssistantFocusProps {
   assistantMessages: AssistantMessage[];
   assistantProvider: string | null;
   draft: string;
+  microphoneReady: boolean;
   onClose: () => void;
   onDraftChange: (value: string) => void;
+  onStartVoice: () => void;
+  onStopVoice: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  voiceError: string | null;
+  voiceInterimTranscript: string;
+  voiceListening: boolean;
+  voiceSupported: boolean;
+  voiceTranscript: string;
 }
 
 function AssistantFocus({
@@ -481,10 +688,20 @@ function AssistantFocus({
   assistantMessages,
   assistantProvider,
   draft,
+  microphoneReady,
   onClose,
   onDraftChange,
+  onStartVoice,
+  onStopVoice,
   onSubmit,
+  voiceError,
+  voiceInterimTranscript,
+  voiceListening,
+  voiceSupported,
+  voiceTranscript,
 }: AssistantFocusProps) {
+  const voiceButtonLabel = voiceListening ? 'Stop listening' : 'Push to talk';
+
   return (
     <div className={focusPanelClass}>
       <FocusHeader
@@ -523,9 +740,49 @@ function AssistantFocus({
             {assistantProvider ?? 'Waiting for first request'}
           </p>
           <p className={`mt-4 ${mutedClass}`}>
-            Voice is not connected yet. This focus view uses the existing
-            assistant message endpoint.
+            Push-to-talk uses browser speech recognition, then sends the
+            transcript through the existing assistant endpoint.
           </p>
+
+          <div className="mt-5 rounded-lg border border-line bg-panel p-4">
+            <p className={labelClass}>Voice input</p>
+            <p className="mt-2 text-sm text-muted">
+              {voiceSupported
+                ? microphoneReady
+                  ? 'Microphone permission granted for this browser session.'
+                  : 'Browser support detected. Permission is requested on first use.'
+                : 'Speech recognition is not supported in this browser.'}
+            </p>
+            <button
+              type="button"
+              onClick={voiceListening ? onStopVoice : onStartVoice}
+              disabled={!voiceSupported || assistantBusy}
+              className="mt-4 w-full rounded-lg border border-cyan/50 bg-cyan/10 px-4 py-3 font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {voiceButtonLabel}
+            </button>
+          </div>
+
+          {(voiceTranscript || voiceInterimTranscript) && (
+            <div className="mt-4 rounded-lg border border-line bg-page/60 p-4">
+              <p className={labelClass}>Transcript</p>
+              <p className="mt-2 leading-relaxed text-text">
+                {voiceTranscript || voiceInterimTranscript}
+              </p>
+              {voiceInterimTranscript && (
+                <p className="mt-2 text-sm text-muted">
+                  Listening: {voiceInterimTranscript}
+                </p>
+              )}
+            </div>
+          )}
+
+          {voiceError && (
+            <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
+              {voiceError}
+            </p>
+          )}
+
           {assistantError && (
             <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
               {assistantError}
