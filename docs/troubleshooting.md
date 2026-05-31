@@ -102,3 +102,31 @@ Windows privacy settings and restart the browser.
 - Speak after pressing `Push to talk`.
 - Try a short phrase first.
 - Check that no other app is holding exclusive microphone access.
+
+## Assistant replies are not spoken aloud
+
+The first text-to-speech layer uses browser speech synthesis.
+
+- Confirm the Assistant focus view is not muted.
+- Press `Test voice` in the voice output panel.
+- Check the system volume and browser tab volume.
+- Try Chrome or Edge if the browser does not expose speech output.
+- If a voice was selected, switch back to `System default` and test again.
+
+Typed replies should still appear even when speech output is unavailable.
+
+## No voices appear in the voice dropdown
+
+Voice lists come from the browser and operating system.
+
+- Wait a moment after opening the Assistant focus view; some browsers load voices
+  after the page renders.
+- Refresh the page.
+- Try Chrome or Edge.
+- Use `System default` if the browser does not list named voices.
+
+## Mute does not stop sound
+
+- Press `Mute` once and wait a moment.
+- Press `Stop speech` if the current utterance is still playing.
+- Refresh the page if the browser speech engine gets stuck.

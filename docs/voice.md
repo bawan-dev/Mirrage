@@ -1,6 +1,9 @@
 # Voice
 
-Voice support is being added in layers. The current foundation is browser push-to-talk: the assistant focus view can ask for microphone permission, use browser speech recognition, show the transcript, and send that transcript to the existing assistant endpoint.
+Voice support is being added in layers. The current foundation is browser-based:
+the assistant focus view can listen with push-to-talk, show the transcript, send
+that transcript to the existing assistant endpoint, and speak the assistant reply
+back through browser speech synthesis.
 
 ## Current State
 
@@ -16,8 +19,12 @@ What exists now:
 - the transcript is shown before it is sent
 - the transcript is sent to `POST /api/assistant/message`
 - the assistant response appears in the assistant focus view
+- assistant responses can be spoken aloud with browser speech synthesis
+- speech output can be muted
+- the browser voice can be changed from the assistant settings panel
 
-This is still a browser-based foundation. There is no wake word, no always-on listening, and no text-to-speech yet.
+This is still a browser-based foundation. There is no wake word, no always-on
+listening, and no backend/local speech engine yet.
 
 ## Status Fields
 
@@ -56,9 +63,12 @@ Assistant focus view
   -> assistant message endpoint
   -> assistant response
   -> response shown in the assistant focus view
+  -> browser speech synthesis
+  -> spoken assistant reply
 ```
 
-The assistant endpoint did not need to change. Voice sends text into the same route as typed messages.
+The assistant endpoint did not need to change. Voice sends text into the same
+route as typed messages, and browser speech synthesis reads the returned reply.
 
 ## Voice Architecture
 
@@ -72,15 +82,26 @@ Browser microphone
   -> FastAPI backend
   -> AI provider layer
   -> assistant reply
+  -> Browser SpeechSynthesis API
+  -> device speaker
 ```
 
-The backend still exposes voice status separately through `GET /api/voice/status`. That endpoint describes the planned voice service state. Browser push-to-talk lives in the frontend for now because it depends on browser microphone permission and browser speech recognition support.
+The backend still exposes voice status separately through `GET /api/voice/status`.
+That endpoint describes the planned voice service state. Browser voice input and
+output live in the frontend for now because they depend on browser microphone,
+speaker, and speech API support.
 
 ## Browser Support
 
-The first version uses the browser Web Speech API. It works best in Chromium-based browsers such as Chrome and Edge.
+The first version uses browser speech APIs. Speech recognition works best in
+Chromium-based browsers such as Chrome and Edge. Speech synthesis is more widely
+available, but voice lists vary by browser and operating system.
 
 If a browser does not support speech recognition, the assistant focus view keeps typed input available and shows a clear unsupported message.
+
+If a browser does not expose speech synthesis, assistant replies still appear as
+text. The mute and voice controls are disabled when speech output is not
+available.
 
 ## Options To Research Later
 
@@ -90,7 +111,7 @@ These are possible options, not final decisions:
 | --- | --- |
 | Wake word | Local wake word detection |
 | Speech-to-text | Local Whisper-style transcription or browser speech APIs |
-| Text-to-speech | Local TTS engine or browser speech output |
+| Text-to-speech | Browser speech output now, local/backend TTS later if needed |
 | Device input | USB microphone or microphone array |
 | Device output | Small speaker, monitor audio, or external speaker |
 
@@ -102,13 +123,15 @@ The project does not currently include:
 
 - wake word detection
 - always-on listening
-- spoken assistant responses
 - backend speech-to-text
 - local Whisper-style transcription
-- local text-to-speech
+- backend or local text-to-speech
+- hardware speaker routing
 
-Those pieces should come after the push-to-talk flow is stable.
+Those pieces should come after browser voice input and output are stable.
 
 ## Next Step
 
-The next useful voice step is to decide whether speech-to-text should stay browser-based or move into a local backend service.
+The next useful voice step is to test browser compatibility and decide whether
+speech-to-text or text-to-speech should stay browser-based or move into local
+backend services.

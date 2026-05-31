@@ -21,7 +21,7 @@ Planned direction:
 - minimal mirror home screen with clock, weather, and subtle system state
 - focus views for assistant, weather, media, calendar, and home controls
 - local-first AI support where possible
-- push-to-talk voice interaction first, with wake word and spoken replies later
+- push-to-talk voice interaction first, with wake word and backend/local audio later
 - physical mirror build after the display, material, audio, heat, and wiring choices are tested
 
 ## Current Build
@@ -35,6 +35,8 @@ What works now:
 - AI provider boundary with `stub`, `ollama`, and `openai` provider options
 - browser push-to-talk voice input in the assistant focus view
 - speech transcripts sent through the existing assistant endpoint
+- browser text-to-speech for assistant replies
+- mute and browser voice settings in the assistant focus view
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -43,7 +45,7 @@ What is still planned:
 
 - wake word support
 - backend or local speech-to-text option
-- text-to-speech for spoken assistant replies
+- backend or local text-to-speech option
 - Spotify or other music service integration
 - calendar integration
 - memory/context layer
@@ -99,7 +101,7 @@ Hardware notes:
 | Backend | Python, FastAPI |
 | AI | Provider boundary for stub, Ollama, and OpenAI-compatible APIs |
 | Weather | Backend Open-Meteo integration with fallback behavior |
-| Voice | Browser push-to-talk speech recognition foundation |
+| Voice | Browser push-to-talk speech recognition and speech synthesis foundation |
 | Dev setup | Docker Compose |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
 | CI | GitHub Actions |
@@ -188,10 +190,12 @@ Current manual checks:
 - check the weather card either shows live data or a clear fallback
 - open the assistant focus view, press `Push to talk`, allow microphone access, and confirm the transcript appears
 - confirm the voice transcript is sent to `/api/assistant/message` and the assistant reply appears in the assistant view
+- confirm assistant replies are spoken aloud when speech output is not muted
+- confirm `Mute`, `Test voice`, and the browser voice selector work in the assistant focus view
 - send a message to `/api/assistant/message` and confirm the response shape stays stable
 - run `docker compose up --build` when Docker or shared run config changes
 
-Browser voice input works best in Chrome or Edge because it uses the browser speech recognition API. Wake word detection and spoken replies are not built yet.
+Browser voice works best in Chrome or Edge because it uses browser speech recognition and speech synthesis. Wake word detection is not built yet.
 
 CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
@@ -217,17 +221,18 @@ Completed foundation work:
 - live weather endpoint and dashboard card
 - Ambient Interaction Layer with focus views
 - push-to-talk voice foundation
+- browser text-to-speech foundation
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- voice refinement: browser compatibility, clearer error states, and a decision on local/backend speech-to-text
+- voice refinement: browser compatibility, clearer error states, and a decision on local/backend speech services
 
 Future milestones:
 
-- Wake Word and Spoken Replies
+- Wake Word
 - Spotify Integration
 - Calendar Integration
 - Memory Layer

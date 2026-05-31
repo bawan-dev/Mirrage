@@ -253,12 +253,30 @@ Done when:
 The assistant focus view accepts a spoken request through push-to-talk and routes
 the transcript through the existing assistant endpoint.
 
+## Phase 17: Text To Speech
+
+Goal: Mirrage talks back after the assistant route returns a reply.
+
+- [x] Speak assistant responses aloud
+- [x] Use browser speech synthesis first
+- [x] Add a mute control
+- [x] Add a browser voice selector
+- [x] Add a voice settings panel
+- [x] Keep text replies visible even when speech output is unavailable
+- [x] Document setup and troubleshooting
+
+Done when:
+
+The assistant focus view can speak returned assistant replies through the
+browser, and the user can mute or change the browser voice without changing the
+backend.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
 - [ ] Backend or local speech-to-text option
 - [ ] Assistant intent handling
-- [ ] Text-to-speech
+- [ ] Backend or local text-to-speech option
 - [ ] Return-to-home voice flow
 
 ## Future: Spotify Integration
@@ -301,5 +319,5 @@ the transcript through the existing assistant endpoint.
 
 ## Current Focus
 
-Phase 16 is complete enough for now. Current focus is testing and refinement
-before adding wake word or third-party integrations.
+Phase 17 is complete enough for now. Current focus is testing browser voice
+compatibility before adding wake word or third-party integrations.

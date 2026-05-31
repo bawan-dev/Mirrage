@@ -164,6 +164,16 @@ export default function App() {
   const [voiceInterimTranscript, setVoiceInterimTranscript] = useState('');
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [microphoneReady, setMicrophoneReady] = useState(false);
+  const speechRequestRef = useRef(0);
+  const [ttsSupported, setTtsSupported] = useState(false);
+  const [ttsMuted, setTtsMuted] = useState(false);
+  const [ttsSpeaking, setTtsSpeaking] = useState(false);
+  const [ttsVoices, setTtsVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [ttsVoiceURI, setTtsVoiceURI] = useState('');
+  const ttsMutedRef = useRef(false);
+  const ttsSupportedRef = useRef(false);
+  const ttsVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const ttsVoiceURIRef = useRef('');
   const [assistantMessages, setAssistantMessages] = useState<
     AssistantMessage[]
   >([
@@ -187,6 +197,36 @@ export default function App() {
 
     return () => {
       recognitionRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      !('speechSynthesis' in window) ||
+      typeof SpeechSynthesisUtterance === 'undefined'
+    ) {
+      setTtsSupported(false);
+      return;
+    }
+
+    const synthesis = window.speechSynthesis;
+
+    function loadSpeechVoices() {
+      const availableVoices = synthesis.getVoices();
+
+      ttsVoicesRef.current = availableVoices;
+      setTtsVoices(availableVoices);
+    }
+
+    ttsSupportedRef.current = true;
+    setTtsSupported(true);
+    loadSpeechVoices();
+    synthesis.addEventListener('voiceschanged', loadSpeechVoices);
+
+    return () => {
+      speechRequestRef.current += 1;
+      synthesis.cancel();
+      synthesis.removeEventListener('voiceschanged', loadSpeechVoices);
     };
   }, []);
 
@@ -326,6 +366,7 @@ export default function App() {
           meta: `${result.provider}${result.model ? ` / ${result.model}` : ''}`,
         },
       ]);
+      speakText(result.reply);
       setDraft('');
     } catch {
       setAssistantError(
@@ -342,6 +383,75 @@ export default function App() {
     } finally {
       setAssistantBusy(false);
     }
+  }
+
+  function stopSpeech() {
+    speechRequestRef.current += 1;
+    window.speechSynthesis?.cancel();
+    setTtsSpeaking(false);
+  }
+
+  function speakText(text: string) {
+    if (!ttsSupportedRef.current || ttsMutedRef.current || !text.trim()) {
+      return;
+    }
+
+    const synthesis = window.speechSynthesis;
+    const selectedVoice =
+      ttsVoicesRef.current.find(
+        (voice) => voice.voiceURI === ttsVoiceURIRef.current,
+      ) ?? null;
+    const requestId = speechRequestRef.current + 1;
+
+    speechRequestRef.current = requestId;
+    synthesis.cancel();
+    setTtsSpeaking(false);
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.96;
+    utterance.pitch = 1;
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.onstart = () => {
+      if (speechRequestRef.current === requestId) {
+        setTtsSpeaking(true);
+      }
+    };
+
+    utterance.onend = () => {
+      if (speechRequestRef.current === requestId) {
+        setTtsSpeaking(false);
+      }
+    };
+
+    utterance.onerror = () => {
+      if (speechRequestRef.current === requestId) {
+        setTtsSpeaking(false);
+      }
+    };
+
+    synthesis.speak(utterance);
+  }
+
+  function handleTtsMutedChange(nextValue: boolean) {
+    ttsMutedRef.current = nextValue;
+    setTtsMuted(nextValue);
+
+    if (nextValue) {
+      stopSpeech();
+    }
+  }
+
+  function handleTtsVoiceChange(value: string) {
+    ttsVoiceURIRef.current = value;
+    setTtsVoiceURI(value);
+  }
+
+  function testSpeechOutput() {
+    speakText('Mirrage voice output is ready.');
   }
 
   async function handleAssistantSubmit(event: FormEvent<HTMLFormElement>) {
@@ -505,6 +615,15 @@ export default function App() {
             onStartVoice={startVoiceCapture}
             onStopVoice={stopVoiceCapture}
             onSubmit={handleAssistantSubmit}
+            onStopSpeech={stopSpeech}
+            onTestSpeech={testSpeechOutput}
+            onTtsMutedChange={handleTtsMutedChange}
+            onTtsVoiceChange={handleTtsVoiceChange}
+            ttsMuted={ttsMuted}
+            ttsSpeaking={ttsSpeaking}
+            ttsSupported={ttsSupported}
+            ttsVoiceURI={ttsVoiceURI}
+            ttsVoices={ttsVoices}
             voiceError={voiceError}
             voiceInterimTranscript={voiceInterimTranscript}
             voiceListening={voiceListening}
@@ -582,7 +701,7 @@ function HomeState({
             Ready
           </strong>
           <p className={`mt-3 ${mutedClass}`}>
-            Open a focused assistant view and send a typed request.
+            Open a focused assistant view and type or speak a request.
           </p>
         </button>
 
@@ -674,7 +793,16 @@ interface AssistantFocusProps {
   onDraftChange: (value: string) => void;
   onStartVoice: () => void;
   onStopVoice: () => void;
+  onStopSpeech: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onTestSpeech: () => void;
+  onTtsMutedChange: (value: boolean) => void;
+  onTtsVoiceChange: (value: string) => void;
+  ttsMuted: boolean;
+  ttsSpeaking: boolean;
+  ttsSupported: boolean;
+  ttsVoiceURI: string;
+  ttsVoices: SpeechSynthesisVoice[];
   voiceError: string | null;
   voiceInterimTranscript: string;
   voiceListening: boolean;
@@ -693,7 +821,16 @@ function AssistantFocus({
   onDraftChange,
   onStartVoice,
   onStopVoice,
+  onStopSpeech,
   onSubmit,
+  onTestSpeech,
+  onTtsMutedChange,
+  onTtsVoiceChange,
+  ttsMuted,
+  ttsSpeaking,
+  ttsSupported,
+  ttsVoiceURI,
+  ttsVoices,
   voiceError,
   voiceInterimTranscript,
   voiceListening,
@@ -701,6 +838,13 @@ function AssistantFocus({
   voiceTranscript,
 }: AssistantFocusProps) {
   const voiceButtonLabel = voiceListening ? 'Stop listening' : 'Push to talk';
+  const speechStatus = !ttsSupported
+    ? 'Speech output is not supported in this browser.'
+    : ttsMuted
+      ? 'Speech output is muted.'
+      : ttsSpeaking
+        ? 'Speaking assistant response.'
+        : 'Assistant replies will be spoken aloud.';
 
   return (
     <div className={focusPanelClass}>
@@ -782,6 +926,59 @@ function AssistantFocus({
               {voiceError}
             </p>
           )}
+
+          <div className="mt-5 rounded-lg border border-line bg-panel p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className={labelClass}>Voice output</p>
+                <p className="mt-2 text-sm text-muted">{speechStatus}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onTtsMutedChange(!ttsMuted)}
+                disabled={!ttsSupported}
+                className="shrink-0 rounded-lg border border-line bg-page/70 px-3 py-2 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {ttsMuted ? 'Unmute' : 'Mute'}
+              </button>
+            </div>
+
+            <label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-cyan">
+              Voice
+              <select
+                value={ttsVoiceURI}
+                onChange={(event) => onTtsVoiceChange(event.target.value)}
+                disabled={!ttsSupported || ttsVoices.length === 0}
+                className="mt-2 w-full rounded-lg border border-line bg-page/70 px-3 py-3 text-sm normal-case tracking-normal text-text outline-none transition focus:border-cyan disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">System default</option>
+                {ttsVoices.map((voice) => (
+                  <option value={voice.voiceURI} key={voice.voiceURI}>
+                    {voice.name} ({voice.lang})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={onTestSpeech}
+                disabled={!ttsSupported || ttsMuted}
+                className="rounded-lg border border-cyan/50 bg-cyan/10 px-4 py-3 text-sm font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Test voice
+              </button>
+              <button
+                type="button"
+                onClick={onStopSpeech}
+                disabled={!ttsSupported || !ttsSpeaking}
+                className="rounded-lg border border-line bg-page/70 px-4 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Stop speech
+              </button>
+            </div>
+          </div>
 
           {assistantError && (
             <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">

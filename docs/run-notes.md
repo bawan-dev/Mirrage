@@ -56,7 +56,8 @@ read live values from the backend; if the backend is not running they show
 
 ## Browser voice setup
 
-Voice input is push-to-talk inside the Assistant focus view.
+Voice input is push-to-talk inside the Assistant focus view. Voice output uses
+browser speech synthesis.
 
 1. Open http://127.0.0.1:5173.
 2. Open the Assistant focus view.
@@ -69,9 +70,26 @@ Expected result:
 - the transcript appears in the assistant view
 - the transcript is sent to the existing assistant endpoint
 - the assistant reply appears in the message thread
+- the assistant reply is spoken aloud unless speech output is muted
 
 This works best in Chrome or Edge because the current foundation uses browser
-speech recognition. There is no wake word yet.
+speech recognition and browser speech synthesis. There is no wake word yet.
+
+## Speech output setup
+
+Inside the Assistant focus view:
+
+1. Use `Mute` to stop assistant replies from speaking aloud.
+2. Use the `Voice` dropdown to choose a browser voice when voices are available.
+3. Use `Test voice` to confirm the selected voice can speak.
+4. Use `Stop speech` if a reply is currently speaking.
+
+Expected result:
+
+- selected voices affect future spoken replies
+- mute stops current speech and keeps future replies quiet
+- typed assistant messages and push-to-talk messages both use the same speech
+  output path
 
 ## Configuration
 
