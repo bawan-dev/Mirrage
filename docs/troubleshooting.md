@@ -68,8 +68,11 @@ docker compose down
 docker compose up --build
 ```
 
-## Assistant always replies "no model is connected yet"
+## Assistant replies with a stub or fallback message
 
-This is expected. The active provider is `stub` until a real provider is wired in
-(see the roadmap). The reply is proof the assistant route works end to end through
-the AI service layer.
+This is expected when `MIRRAGE_AI_PROVIDER=stub`, or when a configured model
+provider is unavailable. The reply is proof the assistant route is still working
+through the backend and AI service layer.
+
+Use `MIRRAGE_AI_PROVIDER=ollama` for a local Ollama model or
+`MIRRAGE_AI_PROVIDER=openai` for an OpenAI-compatible API provider.

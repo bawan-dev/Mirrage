@@ -2,44 +2,58 @@
 
 [![CI](https://github.com/bawan-dev/Mirrage/actions/workflows/ci.yml/badge.svg)](https://github.com/bawan-dev/Mirrage/actions/workflows/ci.yml)
 
-Mirrage is an AI smart mirror project: a wall-mounted mirror display with a clean dashboard, voice interaction, and an assistant layer that can eventually run with local or remote models.
+Mirrage is a privacy-first ambient AI assistant for the home, starting with a smart mirror interface.
 
-The goal is to build the software and hardware plan together: dashboard first, backend next, then AI, voice, and physical mirror integration.
+The project is being built as a serious full-stack system: a mirror-first frontend, a FastAPI backend, provider-based AI routing, live information endpoints, Docker development setup, CI, and hardware planning for a future physical build.
 
-## What This Project Is
+## Product Direction
 
-Mirrage is planned as a smart mirror assistant for everyday use. It should show useful information at a glance, respond to voice commands, and act as a focused AI interface in a physical room.
+The long-term version is not a cluttered dashboard. The goal is an assistant that stays quiet until it is needed:
 
-The long-term version includes:
+```text
+Minimal home state
+  -> focused assistant / weather / media view
+  -> return to home state
+```
 
-- A dark mirror-friendly dashboard
-- Clock, date, weather, and status widgets
-- Voice input and assistant responses
-- Local or remote AI model support
-- Hardware planning for a real mirror build
-- Docker-based development and deployment
+Planned direction:
 
-## Current Status
+- minimal mirror home screen with clock, weather, and subtle system state
+- focus views for assistant, weather, media, calendar, and home controls
+- local-first AI support where possible
+- voice interaction after the UI and backend boundaries are stable
+- physical mirror build after the display, material, audio, heat, and wiring choices are tested
 
-This project is in the foundation stage.
+## Current Build
 
-Right now, the dashboard, backend, and first assistant boundary are in place. Voice is status-only. Hardware planning notes are started, but no physical build exists yet.
+What works now:
 
-Current foundation:
+- React + TypeScript + Tailwind mirror interface
+- FastAPI backend with health, system, voice, weather, and assistant routes
+- dashboard connected to backend status data
+- weather endpoint and card using Open-Meteo with a fallback state
+- AI provider boundary with `stub`, `ollama`, and `openai` provider options
+- Docker Compose for running frontend and backend together
+- backend tests, frontend lint/type/build checks, and GitHub Actions CI
+- hardware planning notes for the first mirror prototype
 
-- `frontend/` for the React dashboard
-- `backend/` for the FastAPI service
-- `ai/` for AI provider routing
-- `docs/` for architecture and planning
-- `hardware/` for the physical mirror build notes
-- `assets/` for screenshots, diagrams, and visual material
-- Docker and environment setup files
+What is still planned:
+
+- real voice pipeline: wake word, speech-to-text, and text-to-speech
+- Spotify or other music service integration
+- calendar integration
+- memory/context layer
+- smart home control
+- physical mirror installation
+- production deployment
+
+The default assistant provider is still `stub`. Real model replies require configuring Ollama or an OpenAI-compatible API provider.
 
 ## Screenshot
 
-![Mirrage dashboard](assets/screenshots/dashboard.png)
+![Mirrage dashboard foundation](assets/screenshots/dashboard.png)
 
-## Planned Architecture
+## Architecture
 
 ![Mirrage architecture](assets/diagrams/architecture.svg)
 
@@ -51,87 +65,46 @@ FastAPI Backend
       |
       +-- AI Service Layer
       |
-      +-- Voice Service
+      +-- Voice Status Layer
       |
-      +-- Hardware Status Layer
+      +-- Hardware Planning Layer
 ```
 
-The system will be built in layers so each part can improve independently. The frontend should not need to know which AI provider is being used. The backend should expose clean status and assistant endpoints. Hardware support should be documented before it is wired into code.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, and external data. AI providers, voice work, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
 
-More detail is tracked in [docs/architecture.md](docs/architecture.md).
+More detail:
 
-The build plan is tracked in [docs/roadmap.md](docs/roadmap.md).
+- [Architecture](docs/architecture.md)
+- [API notes](docs/api.md)
+- [Roadmap](docs/roadmap.md)
+- [Voice plan](docs/voice.md)
+- [Run notes](docs/run-notes.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
-The first backend contract is tracked in [docs/api.md](docs/api.md).
+Hardware notes:
 
-Voice planning is tracked in [docs/voice.md](docs/voice.md).
-
-Quick run steps are in [docs/run-notes.md](docs/run-notes.md), and common setup
-problems are covered in [docs/troubleshooting.md](docs/troubleshooting.md).
+- [Build plan](hardware/build-plan.md)
+- [Component tracker](hardware/components.md)
+- [Wiring notes](hardware/wiring-notes.md)
 
 ## Tech Stack
-
-Current stack:
 
 | Area | Tooling |
 | --- | --- |
 | Frontend | React, TypeScript, Tailwind CSS, Vite |
 | Backend | Python, FastAPI |
-| AI | Provider layer: stub, Ollama (local), OpenAI-compatible |
-| Voice | Status layer first, speech pipeline later |
+| AI | Provider boundary for stub, Ollama, and OpenAI-compatible APIs |
+| Weather | Backend Open-Meteo integration with fallback behavior |
+| Voice | Status layer only for now |
 | Dev setup | Docker Compose |
-| Docs | Markdown |
-
-## Build Approach
-
-Mirrage will be built in small daily steps. Each step should have one clear purpose.
-
-Near-term order:
-
-- Keep the dashboard and backend connected
-- Add features in small testable steps
-- Keep planned features clearly marked
-- Add Docker wiring
-- Add hardware build notes
-- Add real voice and AI support only after the boundaries are stable
-
-## Project Structure
-
-```text
-mirrage/
-  frontend/
-  backend/
-  ai/
-  docs/
-  hardware/
-  assets/
-  docker-compose.yml
-  .env.example
-  .gitignore
-  README.md
-```
-
-## What Is Not Built Yet
-
-This project does not currently include:
-
-- A working voice pipeline
-- Real hardware integration
-- A production deployment
-
-The AI assistant works through a pluggable provider layer (`stub` by default, or a
-real Ollama / OpenAI-compatible model via `MIRRAGE_AI_PROVIDER`).
-
-Those pieces will be added deliberately as the project develops.
+| Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
+| CI | GitHub Actions |
 
 ## Local Development
-
-Local workflow:
 
 ### Frontend
 
 ```powershell
-# frontend
 cd frontend
 npm install
 npm run dev
@@ -146,7 +119,6 @@ http://127.0.0.1:5173
 ### Backend
 
 ```powershell
-# backend
 .\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload
@@ -166,10 +138,7 @@ Expected response:
 
 ### Docker
 
-Docker runs the frontend and backend together.
-
 ```powershell
-# docker
 docker compose up --build
 ```
 
@@ -180,11 +149,6 @@ http://127.0.0.1:5173
 http://127.0.0.1:8000/health
 ```
 
-Expected:
-
-- the dashboard loads at `5173`
-- the backend health check returns `{"service":"mirrage-api","status":"online"}`
-
 Stop Docker:
 
 ```powershell
@@ -192,64 +156,74 @@ Ctrl + C
 docker compose down
 ```
 
-## Code Quality
+## Testing
 
-The backend uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
-The frontend uses ESLint and Prettier.
+Current automated checks:
 
 ```powershell
-# backend (from the repo root, with the venv active)
-pip install -r backend/requirements-dev.txt
-ruff check .
-ruff format --check .
-
 # frontend
 cd frontend
 npm run lint
 npm run format:check
+npm run type-check
+npm run build
 ```
 
-`ruff format .` and `npm run format` apply fixes in place.
-
-## Testing
-
-The backend has a pytest suite covering the API endpoints and the AI service layer.
-
 ```powershell
+# backend, from repo root
+.\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements-dev.txt
 pytest
 ```
 
-Every push and pull request runs the full check suite in GitHub Actions
-([.github/workflows/ci.yml](.github/workflows/ci.yml)): Ruff lint and format on the
-backend, pytest, then ESLint, Prettier, type-check, and build on the frontend.
+Current manual checks:
 
-## Roadmap
+- open `http://127.0.0.1:5173` and confirm the mirror UI loads
+- open `http://127.0.0.1:8000/health` and confirm the backend is online
+- check the dashboard system card shows backend status when the API is running
+- check the voice card stays status-only and does not imply microphone support
+- check the weather card either shows live data or a clear fallback
+- send a message to `/api/assistant/message` and confirm the response shape stays stable
+- run `docker compose up --build` when Docker or shared run config changes
 
-- [x] Create repository structure
-- [x] Add starter files for the main system areas
-- [x] Draft the project overview
-- [x] Document the architecture
-- [x] Document the roadmap
-- [x] Document the first API endpoints
-- [x] Review and clean starter files
-- [x] Set up the React + Vite frontend
-- [x] Build the first smart mirror dashboard screen
-- [x] Set up the FastAPI backend
-- [x] Add health and status endpoints
-- [x] Add AI provider routing
-- [x] Add voice service status
-- [x] Add Docker development setup
-- [x] Add hardware planning details
-- [x] Finish project polish (run notes, troubleshooting, current roadmap)
-- [x] Migrate frontend to TypeScript + Tailwind
-- [x] Add linting and formatting
-- [x] Add tests and continuous integration
-- [x] Connect a real AI provider
-- [x] Add live weather data
+CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+## Project Structure
+
+```text
+mirrage/
+  frontend/       mirror interface
+  backend/        FastAPI service
+  ai/             assistant provider layer
+  docs/           architecture, API, roadmap, run notes
+  hardware/       physical build planning
+  assets/         screenshots and diagrams
+```
+
+## Roadmap Snapshot
+
+Completed foundation work:
+
+- frontend dashboard
+- backend API
+- AI provider boundary
+- live weather endpoint and dashboard card
+- Docker development setup
+- tests and CI
+- first hardware planning notes
+
+Next planned milestone:
+
+- Ambient Interaction Layer: minimal home state, focus views, assistant focus view, weather focus view, and planned media placeholder
+
+Future milestones:
+
+- Voice Interaction
+- Spotify Integration
+- Calendar Integration
+- Memory Layer
+- Smart Home Integration
+- Physical Mirror Build
+- Home Installation
 
 The full phase breakdown lives in [docs/roadmap.md](docs/roadmap.md).
-
-## Why Mirrage
-
-Mirrage combines software, AI, interface design, and hardware into one project. The plan is to build it in layers so each part can be understood, tested, and improved without losing track of the whole system.

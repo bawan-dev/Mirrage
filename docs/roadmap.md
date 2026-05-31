@@ -219,13 +219,69 @@ Done when:
 
 The weather card shows real local conditions through the backend.
 
-## Future: Mobile Companion App
+## Phase 15: Ambient Interaction Layer
 
-Goal (planned, from the project overview): a companion mobile app for remote control
-and notifications. Tracked here so the roadmap matches the project vision, but not
-started until the core system is stable.
+Goal: move Mirrage from a dashboard foundation toward an ambient assistant interface.
+
+- [ ] Simplify the home state
+- [ ] Add a focus view state model
+- [ ] Add weather focus view
+- [ ] Add assistant focus view
+- [ ] Add planned media focus view
+- [ ] Add a return-to-home flow
+- [ ] Keep future integrations clearly marked
+
+Done when:
+
+The mirror UI feels like a calm home interface that can expand into focused views
+without pretending future voice, media, or smart home integrations are finished.
+
+## Future: Voice Interaction
+
+- [ ] Wake phrase or button entry point
+- [ ] Speech-to-text
+- [ ] Assistant intent handling
+- [ ] Text-to-speech
+- [ ] Return-to-home voice flow
+
+## Future: Spotify Integration
+
+- [ ] Connect real account authorization
+- [ ] Read current track
+- [ ] Add play, pause, previous, and next actions
+- [ ] Keep a clear fallback when the service is not connected
+
+## Future: Calendar Integration
+
+- [ ] Read upcoming events
+- [ ] Add a calendar focus view
+- [ ] Handle account permissions clearly
+
+## Future: Memory Layer
+
+- [ ] Decide what Mirrage is allowed to remember
+- [ ] Keep memory local-first where possible
+- [ ] Add clear privacy controls before storing personal context
+
+## Future: Smart Home Integration
+
+- [ ] Pick the first home control target
+- [ ] Add backend action boundaries
+- [ ] Add confirmation for risky actions
+
+## Future: Physical Mirror Build
+
+- [ ] Test display brightness through mirror material
+- [ ] Choose final display and mirror material
+- [ ] Test heat and airflow
+- [ ] Build the first frame
+
+## Future: Home Installation
+
+- [ ] Plan wall mounting
+- [ ] Plan cable routing
+- [ ] Test daily reliability
 
 ## Current Focus
 
-All defined phases are complete. The next planned milestone is the Mobile Companion
-App; real voice and hardware integration follow once the core system is stable.
+Current focus is Phase 15: Ambient Interaction Layer.
