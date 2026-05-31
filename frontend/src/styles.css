@@ -49,4 +49,20 @@ body {
       linear-gradient(135deg, rgba(109, 215, 232, 0.16), transparent 48%),
       var(--color-panel-strong);
   }
+
+  .animate-focus-in {
+    animation: focus-in 420ms ease-out both;
+  }
+}
+
+@keyframes focus-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

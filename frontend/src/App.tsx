@@ -8,16 +8,33 @@ import {
   sendAssistantMessage,
 } from './api';
 import type {
+  AssistantReply,
   HealthStatus,
   SystemStatus,
   VoiceStatus,
   WeatherInfo,
 } from './types';
 
+type FocusView = 'home' | 'weather' | 'assistant' | 'media';
+
 interface BackendState {
   error: string | null;
   isLoading: boolean;
 }
+
+interface AssistantMessage {
+  role: 'user' | 'assistant';
+  text: string;
+  meta?: string;
+}
+
+const focusButtonBase =
+  'group rounded-lg border border-line bg-panel p-5 text-left shadow-mirror transition duration-300 hover:-translate-y-1 hover:border-cyan/70 hover:bg-panel-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan';
+const labelClass =
+  'text-[0.72rem] font-bold uppercase tracking-[0.18em] text-cyan';
+const mutedClass = 'text-sm leading-relaxed text-muted';
+const focusPanelClass =
+  'animate-focus-in rounded-xl border border-line bg-panel p-5 shadow-mirror md:p-8';
 
 function formatStatus(value?: string): string {
   if (!value) {
@@ -29,13 +46,36 @@ function formatStatus(value?: string): string {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-const cardBase =
-  'flex min-h-[180px] flex-col justify-between gap-5 rounded-lg border border-line bg-panel p-[22px] shadow-mirror';
-const labelClass = 'text-[0.78rem] font-bold uppercase text-cyan';
-const valueClass = 'block text-[1.75rem] font-bold leading-tight text-text';
-const detailClass = 'leading-snug text-muted';
+function formatTemperature(weather: WeatherInfo | null): string {
+  if (
+    !weather ||
+    weather.temperature_c == null ||
+    weather.status !== 'online'
+  ) {
+    return '-- C';
+  }
+
+  return `${Math.round(weather.temperature_c)} C`;
+}
+
+function formatUpdated(value: string | null | undefined): string {
+  if (!value) {
+    return 'Not updated yet';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(parsed);
+}
 
 export default function App() {
+  const [activeView, setActiveView] = useState<FocusView>('home');
   const [now, setNow] = useState<Date>(() => new Date());
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
@@ -46,9 +86,20 @@ export default function App() {
     isLoading: true,
   });
   const [draft, setDraft] = useState('');
-  const [assistantReply, setAssistantReply] = useState<string | null>(null);
   const [assistantBusy, setAssistantBusy] = useState(false);
   const [assistantError, setAssistantError] = useState<string | null>(null);
+  const [assistantProvider, setAssistantProvider] = useState<string | null>(
+    null,
+  );
+  const [assistantMessages, setAssistantMessages] = useState<
+    AssistantMessage[]
+  >([
+    {
+      role: 'assistant',
+      text: 'Assistant route is ready. Real responses depend on the configured provider.',
+      meta: 'Provider status appears after the first message.',
+    },
+  ]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -56,6 +107,17 @@ export default function App() {
     }, 1000);
 
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setActiveView('home');
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -118,6 +180,35 @@ export default function App() {
     [now],
   );
 
+  const backendLabel = useMemo(() => {
+    if (backendState.isLoading) {
+      return 'Checking backend';
+    }
+
+    if (backendState.error) {
+      return 'Backend offline';
+    }
+
+    return `Backend ${formatStatus(healthStatus?.status)}`;
+  }, [backendState.error, backendState.isLoading, healthStatus]);
+
+  const weatherSummary = useMemo(() => {
+    if (backendState.isLoading) {
+      return 'Reading weather';
+    }
+
+    if (backendState.error || !weather || weather.status !== 'online') {
+      return 'Weather unavailable';
+    }
+
+    return `${weather.condition}. ${weather.location}.`;
+  }, [backendState.error, backendState.isLoading, weather]);
+
+  const voiceLabel = voiceStatus?.listening ? 'Listening' : 'Voice planned';
+  const systemLabel = backendState.error
+    ? 'System offline'
+    : formatStatus(systemStatus?.status);
+
   async function handleAssistantSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -128,192 +219,411 @@ export default function App() {
 
     setAssistantBusy(true);
     setAssistantError(null);
+    setAssistantMessages((messages) => [
+      ...messages,
+      { role: 'user', text: message },
+    ]);
 
     try {
-      const result = await sendAssistantMessage(message);
-      setAssistantReply(result.reply);
+      const result: AssistantReply = await sendAssistantMessage(message);
+      setAssistantProvider(result.provider);
+      setAssistantMessages((messages) => [
+        ...messages,
+        {
+          role: 'assistant',
+          text: result.reply,
+          meta: `${result.provider}${result.model ? ` / ${result.model}` : ''}`,
+        },
+      ]);
       setDraft('');
     } catch {
-      setAssistantError('Assistant unavailable.');
+      setAssistantError(
+        'Assistant unavailable. Check the backend or provider.',
+      );
+      setAssistantMessages((messages) => [
+        ...messages,
+        {
+          role: 'assistant',
+          text: 'Assistant request failed. The UI is still working, but the route or provider did not answer.',
+          meta: 'Fallback state',
+        },
+      ]);
     } finally {
       setAssistantBusy(false);
     }
   }
 
-  const assistantTitle = assistantBusy
-    ? 'Thinking…'
-    : assistantReply
-      ? 'Reply'
-      : 'Standby';
+  function openFocus(view: Exclude<FocusView, 'home'>) {
+    setActiveView(view);
+  }
 
-  const assistantDetail =
-    assistantError ?? assistantReply ?? 'Ask the assistant a question.';
-
-  const weatherTitle = useMemo(() => {
-    if (backendState.isLoading) {
-      return 'Checking';
-    }
-
-    if (backendState.error || weather?.temperature_c == null) {
-      return 'Unavailable';
-    }
-
-    return `${Math.round(weather.temperature_c)}°C`;
-  }, [backendState.error, backendState.isLoading, weather]);
-
-  const weatherDetail = useMemo(() => {
-    if (backendState.isLoading) {
-      return 'Reading local conditions.';
-    }
-
-    if (backendState.error || !weather || weather.status !== 'online') {
-      return 'Weather unavailable.';
-    }
-
-    return `${weather.condition}. ${weather.location}.`;
-  }, [backendState.error, backendState.isLoading, weather]);
-
-  const sessionMessage = useMemo(() => {
-    if (backendState.isLoading) {
-      return 'Dashboard online. Checking backend session.';
-    }
-
-    if (backendState.error) {
-      return 'Dashboard online. Backend unavailable.';
-    }
-
-    return `Dashboard online. Backend ${formatStatus(healthStatus?.status)}.`;
-  }, [backendState.error, backendState.isLoading, healthStatus]);
-
-  const systemTitle = useMemo(() => {
-    if (backendState.isLoading) {
-      return 'Checking';
-    }
-
-    if (backendState.error) {
-      return 'Offline';
-    }
-
-    return formatStatus(systemStatus?.status);
-  }, [backendState.error, backendState.isLoading, systemStatus]);
-
-  const systemDetail = useMemo(() => {
-    if (backendState.isLoading) {
-      return 'Reading backend status.';
-    }
-
-    if (backendState.error) {
-      return 'Backend status unavailable.';
-    }
-
-    return `Backend ${formatStatus(systemStatus?.backend)}. AI ${formatStatus(
-      systemStatus?.ai,
-    )}.`;
-  }, [backendState.error, backendState.isLoading, systemStatus]);
-
-  const voiceTitle = useMemo(() => {
-    if (backendState.isLoading) {
-      return 'Checking';
-    }
-
-    if (backendState.error) {
-      return 'Unknown';
-    }
-
-    return voiceStatus?.listening ? 'Listening' : 'Not listening';
-  }, [backendState.error, backendState.isLoading, voiceStatus]);
-
-  const voiceDetail = useMemo(() => {
-    if (backendState.isLoading) {
-      return 'Reading voice state.';
-    }
-
-    if (backendState.error) {
-      return 'Voice status unavailable.';
-    }
-
-    return `Wake word ${formatStatus(voiceStatus?.wake_word)}.`;
-  }, [backendState.error, backendState.isLoading, voiceStatus]);
+  function closeFocus() {
+    setActiveView('home');
+  }
 
   return (
-    <main className="mx-auto grid min-h-screen w-[min(1120px,100%)] content-start gap-[22px] px-4 py-7 md:content-center md:px-6 md:py-12">
+    <main className="relative mx-auto flex min-h-screen w-[min(1180px,100%)] flex-col justify-center overflow-hidden px-4 py-8 md:px-8">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(109,215,232,0.10),transparent_28%),radial-gradient(circle_at_85%_70%,rgba(122,217,165,0.08),transparent_28%)]" />
+
       <section
-        className="panel-hero rounded-lg border border-line p-6 shadow-mirror md:p-8"
-        aria-labelledby="dashboard-title"
+        className={`transition-all duration-500 ${
+          activeView === 'home'
+            ? 'translate-y-0 opacity-100'
+            : 'pointer-events-none -translate-y-4 opacity-0 blur-sm'
+        }`}
+        aria-hidden={activeView !== 'home'}
       >
-        <p className={labelClass}>Mirrage</p>
-        <h1
-          id="dashboard-title"
-          className="mt-3.5 text-[2rem] font-bold leading-none sm:text-[2.45rem] md:text-[3.6rem]"
-        >
-          Smart Mirror Dashboard
-        </h1>
-        <p className="mt-[18px] max-w-[680px] text-[1.08rem] leading-relaxed text-muted">
-          {sessionMessage}
-        </p>
+        <HomeState
+          backendLabel={backendLabel}
+          currentDate={currentDate}
+          currentTime={currentTime}
+          onOpen={openFocus}
+          systemLabel={systemLabel}
+          voiceLabel={voiceLabel}
+          weather={weather}
+          weatherSummary={weatherSummary}
+        />
       </section>
 
       <section
-        className="grid grid-cols-1 gap-4 md:grid-cols-6"
-        aria-label="Dashboard cards"
+        className={`absolute inset-x-4 top-8 transition-all duration-500 md:inset-x-8 md:top-10 ${
+          activeView === 'home'
+            ? 'pointer-events-none translate-y-8 opacity-0 blur-sm'
+            : 'translate-y-0 opacity-100'
+        }`}
+        aria-hidden={activeView === 'home'}
       >
-        <article className={`${cardBase} panel-time md:col-span-4`}>
-          <span className={labelClass}>Time</span>
-          <strong className="block text-[1.65rem] font-bold leading-none tabular-nums text-text sm:text-[3rem] md:text-[4rem]">
-            {currentTime}
-          </strong>
-          <p className={detailClass}>{currentDate}</p>
-        </article>
+        {activeView === 'weather' && (
+          <WeatherFocus
+            backendState={backendState}
+            onClose={closeFocus}
+            weather={weather}
+          />
+        )}
 
-        <article className={`${cardBase} md:col-span-2`}>
-          <span className={labelClass}>Weather</span>
-          <strong className={`${valueClass} text-amber`}>{weatherTitle}</strong>
-          <p className={detailClass}>{weatherDetail}</p>
-        </article>
+        {activeView === 'assistant' && (
+          <AssistantFocus
+            assistantBusy={assistantBusy}
+            assistantError={assistantError}
+            assistantMessages={assistantMessages}
+            assistantProvider={assistantProvider}
+            draft={draft}
+            onClose={closeFocus}
+            onDraftChange={setDraft}
+            onSubmit={handleAssistantSubmit}
+          />
+        )}
 
-        <article className={`${cardBase} md:col-span-2`}>
-          <span className={labelClass}>Assistant</span>
-          <strong className={`${valueClass} text-green`}>
-            {assistantTitle}
-          </strong>
-          <p className={detailClass}>{assistantDetail}</p>
-          <form onSubmit={handleAssistantSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask Mirrage…"
-              aria-label="Message the assistant"
-              className="min-w-0 flex-1 rounded-md border border-line bg-page/60 px-3 py-2 text-sm text-text outline-none placeholder:text-muted focus:border-cyan"
-            />
-            <button
-              type="submit"
-              disabled={assistantBusy}
-              className="rounded-md border border-line bg-panel-strong px-3 py-2 text-sm font-semibold text-cyan disabled:opacity-50"
-            >
-              Send
-            </button>
-          </form>
-        </article>
-
-        <article className={`${cardBase} md:col-span-2`}>
-          <span className={labelClass}>Voice</span>
-          <strong className={valueClass}>{voiceTitle}</strong>
-          <p className={detailClass}>{voiceDetail}</p>
-        </article>
-
-        <article className={`${cardBase} md:col-span-2`}>
-          <span className={labelClass}>System</span>
-          <strong className={`${valueClass} text-green`}>{systemTitle}</strong>
-          <p className={detailClass}>{systemDetail}</p>
-        </article>
-
-        <article className={`${cardBase} min-h-[140px] md:col-span-6`}>
-          <span className={labelClass}>Hardware</span>
-          <strong className={valueClass}>Planning</strong>
-          <p className={detailClass}>Mirror hardware not connected.</p>
-        </article>
+        {activeView === 'media' && <MediaFocus onClose={closeFocus} />}
       </section>
     </main>
+  );
+}
+
+interface HomeStateProps {
+  backendLabel: string;
+  currentDate: string;
+  currentTime: string;
+  onOpen: (view: Exclude<FocusView, 'home'>) => void;
+  systemLabel: string;
+  voiceLabel: string;
+  weather: WeatherInfo | null;
+  weatherSummary: string;
+}
+
+function HomeState({
+  backendLabel,
+  currentDate,
+  currentTime,
+  onOpen,
+  systemLabel,
+  voiceLabel,
+  weather,
+  weatherSummary,
+}: HomeStateProps) {
+  return (
+    <div className="grid min-h-[82vh] content-between gap-10">
+      <header className="flex items-start justify-between gap-6">
+        <div>
+          <p className={labelClass}>Mirrage</p>
+          <h1 className="mt-4 text-[4.5rem] font-semibold leading-none tracking-normal text-text sm:text-[7rem] md:text-[9rem]">
+            {currentTime}
+          </h1>
+          <p className="mt-4 text-lg text-muted">{currentDate}</p>
+        </div>
+
+        <div className="hidden rounded-full border border-line bg-panel px-4 py-2 text-sm text-muted shadow-mirror md:block">
+          {backendLabel}
+        </div>
+      </header>
+
+      <section
+        className="grid grid-cols-1 gap-4 md:grid-cols-3"
+        aria-label="Ambient focus controls"
+      >
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('weather')}
+        >
+          <span className={labelClass}>Weather</span>
+          <strong className="mt-8 block text-4xl font-semibold text-amber">
+            {formatTemperature(weather)}
+          </strong>
+          <p className={`mt-3 ${mutedClass}`}>{weatherSummary}</p>
+        </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('assistant')}
+        >
+          <span className={labelClass}>Assistant</span>
+          <strong className="mt-8 block text-4xl font-semibold text-green">
+            Ready
+          </strong>
+          <p className={`mt-3 ${mutedClass}`}>
+            Open a focused assistant view and send a typed request.
+          </p>
+        </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('media')}
+        >
+          <span className={labelClass}>Media</span>
+          <strong className="mt-8 block text-4xl font-semibold text-text">
+            Planned
+          </strong>
+          <p className={`mt-3 ${mutedClass}`}>
+            Mock controls only. No Spotify account is connected yet.
+          </p>
+        </button>
+      </section>
+
+      <footer className="grid gap-3 text-sm text-muted md:grid-cols-3">
+        <p>{systemLabel}</p>
+        <p>{voiceLabel}</p>
+        <p>Hardware planning only</p>
+      </footer>
+    </div>
+  );
+}
+
+interface WeatherFocusProps {
+  backendState: BackendState;
+  onClose: () => void;
+  weather: WeatherInfo | null;
+}
+
+function WeatherFocus({ backendState, onClose, weather }: WeatherFocusProps) {
+  const weatherOnline = !backendState.error && weather?.status === 'online';
+
+  return (
+    <div className={focusPanelClass}>
+      <FocusHeader
+        eyebrow="Weather Focus"
+        onClose={onClose}
+        title={weatherOnline ? weather.location : 'Weather unavailable'}
+      />
+
+      <div className="mt-12 grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
+        <div>
+          <p className="text-[5rem] font-semibold leading-none text-amber md:text-[8rem]">
+            {formatTemperature(weather)}
+          </p>
+          <p className="mt-5 text-2xl text-text">
+            {weatherOnline
+              ? weather.condition
+              : 'Weather data is not available right now.'}
+          </p>
+        </div>
+
+        <div className="grid content-end gap-4 rounded-lg border border-line bg-page/50 p-5">
+          <div>
+            <p className={labelClass}>Source</p>
+            <p className="mt-2 text-lg text-text">Open-Meteo via backend</p>
+          </div>
+          <div>
+            <p className={labelClass}>Updated</p>
+            <p className="mt-2 text-lg text-text">
+              {formatUpdated(weather?.updated)}
+            </p>
+          </div>
+          <div>
+            <p className={labelClass}>Fallback</p>
+            <p className={`mt-2 ${mutedClass}`}>
+              If the provider fails, the UI stays readable and reports the
+              missing data.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AssistantFocusProps {
+  assistantBusy: boolean;
+  assistantError: string | null;
+  assistantMessages: AssistantMessage[];
+  assistantProvider: string | null;
+  draft: string;
+  onClose: () => void;
+  onDraftChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}
+
+function AssistantFocus({
+  assistantBusy,
+  assistantError,
+  assistantMessages,
+  assistantProvider,
+  draft,
+  onClose,
+  onDraftChange,
+  onSubmit,
+}: AssistantFocusProps) {
+  return (
+    <div className={focusPanelClass}>
+      <FocusHeader
+        eyebrow="Assistant Focus"
+        onClose={onClose}
+        title="Ask Mirrage"
+      />
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="max-h-[52vh] overflow-y-auto rounded-lg border border-line bg-page/40 p-4">
+          <div className="grid gap-4">
+            {assistantMessages.map((message, index) => (
+              <div
+                className={`max-w-[86%] rounded-lg border border-line p-4 ${
+                  message.role === 'user'
+                    ? 'ml-auto bg-cyan/10'
+                    : 'bg-panel-strong'
+                }`}
+                key={`${message.role}-${index}-${message.text}`}
+              >
+                <p className={labelClass}>
+                  {message.role === 'user' ? 'You' : 'Mirrage'}
+                </p>
+                <p className="mt-2 leading-relaxed text-text">{message.text}</p>
+                {message.meta && (
+                  <p className="mt-3 text-xs text-muted">{message.meta}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <aside className="rounded-lg border border-line bg-page/40 p-5">
+          <p className={labelClass}>Provider</p>
+          <p className="mt-2 text-lg text-text">
+            {assistantProvider ?? 'Waiting for first request'}
+          </p>
+          <p className={`mt-4 ${mutedClass}`}>
+            Voice is not connected yet. This focus view uses the existing
+            assistant message endpoint.
+          </p>
+          {assistantError && (
+            <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
+              {assistantError}
+            </p>
+          )}
+        </aside>
+      </div>
+
+      <form
+        onSubmit={onSubmit}
+        className="mt-6 flex flex-col gap-3 md:flex-row"
+      >
+        <input
+          type="text"
+          value={draft}
+          onChange={(event) => onDraftChange(event.target.value)}
+          placeholder="Type a request for Mirrage"
+          aria-label="Message the assistant"
+          className="min-w-0 flex-1 rounded-lg border border-line bg-page/70 px-4 py-3 text-text outline-none transition placeholder:text-muted focus:border-cyan"
+        />
+        <button
+          type="submit"
+          disabled={assistantBusy}
+          className="rounded-lg border border-cyan/50 bg-cyan/10 px-6 py-3 font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {assistantBusy ? 'Sending...' : 'Send'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+interface MediaFocusProps {
+  onClose: () => void;
+}
+
+function MediaFocus({ onClose }: MediaFocusProps) {
+  return (
+    <div className={focusPanelClass}>
+      <FocusHeader
+        eyebrow="Media Focus"
+        onClose={onClose}
+        title="Music mockup"
+      />
+
+      <div className="mt-10 grid items-center gap-8 md:grid-cols-[320px_1fr]">
+        <div className="aspect-square rounded-xl border border-line bg-[linear-gradient(135deg,rgba(109,215,232,0.24),rgba(122,217,165,0.10),rgba(240,195,106,0.16))] shadow-mirror" />
+
+        <div>
+          <p className={labelClass}>Planned Spotify-style integration</p>
+          <h2 className="mt-4 text-4xl font-semibold text-text md:text-6xl">
+            Late Night Build
+          </h2>
+          <p className="mt-4 text-xl text-muted">Mock Artist</p>
+          <p className={`mt-8 max-w-xl ${mutedClass}`}>
+            This view is only a UI placeholder. No Spotify API, account login,
+            playback, or device control is connected yet.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            {['Previous', 'Play', 'Next'].map((action) => (
+              <button
+                type="button"
+                className="rounded-full border border-line bg-panel-strong px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan"
+                key={action}
+              >
+                {action}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface FocusHeaderProps {
+  eyebrow: string;
+  onClose: () => void;
+  title: string;
+}
+
+function FocusHeader({ eyebrow, onClose, title }: FocusHeaderProps) {
+  return (
+    <header className="flex items-start justify-between gap-4">
+      <div>
+        <p className={labelClass}>{eyebrow}</p>
+        <h1 className="mt-3 text-4xl font-semibold leading-tight text-text md:text-6xl">
+          {title}
+        </h1>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="rounded-full border border-line bg-page/70 px-4 py-2 text-sm font-semibold text-muted transition hover:border-cyan/70 hover:text-cyan"
+      >
+        Close
+      </button>
+    </header>
   );
 }

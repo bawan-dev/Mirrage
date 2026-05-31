@@ -223,13 +223,13 @@ The weather card shows real local conditions through the backend.
 
 Goal: move Mirrage from a dashboard foundation toward an ambient assistant interface.
 
-- [ ] Simplify the home state
-- [ ] Add a focus view state model
-- [ ] Add weather focus view
-- [ ] Add assistant focus view
-- [ ] Add planned media focus view
-- [ ] Add a return-to-home flow
-- [ ] Keep future integrations clearly marked
+- [x] Simplify the home state
+- [x] Add a focus view state model
+- [x] Add weather focus view
+- [x] Add assistant focus view
+- [x] Add planned media focus view
+- [x] Add a return-to-home flow
+- [x] Keep future integrations clearly marked
 
 Done when:
 
@@ -284,4 +284,5 @@ without pretending future voice, media, or smart home integrations are finished.
 
 ## Current Focus
 
-Current focus is Phase 15: Ambient Interaction Layer.
+Phase 15 is complete enough for now. Current focus is testing and UI refinement
+before starting voice or third-party integrations.
