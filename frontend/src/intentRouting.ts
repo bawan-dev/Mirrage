@@ -1,0 +1,111 @@
+export type CommandFocusTarget = 'weather' | 'assistant' | 'media';
+
+export type AssistantIntent = 'open_weather' | 'open_assistant' | 'open_media';
+
+export interface AssistantUiAction {
+  type: 'open_focus_view';
+  target: CommandFocusTarget;
+}
+
+export interface AssistantCommandRoute {
+  action: AssistantUiAction;
+  intent: AssistantIntent;
+  response: string;
+}
+
+const WEATHER_TERMS = [
+  'weather',
+  'forecast',
+  'temperature',
+  'outside',
+  'rain',
+  'raining',
+];
+
+const MEDIA_TERMS = [
+  'music',
+  'song',
+  'songs',
+  'playlist',
+  'playback',
+  'spotify',
+];
+
+const ACTION_TERMS = [
+  'open',
+  'show',
+  'switch to',
+  'go to',
+  'take me to',
+  'bring up',
+];
+
+function normalizeCommand(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function includesAnyTerm(command: string, terms: string[]): boolean {
+  const paddedCommand = ` ${command} `;
+
+  return terms.some((term) => paddedCommand.includes(` ${term} `));
+}
+
+function asksForView(command: string, targetTerms: string[]): boolean {
+  return (
+    includesAnyTerm(command, targetTerms) &&
+    ACTION_TERMS.some((action) => command.includes(action))
+  );
+}
+
+function createRoute(
+  intent: AssistantIntent,
+  target: CommandFocusTarget,
+  response: string,
+): AssistantCommandRoute {
+  return {
+    action: {
+      target,
+      type: 'open_focus_view',
+    },
+    intent,
+    response,
+  };
+}
+
+export function routeAssistantCommand(
+  input: string,
+): AssistantCommandRoute | null {
+  const command = normalizeCommand(input);
+
+  if (!command) {
+    return null;
+  }
+
+  if (
+    includesAnyTerm(command, WEATHER_TERMS) ||
+    asksForView(command, ['weather'])
+  ) {
+    return createRoute('open_weather', 'weather', 'Opening the weather view.');
+  }
+
+  if (
+    includesAnyTerm(command, MEDIA_TERMS) ||
+    asksForView(command, ['media'])
+  ) {
+    return createRoute('open_media', 'media', 'Opening the media view.');
+  }
+
+  if (asksForView(command, ['assistant', 'mirrage'])) {
+    return createRoute(
+      'open_assistant',
+      'assistant',
+      'Opening the assistant view.',
+    );
+  }
+
+  return null;
+}

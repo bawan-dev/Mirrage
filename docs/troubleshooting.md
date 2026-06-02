@@ -130,3 +130,12 @@ Voice lists come from the browser and operating system.
 - Press `Mute` once and wait a moment.
 - Press `Stop speech` if the current utterance is still playing.
 - Refresh the page if the browser speech engine gets stuck.
+
+## A command does not open the expected view
+
+The first command router only handles a small set of local screen commands.
+
+- Try one of the known phrases from [run notes](run-notes.md#command-routing-checks).
+- Confirm you are sending the message from the Assistant focus view.
+- If the message is not recognized, it will go to the normal assistant endpoint.
+- Keep command wording simple for now: weather, music/media, or assistant.

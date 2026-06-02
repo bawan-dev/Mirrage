@@ -7,6 +7,11 @@ import {
   getWeather,
   sendAssistantMessage,
 } from './api';
+import {
+  routeAssistantCommand,
+  type AssistantCommandRoute,
+  type AssistantUiAction,
+} from './intentRouting';
 import type {
   AssistantReply,
   HealthStatus,
@@ -336,11 +341,47 @@ export default function App() {
     ? 'System offline'
     : formatStatus(systemStatus?.status);
 
+  function performUiAction(action: AssistantUiAction) {
+    if (action.type === 'open_focus_view') {
+      setActiveView(action.target);
+    }
+  }
+
+  function handleAssistantCommand(
+    message: string,
+    source: 'typed' | 'voice',
+    command: AssistantCommandRoute,
+  ) {
+    setAssistantError(null);
+    setAssistantMessages((messages) => [
+      ...messages,
+      {
+        role: 'user',
+        text: message,
+        meta: source === 'voice' ? 'Voice transcript' : undefined,
+      },
+      {
+        role: 'assistant',
+        text: command.response,
+        meta: `UI action / ${formatStatus(command.intent)}`,
+      },
+    ]);
+    setDraft('');
+    performUiAction(command.action);
+    speakText(command.response);
+  }
+
   async function sendAssistantRequest(
     message: string,
     source: 'typed' | 'voice',
   ) {
     if (!message || assistantBusy) {
+      return;
+    }
+
+    const command = routeAssistantCommand(message);
+    if (command) {
+      handleAssistantCommand(message, source, command);
       return;
     }
 

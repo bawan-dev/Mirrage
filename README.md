@@ -37,6 +37,7 @@ What works now:
 - speech transcripts sent through the existing assistant endpoint
 - browser text-to-speech for assistant replies
 - mute and browser voice settings in the assistant focus view
+- local command routing for opening weather, media, and assistant focus views
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -82,6 +83,7 @@ More detail:
 
 - [Architecture](docs/architecture.md)
 - [API notes](docs/api.md)
+- [Command routing](docs/command-routing.md)
 - [Roadmap](docs/roadmap.md)
 - [Voice plan](docs/voice.md)
 - [Run notes](docs/run-notes.md)
@@ -102,6 +104,7 @@ Hardware notes:
 | AI | Provider boundary for stub, Ollama, and OpenAI-compatible APIs |
 | Weather | Backend Open-Meteo integration with fallback behavior |
 | Voice | Browser push-to-talk speech recognition and speech synthesis foundation |
+| Commands | Frontend intent routing for local UI actions |
 | Dev setup | Docker Compose |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
 | CI | GitHub Actions |
@@ -192,6 +195,9 @@ Current manual checks:
 - confirm the voice transcript is sent to `/api/assistant/message` and the assistant reply appears in the assistant view
 - confirm assistant replies are spoken aloud when speech output is not muted
 - confirm `Mute`, `Test voice`, and the browser voice selector work in the assistant focus view
+- type `What is the weather?` in the assistant view and confirm Weather focus opens
+- type `Show my music` in the assistant view and confirm Media focus opens
+- type `Open assistant` and confirm Assistant focus opens
 - send a message to `/api/assistant/message` and confirm the response shape stays stable
 - run `docker compose up --build` when Docker or shared run config changes
 
@@ -222,13 +228,14 @@ Completed foundation work:
 - Ambient Interaction Layer with focus views
 - push-to-talk voice foundation
 - browser text-to-speech foundation
+- local command routing for focus views
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- voice refinement: browser compatibility, clearer error states, and a decision on local/backend speech services
+- command refinement: broader intent coverage, safer action boundaries, and voice-driven navigation polish
 
 Future milestones:
 

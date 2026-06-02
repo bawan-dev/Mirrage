@@ -26,6 +26,12 @@ Backend API
 
 The frontend should ask for data. The backend should decide where that data comes from. The AI, voice, and hardware layers should stay behind backend boundaries so they can be replaced or upgraded later.
 
+There is one current frontend-local exception: simple command routing. Mirrage
+can recognize a small set of screen-navigation commands before calling the
+assistant endpoint. Those commands turn into UI actions, such as opening the
+weather, media, or assistant focus view. Normal assistant messages still go to
+the backend.
+
 ## Folder Responsibilities
 
 ### `frontend/`
@@ -37,9 +43,12 @@ Its job:
 - show the mirror interface
 - display time, date, weather, assistant, voice, system, and hardware status
 - call backend endpoints when real data is available
+- route simple screen-navigation commands into UI actions
 - stay focused on presentation and user interaction
 
-The frontend should not directly talk to AI providers, hardware devices, or voice engines.
+The frontend should not directly talk to AI providers or hardware devices.
+Browser voice input/output and simple UI command routing are currently local
+because they depend on browser APIs and screen state.
 
 ### `backend/`
 
@@ -162,18 +171,46 @@ Provider selection is controlled by `MIRRAGE_AI_PROVIDER`. Supported providers a
 failure degrades to a short fallback reply rather than an error page. See
 [../ai/README.md](../ai/README.md) for details.
 
+## Command Routing Boundary
+
+The current command router lives in the frontend and handles only local UI
+navigation. It takes assistant input, checks it against a small set of known
+phrases, and returns an action object.
+
+```text
+assistant input
+  -> intent router
+  -> UI action
+  -> focus view changes
+```
+
+Examples:
+
+| Command | UI action |
+| --- | --- |
+| `What is the weather?` | Open Weather focus view |
+| `Show my music` | Open Media focus view |
+| `Open assistant` | Open Assistant focus view |
+
+If the router does not recognize a command, the message follows the normal
+assistant path through `POST /api/assistant/message`.
+
+This is documented in [command-routing.md](command-routing.md).
+
 ## Voice Boundary
 
-Voice should start as status only.
+Voice is still layered. The backend exposes voice status, while the current
+browser handles push-to-talk speech recognition and speech synthesis.
 
-Early voice state can include:
+Current voice state can include:
 
 - whether the system is listening
 - whether wake word detection is configured
 - whether speech-to-text is configured
 - whether text-to-speech is configured
 
-Actual microphone handling should come later, after the frontend and backend are stable.
+Wake word detection, backend speech-to-text, and backend text-to-speech should
+come later after browser voice behavior is stable.
 
 The current voice plan is tracked in [voice.md](voice.md).
 
@@ -196,7 +233,7 @@ To keep the project clean, the first stages should avoid:
 
 - direct frontend calls to AI providers
 - hardware code before hardware decisions are documented
-- voice pipeline work before basic backend endpoints exist
+- backend voice pipeline work before browser voice behavior is stable
 - large abstractions before the project needs them
 - treating planned features as finished features
 

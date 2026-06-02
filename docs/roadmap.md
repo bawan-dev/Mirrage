@@ -271,6 +271,24 @@ The assistant focus view can speak returned assistant replies through the
 browser, and the user can mute or change the browser voice without changing the
 backend.
 
+## Phase 18: Command Routing
+
+Goal: let simple assistant commands change the mirror view.
+
+- [x] Add a frontend intent routing layer
+- [x] Add a UI action object for focus view changes
+- [x] Route weather commands to the Weather focus view
+- [x] Route music/media commands to the Media focus view
+- [x] Route assistant commands to the Assistant focus view
+- [x] Add assistant action responses for routed commands
+- [x] Keep normal assistant messages going to the backend endpoint
+- [x] Document the command routing architecture
+
+Done when:
+
+Typing or speaking a known command can open the correct focus view, while
+unknown messages still use the existing assistant route.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
@@ -319,5 +337,6 @@ backend.
 
 ## Current Focus
 
-Phase 17 is complete enough for now. Current focus is testing browser voice
-compatibility before adding wake word or third-party integrations.
+Phase 18 is complete enough for now. Current focus is testing command wording,
+voice-driven navigation, and clean action boundaries before adding wake word or
+third-party integrations.

@@ -91,6 +91,21 @@ Expected result:
 - typed assistant messages and push-to-talk messages both use the same speech
   output path
 
+## Command routing checks
+
+The assistant can route a few local screen commands without calling a model.
+
+From the Assistant focus view, type each command:
+
+| Command | Expected result |
+| --- | --- |
+| `What is the weather?` | Weather focus view opens |
+| `Show my music` | Media focus view opens |
+| `Open assistant` | Assistant focus view opens |
+
+The assistant also adds a short action response to the message thread. Commands
+that are not recognized still go to the backend assistant endpoint.
+
 ## Configuration
 
 Copy the example environment file and adjust as needed:
