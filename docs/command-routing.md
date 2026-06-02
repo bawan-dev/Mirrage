@@ -14,6 +14,7 @@ Supported examples:
 | --- | --- |
 | `What is the weather?` | Opens the Weather focus view |
 | `Show my music` | Opens the Media focus view |
+| `What is on my calendar today?` | Opens the Calendar focus view and summarizes today's events |
 | `Open assistant` | Opens the Assistant focus view |
 
 If a message is not recognized as a UI command, it still goes to the existing
@@ -52,6 +53,11 @@ Supported targets:
 - `weather`
 - `media`
 - `assistant`
+- `calendar`
+
+Most commands return a short local response. Calendar has one extra path:
+`What is on my calendar today?` opens the Calendar focus view and fetches today's
+events from the backend Calendar endpoint before answering.
 
 ## Why It Is Local For Now
 
@@ -62,7 +68,7 @@ Later, the same shape can move behind the backend if Mirrage needs:
 
 - richer intent detection
 - smart home actions
-- calendar actions
+- broader calendar actions
 - command permissions
 - confirmations for risky actions
 

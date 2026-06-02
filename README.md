@@ -29,7 +29,7 @@ Planned direction:
 What works now:
 
 - React + TypeScript + Tailwind mirror interface
-- FastAPI backend with health, system, voice, weather, and assistant routes
+- FastAPI backend with health, system, voice, weather, assistant, Spotify, and Calendar routes
 - dashboard connected to backend status data
 - weather endpoint and card using Open-Meteo with a fallback state
 - AI provider boundary with `stub`, `ollama`, and `openai` provider options
@@ -37,8 +37,9 @@ What works now:
 - speech transcripts sent through the existing assistant endpoint
 - browser text-to-speech for assistant replies
 - mute and browser voice settings in the assistant focus view
-- local command routing for opening weather, media, and assistant focus views
+- local command routing for opening weather, media, assistant, and calendar focus views
 - Spotify OAuth, currently playing, album artwork, and playback controls
+- Google Calendar OAuth, today's schedule, upcoming events, and calendar assistant command
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -49,7 +50,7 @@ What is still planned:
 - backend or local speech-to-text option
 - backend or local text-to-speech option
 - Spotify persistence, device picker, and voice playback commands
-- calendar integration
+- Calendar token persistence and richer schedule actions
 - memory/context layer
 - smart home control
 - physical mirror installation
@@ -73,6 +74,10 @@ FastAPI Backend
       |
       +-- AI Service Layer
       |
+      +-- Calendar Integration
+      |
+      +-- Spotify Integration
+      |
       +-- Voice Input Layer
       |
       +-- Hardware Planning Layer
@@ -84,6 +89,7 @@ More detail:
 
 - [Architecture](docs/architecture.md)
 - [API notes](docs/api.md)
+- [Calendar setup](docs/calendar.md)
 - [Command routing](docs/command-routing.md)
 - [Roadmap](docs/roadmap.md)
 - [Spotify setup](docs/spotify.md)
@@ -106,6 +112,7 @@ Hardware notes:
 | AI | Provider boundary for stub, Ollama, and OpenAI-compatible APIs |
 | Weather | Backend Open-Meteo integration with fallback behavior |
 | Music | Spotify OAuth and Web API through backend endpoints |
+| Calendar | Google Calendar OAuth and read-only events through backend endpoints |
 | Voice | Browser push-to-talk speech recognition and speech synthesis foundation |
 | Commands | Frontend intent routing for local UI actions |
 | Dev setup | Docker Compose |
@@ -200,9 +207,11 @@ Current manual checks:
 - confirm `Mute`, `Test voice`, and the browser voice selector work in the assistant focus view
 - type `What is the weather?` in the assistant view and confirm Weather focus opens
 - type `Show my music` in the assistant view and confirm Media focus opens
+- type `What is on my calendar today?` and confirm Calendar focus opens with a schedule response
 - type `Open assistant` and confirm Assistant focus opens
 - configure Spotify credentials, connect through the Media view, and confirm playback state loads
 - test Spotify play/pause/next/previous with an active Spotify device
+- configure Google Calendar credentials, connect through the Calendar view, and confirm today's events load
 - send a message to `/api/assistant/message` and confirm the response shape stays stable
 - run `docker compose up --build` when Docker or shared run config changes
 
@@ -211,6 +220,9 @@ Browser voice works best in Chrome or Edge because it uses browser speech recogn
 Spotify playback controls require a connected Spotify account and an active Spotify
 device. The first token store is in backend memory, so reconnect after backend
 restart.
+
+Google Calendar uses a read-only events scope. The first token store is also in
+backend memory, so reconnect after backend restart.
 
 CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
@@ -239,19 +251,20 @@ Completed foundation work:
 - browser text-to-speech foundation
 - local command routing for focus views
 - Spotify media integration
+- Google Calendar daily schedule integration
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- Spotify refinement: token persistence, device picker, and voice playback commands
+- Calendar refinement: token persistence, event detail polish, and broader schedule commands
 
 Future milestones:
 
 - Wake Word
 - Spotify Refinement
-- Calendar Integration
+- Calendar Refinement
 - Memory Layer
 - Smart Home Integration
 - Physical Mirror Build

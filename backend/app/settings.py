@@ -22,6 +22,15 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8000/api/integrations/spotify/callback"
     )
 
+    # Google Calendar OAuth / API configuration.
+    google_calendar_client_id: str | None = None
+    google_calendar_client_secret: str | None = None
+    google_calendar_redirect_uri: str = (
+        "http://127.0.0.1:8000/api/integrations/calendar/callback"
+    )
+    google_calendar_id: str = "primary"
+    google_calendar_time_zone: str = "Europe/London"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="MIRRAGE_",

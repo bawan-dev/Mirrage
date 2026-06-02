@@ -307,6 +307,24 @@ Done when:
 The Media focus view can connect a Spotify account, show current playback, show
 album artwork, and control playback through Mirrage backend endpoints.
 
+## Phase 20: Calendar Integration
+
+Goal: make Mirrage useful as a daily schedule assistant.
+
+- [x] Add Google Calendar OAuth through the backend
+- [x] Add a Calendar service layer
+- [x] Add today's schedule endpoint
+- [x] Add upcoming events endpoint
+- [x] Add Calendar focus view
+- [x] Add assistant command for `What is on my calendar today?`
+- [x] Keep Google API calls isolated in the backend service layer
+- [x] Document setup, scope, and limitations
+
+Done when:
+
+The Calendar focus view can connect a Google account, show today's events, show
+upcoming events, and the assistant can answer what is on the calendar today.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
@@ -322,10 +340,12 @@ album artwork, and control playback through Mirrage backend endpoints.
 - [ ] Add better handling for Premium/device errors
 - [ ] Add voice commands for playback controls
 
-## Future: Calendar Integration
+## Future: Calendar Refinement
 
-- [ ] Read upcoming events
-- [ ] Add a calendar focus view
+- [ ] Persist Calendar token securely across backend restarts
+- [ ] Add event detail view
+- [ ] Add tomorrow and week schedule commands
+- [ ] Add create/update event support behind confirmations
 - [ ] Handle account permissions clearly
 
 ## Future: Memory Layer
@@ -355,6 +375,6 @@ album artwork, and control playback through Mirrage backend endpoints.
 
 ## Current Focus
 
-Phase 19 is complete enough for now. Current focus is testing Spotify OAuth and
-device behavior before adding persistence, device selection, or voice playback
-commands.
+Phase 20 is complete enough for now. Current focus is testing Google Calendar
+OAuth and daily schedule behavior before adding token persistence, event editing,
+or broader schedule commands.

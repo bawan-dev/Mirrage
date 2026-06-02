@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 import {
+  getCalendarLoginUrl,
+  getCalendarStatus,
+  getCalendarToday,
+  getCalendarUpcoming,
   getHealthStatus,
   getSpotifyLoginUrl,
   getSpotifyPlayback,
@@ -18,6 +22,9 @@ import {
 } from './intentRouting';
 import type {
   AssistantReply,
+  CalendarEvent,
+  CalendarSchedule,
+  CalendarStatus,
   HealthStatus,
   SpotifyPlayback,
   SpotifyStatus,
@@ -26,7 +33,7 @@ import type {
   WeatherInfo,
 } from './types';
 
-type FocusView = 'home' | 'weather' | 'assistant' | 'media';
+type FocusView = 'home' | 'weather' | 'assistant' | 'media' | 'calendar';
 
 interface BackendState {
   error: string | null;
@@ -35,6 +42,11 @@ interface BackendState {
 
 interface SpotifyUiState {
   actionMessage: string | null;
+  error: string | null;
+  isLoading: boolean;
+}
+
+interface CalendarUiState {
   error: string | null;
   isLoading: boolean;
 }
@@ -140,6 +152,75 @@ function formatDuration(milliseconds: number | null | undefined): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
+function formatCalendarEventTime(event: CalendarEvent): string {
+  if (event.is_all_day) {
+    return 'All day';
+  }
+
+  const parsed = new Date(event.start);
+  if (Number.isNaN(parsed.getTime())) {
+    return event.start;
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(parsed);
+}
+
+function formatCalendarEventDateTime(event: CalendarEvent): string {
+  if (event.is_all_day) {
+    const parsed = new Date(`${event.start}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      return event.start;
+    }
+
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+    }).format(parsed);
+  }
+
+  const parsed = new Date(event.start);
+  if (Number.isNaN(parsed.getTime())) {
+    return event.start;
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+  }).format(parsed);
+}
+
+function summarizeCalendarToday(
+  schedule: CalendarSchedule,
+  status: CalendarStatus | null,
+): string {
+  if (!status?.configured || schedule.status === 'not_configured') {
+    return 'Google Calendar is not configured yet. Add the Calendar OAuth credentials, then connect it from the calendar view.';
+  }
+
+  if (!schedule.authenticated || schedule.status === 'not_authenticated') {
+    return 'Google Calendar is configured, but it is not connected yet. Open the calendar view and connect your account.';
+  }
+
+  if (schedule.events.length === 0) {
+    return 'You do not have anything on your calendar today.';
+  }
+
+  const visibleEvents = schedule.events
+    .slice(0, 3)
+    .map((event) => `${formatCalendarEventTime(event)} ${event.title}`)
+    .join('; ');
+  const remaining = schedule.events.length - 3;
+
+  return `You have ${schedule.events.length} event${
+    schedule.events.length === 1 ? '' : 's'
+  } today: ${visibleEvents}${remaining > 0 ? `; plus ${remaining} more.` : '.'}`;
+}
+
 function getSpeechRecognitionConstructor(): BrowserSpeechRecognitionConstructor | null {
   const speechWindow = window as Window & {
     SpeechRecognition?: BrowserSpeechRecognitionConstructor;
@@ -177,6 +258,14 @@ export default function App() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus | null>(null);
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
+  const [calendarStatus, setCalendarStatus] = useState<CalendarStatus | null>(
+    null,
+  );
+  const [calendarToday, setCalendarToday] = useState<CalendarSchedule | null>(
+    null,
+  );
+  const [calendarUpcoming, setCalendarUpcoming] =
+    useState<CalendarSchedule | null>(null);
   const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatus | null>(
     null,
   );
@@ -188,6 +277,10 @@ export default function App() {
   });
   const [spotifyState, setSpotifyState] = useState<SpotifyUiState>({
     actionMessage: null,
+    error: null,
+    isLoading: true,
+  });
+  const [calendarState, setCalendarState] = useState<CalendarUiState>({
     error: null,
     isLoading: true,
   });
@@ -361,6 +454,47 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadCalendar() {
+      try {
+        const [status, today, upcoming] = await Promise.all([
+          getCalendarStatus(),
+          getCalendarToday(),
+          getCalendarUpcoming(),
+        ]);
+
+        if (!isActive) {
+          return;
+        }
+
+        setCalendarStatus(status);
+        setCalendarToday(today);
+        setCalendarUpcoming(upcoming);
+        setCalendarState({
+          error: null,
+          isLoading: false,
+        });
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setCalendarState({
+          error: 'Calendar API unavailable',
+          isLoading: false,
+        });
+      }
+    }
+
+    loadCalendar();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const currentTime = useMemo(
     () =>
       new Intl.DateTimeFormat('en-GB', {
@@ -405,6 +539,36 @@ export default function App() {
     return `${weather.condition}. ${weather.location}.`;
   }, [backendState.error, backendState.isLoading, weather]);
 
+  const calendarSummary = useMemo(() => {
+    if (calendarState.isLoading) {
+      return 'Checking schedule';
+    }
+
+    if (calendarState.error) {
+      return 'Calendar unavailable';
+    }
+
+    if (!calendarStatus?.configured) {
+      return 'Setup needed';
+    }
+
+    if (!calendarStatus.authenticated) {
+      return 'Connect Google Calendar';
+    }
+
+    const eventCount = calendarToday?.events.length ?? 0;
+    if (eventCount === 0) {
+      return 'No events today';
+    }
+
+    return `${eventCount} event${eventCount === 1 ? '' : 's'} today`;
+  }, [
+    calendarState.error,
+    calendarState.isLoading,
+    calendarStatus,
+    calendarToday,
+  ]);
+
   const voiceLabel = voiceListening
     ? 'Listening now'
     : voiceSupported
@@ -422,12 +586,14 @@ export default function App() {
     }
   }
 
-  function handleAssistantCommand(
+  async function handleAssistantCommand(
     message: string,
     source: 'typed' | 'voice',
     command: AssistantCommandRoute,
   ) {
     setAssistantError(null);
+    setDraft('');
+    performUiAction(command.action);
     setAssistantMessages((messages) => [
       ...messages,
       {
@@ -435,14 +601,66 @@ export default function App() {
         text: message,
         meta: source === 'voice' ? 'Voice transcript' : undefined,
       },
+    ]);
+
+    if (command.intent === 'calendar_today') {
+      setAssistantBusy(true);
+
+      try {
+        const [status, today, upcoming] = await Promise.all([
+          getCalendarStatus(),
+          getCalendarToday(),
+          getCalendarUpcoming(),
+        ]);
+        const response = summarizeCalendarToday(today, status);
+
+        setCalendarStatus(status);
+        setCalendarToday(today);
+        setCalendarUpcoming(upcoming);
+        setCalendarState({
+          error: null,
+          isLoading: false,
+        });
+        setAssistantMessages((messages) => [
+          ...messages,
+          {
+            role: 'assistant',
+            text: response,
+            meta: `UI action / ${formatStatus(command.intent)}`,
+          },
+        ]);
+        speakText(response);
+      } catch {
+        const fallback =
+          'Calendar is unavailable right now. Check the backend and Google Calendar setup.';
+        setCalendarState({
+          error: 'Calendar API unavailable',
+          isLoading: false,
+        });
+        setAssistantMessages((messages) => [
+          ...messages,
+          {
+            role: 'assistant',
+            text: fallback,
+            meta: 'Calendar fallback',
+          },
+        ]);
+        speakText(fallback);
+      } finally {
+        setAssistantBusy(false);
+      }
+
+      return;
+    }
+
+    setAssistantMessages((messages) => [
+      ...messages,
       {
         role: 'assistant',
         text: command.response,
         meta: `UI action / ${formatStatus(command.intent)}`,
       },
     ]);
-    setDraft('');
-    performUiAction(command.action);
     speakText(command.response);
   }
 
@@ -456,7 +674,7 @@ export default function App() {
 
     const command = routeAssistantCommand(message);
     if (command) {
-      handleAssistantCommand(message, source, command);
+      await handleAssistantCommand(message, source, command);
       return;
     }
 
@@ -706,6 +924,33 @@ export default function App() {
     }
   }
 
+  async function refreshCalendar() {
+    setCalendarState({
+      error: null,
+      isLoading: true,
+    });
+
+    try {
+      const [status, today, upcoming] = await Promise.all([
+        getCalendarStatus(),
+        getCalendarToday(),
+        getCalendarUpcoming(),
+      ]);
+      setCalendarStatus(status);
+      setCalendarToday(today);
+      setCalendarUpcoming(upcoming);
+      setCalendarState({
+        error: null,
+        isLoading: false,
+      });
+    } catch {
+      setCalendarState({
+        error: 'Calendar API unavailable',
+        isLoading: false,
+      });
+    }
+  }
+
   async function handleSpotifyAction(
     action: 'play' | 'pause' | 'next' | 'previous',
   ) {
@@ -748,6 +993,7 @@ export default function App() {
       >
         <HomeState
           backendLabel={backendLabel}
+          calendarSummary={calendarSummary}
           currentDate={currentDate}
           currentTime={currentTime}
           onOpen={openFocus}
@@ -815,6 +1061,18 @@ export default function App() {
             spotifyStatus={spotifyStatus}
           />
         )}
+
+        {activeView === 'calendar' && (
+          <CalendarFocus
+            calendarState={calendarState}
+            calendarStatus={calendarStatus}
+            loginUrl={getCalendarLoginUrl()}
+            onClose={closeFocus}
+            onRefresh={() => void refreshCalendar()}
+            today={calendarToday}
+            upcoming={calendarUpcoming}
+          />
+        )}
       </section>
     </main>
   );
@@ -822,6 +1080,7 @@ export default function App() {
 
 interface HomeStateProps {
   backendLabel: string;
+  calendarSummary: string;
   currentDate: string;
   currentTime: string;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
@@ -833,6 +1092,7 @@ interface HomeStateProps {
 
 function HomeState({
   backendLabel,
+  calendarSummary,
   currentDate,
   currentTime,
   onOpen,
@@ -858,7 +1118,7 @@ function HomeState({
       </header>
 
       <section
-        className="grid grid-cols-1 gap-4 md:grid-cols-3"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
         aria-label="Ambient focus controls"
       >
         <button
@@ -899,6 +1159,18 @@ function HomeState({
           <p className={`mt-3 ${mutedClass}`}>
             Connect an account to show playback and mirror controls.
           </p>
+        </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('calendar')}
+        >
+          <span className={labelClass}>Calendar</span>
+          <strong className="mt-8 block text-4xl font-semibold text-cyan">
+            Today
+          </strong>
+          <p className={`mt-3 ${mutedClass}`}>{calendarSummary}</p>
         </button>
       </section>
 
@@ -960,6 +1232,176 @@ function WeatherFocus({ backendState, onClose, weather }: WeatherFocusProps) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface CalendarFocusProps {
+  calendarState: CalendarUiState;
+  calendarStatus: CalendarStatus | null;
+  loginUrl: string;
+  onClose: () => void;
+  onRefresh: () => void;
+  today: CalendarSchedule | null;
+  upcoming: CalendarSchedule | null;
+}
+
+function CalendarFocus({
+  calendarState,
+  calendarStatus,
+  loginUrl,
+  onClose,
+  onRefresh,
+  today,
+  upcoming,
+}: CalendarFocusProps) {
+  const isConfigured = calendarStatus?.configured ?? false;
+  const isAuthenticated = calendarStatus?.authenticated ?? false;
+  const todayEvents = today?.events ?? [];
+  const upcomingEvents = upcoming?.events ?? [];
+  const title = isAuthenticated
+    ? 'Daily schedule'
+    : isConfigured
+      ? 'Connect Calendar'
+      : 'Calendar setup';
+
+  return (
+    <div className={focusPanelClass}>
+      <FocusHeader eyebrow="Calendar Focus" onClose={onClose} title={title} />
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="rounded-lg border border-line bg-page/40 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className={labelClass}>Today</p>
+              <p className="mt-2 text-lg text-muted">
+                {today?.date ?? 'Schedule not loaded'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={calendarState.isLoading}
+              className="rounded-lg border border-line bg-panel-strong px-4 py-2 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {calendarState.isLoading ? 'Refreshing' : 'Refresh'}
+            </button>
+          </div>
+
+          {todayEvents.length > 0 ? (
+            <CalendarEventList events={todayEvents} mode="today" />
+          ) : (
+            <div className="mt-8 rounded-lg border border-line bg-panel p-5">
+              <p className="text-2xl font-semibold text-text">
+                {isAuthenticated ? 'No events today' : 'Calendar not connected'}
+              </p>
+              <p className={`mt-3 ${mutedClass}`}>
+                {isAuthenticated
+                  ? 'Your daily schedule is clear.'
+                  : (today?.message ??
+                    'Connect Google Calendar to show your day here.')}
+              </p>
+            </div>
+          )}
+        </section>
+
+        <aside className="grid gap-5">
+          <div className="rounded-lg border border-line bg-page/40 p-5">
+            <p className={labelClass}>Connection</p>
+            <p className="mt-3 text-lg text-text">
+              {calendarStatus?.message ?? 'Checking Google Calendar.'}
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Calendar: {calendarStatus?.calendar_id ?? 'primary'}
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              {isConfigured && !isAuthenticated && (
+                <a
+                  href={loginUrl}
+                  className="rounded-lg border border-green/50 bg-green/10 px-4 py-3 text-sm font-semibold text-green transition hover:bg-green/15"
+                >
+                  Connect Google Calendar
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={onRefresh}
+                disabled={calendarState.isLoading}
+                className="rounded-lg border border-line bg-panel-strong px-4 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Check status
+              </button>
+            </div>
+
+            {calendarState.error && (
+              <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
+                {calendarState.error}
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-line bg-page/40 p-5">
+            <p className={labelClass}>Upcoming</p>
+            <p className="mt-2 text-sm text-muted">
+              {upcoming?.message ?? 'Next events appear after connection.'}
+            </p>
+
+            {upcomingEvents.length > 0 && (
+              <CalendarEventList
+                events={upcomingEvents.slice(0, 5)}
+                mode="upcoming"
+              />
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function CalendarEventList({
+  events,
+  mode,
+}: {
+  events: CalendarEvent[];
+  mode: 'today' | 'upcoming';
+}) {
+  return (
+    <div className="mt-6 grid gap-3">
+      {events.map((event) => (
+        <article
+          className="rounded-lg border border-line bg-panel p-4"
+          key={`${event.id}-${event.start}`}
+        >
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className={labelClass}>
+                {mode === 'today'
+                  ? formatCalendarEventTime(event)
+                  : formatCalendarEventDateTime(event)}
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-text">
+                {event.title}
+              </h2>
+              {event.location && (
+                <p className="mt-2 text-sm text-muted">{event.location}</p>
+              )}
+            </div>
+
+            {event.html_link && (
+              <a
+                href={event.html_link}
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 rounded-lg border border-line bg-page/70 px-3 py-2 text-sm font-semibold text-muted transition hover:border-cyan/70 hover:text-cyan"
+              >
+                Open
+              </a>
+            )}
+          </div>
+        </article>
+      ))}
     </div>
   );
 }

@@ -157,6 +157,62 @@ The response shape is identical for every provider, so the dashboard never chang
 If a provider fails, the endpoint still returns `200` with a short fallback reply so
 the dashboard stays usable.
 
+## Calendar Integration
+
+Google Calendar is isolated behind backend endpoints. The frontend does not call
+Google directly.
+
+### `GET /api/integrations/calendar/status`
+
+Returns whether Google Calendar credentials are configured and whether the
+backend has an active OAuth token.
+
+### `GET /api/integrations/calendar/login`
+
+Starts Google OAuth by redirecting the browser to Google.
+
+### `GET /api/integrations/calendar/callback`
+
+Receives Google's OAuth callback. On success, the backend stores the token in
+memory and redirects back to the frontend.
+
+### `GET /api/integrations/calendar/events/today`
+
+Returns today's schedule for the configured calendar.
+
+Example response:
+
+```json
+{
+  "status": "ready",
+  "authenticated": true,
+  "date": "2026-06-02",
+  "time_zone": "Europe/London",
+  "events": [
+    {
+      "id": "event-1",
+      "title": "Design review",
+      "start": "2026-06-02T09:30:00+01:00",
+      "end": "2026-06-02T10:00:00+01:00",
+      "is_all_day": false,
+      "location": "Studio",
+      "calendar": "Mirrage",
+      "html_link": "https://calendar.google.com/event?eid=1"
+    }
+  ],
+  "updated": "2026-06-02T12:00:00+00:00",
+  "message": "1 event found."
+}
+```
+
+### `GET /api/integrations/calendar/events/upcoming`
+
+Returns upcoming events. The optional `days` query parameter defaults to `7` and
+is capped by the backend.
+
+Google Calendar uses a read-only events scope for this phase. See
+[calendar.md](calendar.md) for setup.
+
 ## Spotify Integration
 
 Spotify is isolated behind backend endpoints. The frontend does not call Spotify

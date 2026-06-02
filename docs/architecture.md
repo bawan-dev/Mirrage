@@ -19,6 +19,8 @@ Backend API
   |
   +-- AI Service Layer
   |
+  +-- Calendar Integration
+  |
   +-- Spotify Integration
   |
   +-- Voice Service
@@ -31,8 +33,8 @@ The frontend should ask for data. The backend should decide where that data come
 There is one current frontend-local exception: simple command routing. Mirrage
 can recognize a small set of screen-navigation commands before calling the
 assistant endpoint. Those commands turn into UI actions, such as opening the
-weather, media, or assistant focus view. Normal assistant messages still go to
-the backend.
+weather, media, calendar, or assistant focus view. Normal assistant messages
+still go to the backend.
 
 ## Folder Responsibilities
 
@@ -62,6 +64,7 @@ Its job:
 - return health and system status
 - receive assistant messages
 - report voice status
+- handle Google Calendar OAuth and Calendar API calls
 - handle Spotify OAuth and Spotify Web API calls
 - provide clean boundaries for AI, voice, and hardware features
 
@@ -79,6 +82,32 @@ Its job:
 - keep provider details away from the frontend
 
 This lets Mirrage switch model providers without rewriting the dashboard.
+
+## Calendar Boundary
+
+Google Calendar is a backend integration. The frontend only calls Mirrage
+endpoints.
+
+```text
+Calendar focus view
+  -> Mirrage backend Calendar route
+  -> Calendar service
+  -> Google Calendar API
+  -> normalized schedule response
+  -> Calendar focus view
+```
+
+The backend owns:
+
+- OAuth login and callback handling
+- access token refresh
+- today's schedule requests
+- upcoming event requests
+- translating Google event responses into dashboard-friendly JSON
+
+The current token store is in backend memory. That is enough for local,
+single-user development, but a persistent encrypted token store should be added
+before production deployment.
 
 ## Spotify Boundary
 
@@ -173,6 +202,7 @@ Planned initial endpoints:
 | `GET` | `/api/system/status` | Return basic system status |
 | `GET` | `/api/voice/status` | Return voice service status |
 | `POST` | `/api/assistant/message` | Send a message to the assistant layer |
+| `GET` | `/api/integrations/calendar/events/today` | Return today's schedule |
 
 More endpoints can be added later, but the first version should stay focused.
 
@@ -218,6 +248,7 @@ Examples:
 | --- | --- |
 | `What is the weather?` | Open Weather focus view |
 | `Show my music` | Open Media focus view |
+| `What is on my calendar today?` | Open Calendar focus view and summarize today's events |
 | `Open assistant` | Open Assistant focus view |
 
 If the router does not recognize a command, the message follows the normal

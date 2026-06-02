@@ -37,6 +37,36 @@ export interface WeatherInfo {
   updated: string | null;
 }
 
+export interface CalendarStatus {
+  configured: boolean;
+  authenticated: boolean;
+  login_url: string | null;
+  calendar_id: string;
+  scopes: string[];
+  message: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string | null;
+  is_all_day: boolean;
+  location: string | null;
+  calendar: string | null;
+  html_link: string | null;
+}
+
+export interface CalendarSchedule {
+  status: string;
+  authenticated: boolean;
+  date: string;
+  time_zone: string;
+  events: CalendarEvent[];
+  updated: string | null;
+  message: string;
+}
+
 export interface SpotifyStatus {
   configured: boolean;
   authenticated: boolean;

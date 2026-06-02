@@ -1,6 +1,11 @@
-export type CommandFocusTarget = 'weather' | 'assistant' | 'media';
+export type CommandFocusTarget = 'weather' | 'assistant' | 'media' | 'calendar';
 
-export type AssistantIntent = 'open_weather' | 'open_assistant' | 'open_media';
+export type AssistantIntent =
+  | 'open_weather'
+  | 'open_assistant'
+  | 'open_media'
+  | 'open_calendar'
+  | 'calendar_today';
 
 export interface AssistantUiAction {
   type: 'open_focus_view';
@@ -30,6 +35,18 @@ const MEDIA_TERMS = [
   'playback',
   'spotify',
 ];
+
+const CALENDAR_TERMS = [
+  'calendar',
+  'schedule',
+  'events',
+  'event',
+  'meeting',
+  'meetings',
+  'appointments',
+];
+
+const TODAY_TERMS = ['today', 'daily', 'day'];
 
 const ACTION_TERMS = [
   'open',
@@ -97,6 +114,28 @@ export function routeAssistantCommand(
     asksForView(command, ['media'])
   ) {
     return createRoute('open_media', 'media', 'Opening the media view.');
+  }
+
+  if (
+    includesAnyTerm(command, CALENDAR_TERMS) &&
+    includesAnyTerm(command, TODAY_TERMS)
+  ) {
+    return createRoute(
+      'calendar_today',
+      'calendar',
+      "Checking today's calendar.",
+    );
+  }
+
+  if (
+    includesAnyTerm(command, CALENDAR_TERMS) ||
+    asksForView(command, ['calendar', 'schedule'])
+  ) {
+    return createRoute(
+      'open_calendar',
+      'calendar',
+      'Opening the calendar view.',
+    );
   }
 
   if (asksForView(command, ['assistant', 'mirrage'])) {

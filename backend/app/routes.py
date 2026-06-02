@@ -6,12 +6,23 @@ from fastapi.responses import RedirectResponse
 from backend.app.schemas import (
     AssistantMessageRequest,
     AssistantMessageResponse,
+    CalendarScheduleResponse,
+    CalendarStatusResponse,
     SpotifyActionResponse,
     SpotifyPlaybackResponse,
     SpotifyStatusResponse,
     WeatherResponse,
 )
 from backend.app.services.assistant import create_assistant_reply
+from backend.app.services.calendar import (
+    CalendarAuthError,
+    CalendarServiceError,
+    build_calendar_authorization_url,
+    complete_calendar_authorization,
+    get_calendar_status,
+    get_today_schedule,
+    get_upcoming_events,
+)
 from backend.app.services.spotify import (
     SpotifyAuthError,
     SpotifyServiceError,
@@ -65,6 +76,55 @@ def create_assistant_message(
     message: AssistantMessageRequest,
 ) -> AssistantMessageResponse:
     return create_assistant_reply(message)
+
+
+@router.get("/api/integrations/calendar/status")
+def read_calendar_status() -> CalendarStatusResponse:
+    return get_calendar_status()
+
+
+@router.get("/api/integrations/calendar/login")
+def start_calendar_login() -> RedirectResponse:
+    try:
+        return RedirectResponse(build_calendar_authorization_url())
+    except CalendarAuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/api/integrations/calendar/callback")
+def complete_calendar_login(
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+) -> RedirectResponse:
+    if error:
+        return RedirectResponse(f"{settings.frontend_url}?calendar=error")
+
+    if not code or not state:
+        return RedirectResponse(f"{settings.frontend_url}?calendar=missing_callback")
+
+    try:
+        complete_calendar_authorization(code, state)
+    except CalendarServiceError:
+        return RedirectResponse(f"{settings.frontend_url}?calendar=error")
+
+    return RedirectResponse(f"{settings.frontend_url}?calendar=connected")
+
+
+@router.get("/api/integrations/calendar/events/today")
+def read_calendar_today() -> CalendarScheduleResponse:
+    try:
+        return get_today_schedule()
+    except CalendarServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get("/api/integrations/calendar/events/upcoming")
+def read_calendar_upcoming(days: int = 7) -> CalendarScheduleResponse:
+    try:
+        return get_upcoming_events(days)
+    except CalendarServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.get("/api/integrations/spotify/status")

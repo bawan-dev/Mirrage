@@ -1,5 +1,7 @@
 import type {
   AssistantReply,
+  CalendarSchedule,
+  CalendarStatus,
   HealthStatus,
   SpotifyActionResult,
   SpotifyPlayback,
@@ -54,6 +56,24 @@ export function getWeather(): Promise<WeatherInfo> {
 
 export function sendAssistantMessage(message: string): Promise<AssistantReply> {
   return postJson<AssistantReply>('/api/assistant/message', { message });
+}
+
+export function getCalendarStatus(): Promise<CalendarStatus> {
+  return fetchJson<CalendarStatus>('/api/integrations/calendar/status');
+}
+
+export function getCalendarToday(): Promise<CalendarSchedule> {
+  return fetchJson<CalendarSchedule>('/api/integrations/calendar/events/today');
+}
+
+export function getCalendarUpcoming(days = 7): Promise<CalendarSchedule> {
+  return fetchJson<CalendarSchedule>(
+    `/api/integrations/calendar/events/upcoming?days=${days}`,
+  );
+}
+
+export function getCalendarLoginUrl(): string {
+  return `${API_BASE_URL}/api/integrations/calendar/login`;
 }
 
 export function getSpotifyStatus(): Promise<SpotifyStatus> {

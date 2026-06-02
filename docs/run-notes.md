@@ -101,6 +101,7 @@ From the Assistant focus view, type each command:
 | --- | --- |
 | `What is the weather?` | Weather focus view opens |
 | `Show my music` | Media focus view opens |
+| `What is on my calendar today?` | Calendar focus view opens and replies with today's schedule |
 | `Open assistant` | Assistant focus view opens |
 
 The assistant also adds a short action response to the message thread. Commands
@@ -139,6 +140,42 @@ Expected result:
 
 Spotify controls need an active Spotify device. Some player control endpoints
 also require Spotify Premium.
+
+## Google Calendar setup check
+
+Calendar needs Google OAuth credentials before the Calendar focus view can
+connect.
+
+1. Enable Google Calendar API in Google Cloud.
+2. Create an OAuth client ID for a web application.
+3. Add this authorized redirect URI:
+
+```text
+http://127.0.0.1:8000/api/integrations/calendar/callback
+```
+
+4. Add credentials to `.env`:
+
+```powershell
+MIRRAGE_GOOGLE_CALENDAR_CLIENT_ID=your-client-id
+MIRRAGE_GOOGLE_CALENDAR_CLIENT_SECRET=your-client-secret
+MIRRAGE_GOOGLE_CALENDAR_REDIRECT_URI=http://127.0.0.1:8000/api/integrations/calendar/callback
+MIRRAGE_GOOGLE_CALENDAR_ID=primary
+MIRRAGE_GOOGLE_CALENDAR_TIME_ZONE=Europe/London
+MIRRAGE_FRONTEND_URL=http://127.0.0.1:5173
+```
+
+5. Restart the backend.
+6. Open the Calendar focus view.
+7. Click `Connect Google Calendar`.
+8. Approve the Google OAuth request.
+
+Expected result:
+
+- Calendar focus view shows today's events if the account has events today
+- upcoming events appear in the side panel
+- asking `What is on my calendar today?` in the Assistant focus view returns a
+  schedule answer
 
 ## Configuration
 

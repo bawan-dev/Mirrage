@@ -138,7 +138,34 @@ The first command router only handles a small set of local screen commands.
 - Try one of the known phrases from [run notes](run-notes.md#command-routing-checks).
 - Confirm you are sending the message from the Assistant focus view.
 - If the message is not recognized, it will go to the normal assistant endpoint.
-- Keep command wording simple for now: weather, music/media, or assistant.
+- Keep command wording simple for now: weather, music/media, calendar, or
+  assistant.
+
+## Calendar says setup is needed
+
+The backend did not receive Google Calendar credentials.
+
+- Add `MIRRAGE_GOOGLE_CALENDAR_CLIENT_ID` and
+  `MIRRAGE_GOOGLE_CALENDAR_CLIENT_SECRET` to `.env`.
+- Confirm the Google Calendar API is enabled in Google Cloud.
+- Confirm the backend was restarted after editing `.env`.
+- For Docker, confirm the values are available to `docker compose`.
+
+## Calendar OAuth fails or returns to an error state
+
+- Confirm the Google OAuth client has this authorized redirect URI exactly:
+  `http://127.0.0.1:8000/api/integrations/calendar/callback`.
+- Confirm `MIRRAGE_GOOGLE_CALENDAR_REDIRECT_URI` matches that value.
+- Confirm the backend is running at `http://127.0.0.1:8000`.
+- If the backend restarted, connect Google Calendar again because the current
+  token store is in memory.
+
+## Calendar events do not appear
+
+- Confirm the connected Google account has events on the selected calendar.
+- Confirm `MIRRAGE_GOOGLE_CALENDAR_ID` is `primary` or a valid calendar ID.
+- Confirm `MIRRAGE_GOOGLE_CALENDAR_TIME_ZONE` matches the day you expect.
+- Try `Refresh` in the Calendar focus view.
 
 ## Spotify says setup is needed
 

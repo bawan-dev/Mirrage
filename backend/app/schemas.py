@@ -21,6 +21,36 @@ class WeatherResponse(BaseModel):
     updated: str | None
 
 
+class CalendarStatusResponse(BaseModel):
+    configured: bool
+    authenticated: bool
+    login_url: str | None
+    calendar_id: str
+    scopes: list[str]
+    message: str
+
+
+class CalendarEventResponse(BaseModel):
+    id: str
+    title: str
+    start: str
+    end: str | None
+    is_all_day: bool
+    location: str | None
+    calendar: str | None
+    html_link: str | None
+
+
+class CalendarScheduleResponse(BaseModel):
+    status: str
+    authenticated: bool
+    date: str
+    time_zone: str
+    events: list[CalendarEventResponse]
+    updated: str | None
+    message: str
+
+
 class SpotifyStatusResponse(BaseModel):
     configured: bool
     authenticated: bool
