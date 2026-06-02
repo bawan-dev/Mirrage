@@ -2,9 +2,13 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 import {
   getHealthStatus,
+  getSpotifyLoginUrl,
+  getSpotifyPlayback,
+  getSpotifyStatus,
   getSystemStatus,
   getVoiceStatus,
   getWeather,
+  runSpotifyAction,
   sendAssistantMessage,
 } from './api';
 import {
@@ -15,6 +19,8 @@ import {
 import type {
   AssistantReply,
   HealthStatus,
+  SpotifyPlayback,
+  SpotifyStatus,
   SystemStatus,
   VoiceStatus,
   WeatherInfo,
@@ -23,6 +29,12 @@ import type {
 type FocusView = 'home' | 'weather' | 'assistant' | 'media';
 
 interface BackendState {
+  error: string | null;
+  isLoading: boolean;
+}
+
+interface SpotifyUiState {
+  actionMessage: string | null;
   error: string | null;
   isLoading: boolean;
 }
@@ -116,6 +128,18 @@ function formatUpdated(value: string | null | undefined): string {
   }).format(parsed);
 }
 
+function formatDuration(milliseconds: number | null | undefined): string {
+  if (milliseconds == null) {
+    return '--:--';
+  }
+
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 function getSpeechRecognitionConstructor(): BrowserSpeechRecognitionConstructor | null {
   const speechWindow = window as Window & {
     SpeechRecognition?: BrowserSpeechRecognitionConstructor;
@@ -153,7 +177,17 @@ export default function App() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus | null>(null);
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
+  const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatus | null>(
+    null,
+  );
+  const [spotifyPlayback, setSpotifyPlayback] =
+    useState<SpotifyPlayback | null>(null);
   const [backendState, setBackendState] = useState<BackendState>({
+    error: null,
+    isLoading: true,
+  });
+  const [spotifyState, setSpotifyState] = useState<SpotifyUiState>({
+    actionMessage: null,
     error: null,
     isLoading: true,
   });
@@ -280,6 +314,47 @@ export default function App() {
     }
 
     loadBackendStatus();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadSpotify() {
+      try {
+        const [status, playback] = await Promise.all([
+          getSpotifyStatus(),
+          getSpotifyPlayback(),
+        ]);
+
+        if (!isActive) {
+          return;
+        }
+
+        setSpotifyStatus(status);
+        setSpotifyPlayback(playback);
+        setSpotifyState({
+          actionMessage: null,
+          error: null,
+          isLoading: false,
+        });
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setSpotifyState({
+          actionMessage: null,
+          error: 'Spotify API unavailable',
+          isLoading: false,
+        });
+      }
+    }
+
+    loadSpotify();
 
     return () => {
       isActive = false;
@@ -603,6 +678,62 @@ export default function App() {
     setActiveView('home');
   }
 
+  async function refreshSpotify() {
+    setSpotifyState((current) => ({
+      ...current,
+      error: null,
+      isLoading: true,
+    }));
+
+    try {
+      const [status, playback] = await Promise.all([
+        getSpotifyStatus(),
+        getSpotifyPlayback(),
+      ]);
+      setSpotifyStatus(status);
+      setSpotifyPlayback(playback);
+      setSpotifyState((current) => ({
+        ...current,
+        error: null,
+        isLoading: false,
+      }));
+    } catch {
+      setSpotifyState((current) => ({
+        ...current,
+        error: 'Spotify API unavailable',
+        isLoading: false,
+      }));
+    }
+  }
+
+  async function handleSpotifyAction(
+    action: 'play' | 'pause' | 'next' | 'previous',
+  ) {
+    setSpotifyState((current) => ({
+      ...current,
+      actionMessage: null,
+      error: null,
+      isLoading: true,
+    }));
+
+    try {
+      const result = await runSpotifyAction(action);
+      await refreshSpotify();
+      setSpotifyState((current) => ({
+        ...current,
+        actionMessage: result.message,
+        error: null,
+        isLoading: false,
+      }));
+    } catch {
+      setSpotifyState({
+        actionMessage: null,
+        error: 'Spotify control failed. Check account, device, and playback.',
+        isLoading: false,
+      });
+    }
+  }
+
   return (
     <main className="relative mx-auto flex min-h-screen w-[min(1180px,100%)] flex-col justify-center overflow-hidden px-4 py-8 md:px-8">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(109,215,232,0.10),transparent_28%),radial-gradient(circle_at_85%_70%,rgba(122,217,165,0.08),transparent_28%)]" />
@@ -673,7 +804,17 @@ export default function App() {
           />
         )}
 
-        {activeView === 'media' && <MediaFocus onClose={closeFocus} />}
+        {activeView === 'media' && (
+          <MediaFocus
+            loginUrl={getSpotifyLoginUrl()}
+            onClose={closeFocus}
+            onRefresh={() => void refreshSpotify()}
+            onSpotifyAction={(action) => void handleSpotifyAction(action)}
+            spotifyPlayback={spotifyPlayback}
+            spotifyState={spotifyState}
+            spotifyStatus={spotifyStatus}
+          />
+        )}
       </section>
     </main>
   );
@@ -753,10 +894,10 @@ function HomeState({
         >
           <span className={labelClass}>Media</span>
           <strong className="mt-8 block text-4xl font-semibold text-text">
-            Planned
+            Spotify
           </strong>
           <p className={`mt-3 ${mutedClass}`}>
-            Mock controls only. No Spotify account is connected yet.
+            Connect an account to show playback and mirror controls.
           </p>
         </button>
       </section>
@@ -1054,42 +1195,190 @@ function AssistantFocus({
 }
 
 interface MediaFocusProps {
+  loginUrl: string;
   onClose: () => void;
+  onRefresh: () => void;
+  onSpotifyAction: (action: 'play' | 'pause' | 'next' | 'previous') => void;
+  spotifyPlayback: SpotifyPlayback | null;
+  spotifyState: SpotifyUiState;
+  spotifyStatus: SpotifyStatus | null;
 }
 
-function MediaFocus({ onClose }: MediaFocusProps) {
+function MediaFocus({
+  loginUrl,
+  onClose,
+  onRefresh,
+  onSpotifyAction,
+  spotifyPlayback,
+  spotifyState,
+  spotifyStatus,
+}: MediaFocusProps) {
+  const isConfigured = spotifyStatus?.configured ?? false;
+  const isAuthenticated = spotifyStatus?.authenticated ?? false;
+  const hasPlayback =
+    isAuthenticated &&
+    spotifyPlayback !== null &&
+    spotifyPlayback.title !== null &&
+    spotifyPlayback.status !== 'no_active_playback';
+  const progressPercent =
+    spotifyPlayback?.progress_ms != null &&
+    spotifyPlayback.duration_ms != null &&
+    spotifyPlayback.duration_ms > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (spotifyPlayback.progress_ms / spotifyPlayback.duration_ms) * 100,
+          ),
+        )
+      : 0;
+  const playPauseAction = spotifyPlayback?.is_playing ? 'pause' : 'play';
+  const playPauseLabel = spotifyPlayback?.is_playing ? 'Pause' : 'Play';
+  const controlsDisabled = spotifyState.isLoading || !isAuthenticated;
+
   return (
     <div className={focusPanelClass}>
-      <FocusHeader
-        eyebrow="Media Focus"
-        onClose={onClose}
-        title="Music mockup"
-      />
+      <FocusHeader eyebrow="Media Focus" onClose={onClose} title="Spotify" />
 
       <div className="mt-10 grid items-center gap-8 md:grid-cols-[320px_1fr]">
-        <div className="aspect-square rounded-xl border border-line bg-[linear-gradient(135deg,rgba(109,215,232,0.24),rgba(122,217,165,0.10),rgba(240,195,106,0.16))] shadow-mirror" />
+        <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border border-line bg-[linear-gradient(135deg,rgba(109,215,232,0.24),rgba(122,217,165,0.10),rgba(240,195,106,0.16))] shadow-mirror">
+          {spotifyPlayback?.artwork_url ? (
+            <img
+              src={spotifyPlayback.artwork_url}
+              alt={spotifyPlayback.album ?? 'Spotify album artwork'}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="px-8 text-center">
+              <p className={labelClass}>Artwork</p>
+              <p className="mt-3 text-sm text-muted">
+                Album art appears after Spotify is connected and playback is
+                active.
+              </p>
+            </div>
+          )}
+        </div>
 
         <div>
-          <p className={labelClass}>Planned Spotify-style integration</p>
+          <p className={labelClass}>
+            {isAuthenticated ? 'Spotify connected' : 'Spotify integration'}
+          </p>
           <h2 className="mt-4 text-4xl font-semibold text-text md:text-6xl">
-            Late Night Build
+            {hasPlayback
+              ? spotifyPlayback.title
+              : isConfigured
+                ? 'Connect Spotify'
+                : 'Setup needed'}
           </h2>
-          <p className="mt-4 text-xl text-muted">Mock Artist</p>
-          <p className={`mt-8 max-w-xl ${mutedClass}`}>
-            This view is only a UI placeholder. No Spotify API, account login,
-            playback, or device control is connected yet.
+          <p className="mt-4 text-xl text-muted">
+            {hasPlayback
+              ? spotifyPlayback.artist
+              : isConfigured
+                ? 'Authorize your account to control playback.'
+                : 'Add Spotify credentials to the backend environment.'}
           </p>
 
+          {hasPlayback && (
+            <div className="mt-6 max-w-xl">
+              <p className={mutedClass}>{spotifyPlayback.album}</p>
+              <p className="mt-2 text-sm text-muted">
+                {spotifyPlayback.device_name
+                  ? `${spotifyPlayback.device_name} (${spotifyPlayback.device_type ?? 'device'})`
+                  : 'No active device reported'}
+              </p>
+              <div className="mt-5">
+                <div className="h-2 overflow-hidden rounded-full bg-line">
+                  <div
+                    className="h-full rounded-full bg-cyan transition-all"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between text-xs text-muted">
+                  <span>{formatDuration(spotifyPlayback.progress_ms)}</span>
+                  <span>{formatDuration(spotifyPlayback.duration_ms)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!hasPlayback && (
+            <p className={`mt-8 max-w-xl ${mutedClass}`}>
+              {isAuthenticated
+                ? (spotifyPlayback?.message ??
+                  'Start Spotify on one of your devices, then refresh this view.')
+                : 'Spotify OAuth runs through the backend so client secrets stay out of the browser.'}
+            </p>
+          )}
+
           <div className="mt-8 flex flex-wrap gap-3">
-            {['Previous', 'Play', 'Next'].map((action) => (
-              <button
-                type="button"
-                className="rounded-full border border-line bg-panel-strong px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan"
-                key={action}
-              >
-                {action}
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={() => onSpotifyAction('previous')}
+              disabled={controlsDisabled}
+              className="rounded-full border border-line bg-panel-strong px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => onSpotifyAction(playPauseAction)}
+              disabled={controlsDisabled}
+              className="rounded-full border border-cyan/50 bg-cyan/10 px-6 py-3 text-sm font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {spotifyState.isLoading ? 'Working...' : playPauseLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => onSpotifyAction('next')}
+              disabled={controlsDisabled}
+              className="rounded-full border border-line bg-panel-strong px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={spotifyState.isLoading}
+              className="rounded-full border border-line bg-page/70 px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div className="mt-8 rounded-lg border border-line bg-page/50 p-5">
+            <p className={labelClass}>Connection</p>
+            <p className="mt-2 text-sm text-muted">
+              {spotifyStatus?.message ?? 'Checking Spotify connection.'}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {isConfigured && !isAuthenticated && (
+                <a
+                  href={loginUrl}
+                  className="rounded-lg border border-green/50 bg-green/10 px-4 py-3 text-sm font-semibold text-green transition hover:bg-green/15"
+                >
+                  Connect Spotify
+                </a>
+              )}
+              {spotifyPlayback?.spotify_url && (
+                <a
+                  href={spotifyPlayback.spotify_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-lg border border-line bg-panel-strong px-4 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan"
+                >
+                  Open in Spotify
+                </a>
+              )}
+            </div>
+            {spotifyState.actionMessage && (
+              <p className="mt-4 rounded-md border border-green/40 bg-green/10 p-3 text-sm text-green">
+                {spotifyState.actionMessage}
+              </p>
+            )}
+            {spotifyState.error && (
+              <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
+                {spotifyState.error}
+              </p>
+            )}
           </div>
         </div>
       </div>

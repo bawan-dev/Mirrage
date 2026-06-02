@@ -157,11 +157,68 @@ The response shape is identical for every provider, so the dashboard never chang
 If a provider fails, the endpoint still returns `200` with a short fallback reply so
 the dashboard stays usable.
 
+## Spotify Integration
+
+Spotify is isolated behind backend endpoints. The frontend does not call Spotify
+directly.
+
+### `GET /api/integrations/spotify/status`
+
+Returns whether Spotify credentials are configured and whether the backend has an
+active OAuth token.
+
+### `GET /api/integrations/spotify/login`
+
+Starts Spotify OAuth by redirecting the browser to Spotify.
+
+### `GET /api/integrations/spotify/callback`
+
+Receives Spotify's OAuth callback. On success, the backend stores the token in
+memory and redirects back to the frontend.
+
+### `GET /api/integrations/spotify/player/currently-playing`
+
+Returns the current playback state.
+
+Example response:
+
+```json
+{
+  "status": "playing",
+  "authenticated": true,
+  "is_playing": true,
+  "title": "Night Drive",
+  "artist": "Mirrage Test",
+  "album": "Mirror Sessions",
+  "artwork_url": "https://example.com/cover.jpg",
+  "progress_ms": 42000,
+  "duration_ms": 180000,
+  "device_name": "Office speaker",
+  "device_type": "Computer",
+  "spotify_url": "https://open.spotify.com/track/1",
+  "updated": "2026-06-02T12:00:00+00:00",
+  "message": "Spotify playback loaded."
+}
+```
+
+### Player Control Endpoints
+
+| Method | Endpoint |
+| --- | --- |
+| `POST` | `/api/integrations/spotify/player/play` |
+| `POST` | `/api/integrations/spotify/player/pause` |
+| `POST` | `/api/integrations/spotify/player/next` |
+| `POST` | `/api/integrations/spotify/player/previous` |
+
+Playback controls require Spotify authorization, an active Spotify device, and a
+Spotify account that can use player controls. See [spotify.md](spotify.md) for
+setup.
+
 ## First Backend Target
 
 The first backend version should be able to:
 
 - start locally with FastAPI
-- return JSON from all four endpoints
+- return JSON from the core endpoints
 - keep route code separate from service logic
 - avoid real AI, voice, and hardware dependencies until their layers are ready

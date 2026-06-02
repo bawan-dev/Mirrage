@@ -1,6 +1,9 @@
 import type {
   AssistantReply,
   HealthStatus,
+  SpotifyActionResult,
+  SpotifyPlayback,
+  SpotifyStatus,
   SystemStatus,
   VoiceStatus,
   WeatherInfo,
@@ -51,4 +54,27 @@ export function getWeather(): Promise<WeatherInfo> {
 
 export function sendAssistantMessage(message: string): Promise<AssistantReply> {
   return postJson<AssistantReply>('/api/assistant/message', { message });
+}
+
+export function getSpotifyStatus(): Promise<SpotifyStatus> {
+  return fetchJson<SpotifyStatus>('/api/integrations/spotify/status');
+}
+
+export function getSpotifyPlayback(): Promise<SpotifyPlayback> {
+  return fetchJson<SpotifyPlayback>(
+    '/api/integrations/spotify/player/currently-playing',
+  );
+}
+
+export function getSpotifyLoginUrl(): string {
+  return `${API_BASE_URL}/api/integrations/spotify/login`;
+}
+
+export function runSpotifyAction(
+  action: 'play' | 'pause' | 'next' | 'previous',
+): Promise<SpotifyActionResult> {
+  return postJson<SpotifyActionResult>(
+    `/api/integrations/spotify/player/${action}`,
+    {},
+  );
 }

@@ -1,16 +1,30 @@
 """API route definitions."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import RedirectResponse
 
 from backend.app.schemas import (
     AssistantMessageRequest,
     AssistantMessageResponse,
+    SpotifyActionResponse,
+    SpotifyPlaybackResponse,
+    SpotifyStatusResponse,
     WeatherResponse,
 )
 from backend.app.services.assistant import create_assistant_reply
+from backend.app.services.spotify import (
+    SpotifyAuthError,
+    SpotifyServiceError,
+    build_authorization_url,
+    complete_authorization,
+    get_current_playback,
+    get_spotify_status,
+    run_player_action,
+)
 from backend.app.services.system import get_system_status
 from backend.app.services.voice import get_voice_status
 from backend.app.services.weather import get_weather
+from backend.app.settings import settings
 
 router = APIRouter()
 
@@ -51,3 +65,56 @@ def create_assistant_message(
     message: AssistantMessageRequest,
 ) -> AssistantMessageResponse:
     return create_assistant_reply(message)
+
+
+@router.get("/api/integrations/spotify/status")
+def read_spotify_status() -> SpotifyStatusResponse:
+    return get_spotify_status()
+
+
+@router.get("/api/integrations/spotify/login")
+def start_spotify_login() -> RedirectResponse:
+    try:
+        return RedirectResponse(build_authorization_url())
+    except SpotifyAuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/api/integrations/spotify/callback")
+def complete_spotify_login(
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+) -> RedirectResponse:
+    if error:
+        return RedirectResponse(f"{settings.frontend_url}?spotify=error")
+
+    if not code or not state:
+        return RedirectResponse(f"{settings.frontend_url}?spotify=missing_callback")
+
+    try:
+        complete_authorization(code, state)
+    except SpotifyServiceError:
+        return RedirectResponse(f"{settings.frontend_url}?spotify=error")
+
+    return RedirectResponse(f"{settings.frontend_url}?spotify=connected")
+
+
+@router.get("/api/integrations/spotify/player/currently-playing")
+def read_spotify_currently_playing() -> SpotifyPlaybackResponse:
+    try:
+        return get_current_playback()
+    except SpotifyAuthError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except SpotifyServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/api/integrations/spotify/player/{action}")
+def control_spotify_player(action: str) -> SpotifyActionResponse:
+    try:
+        return run_player_action(action)
+    except SpotifyAuthError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except SpotifyServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

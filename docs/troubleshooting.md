@@ -139,3 +139,27 @@ The first command router only handles a small set of local screen commands.
 - Confirm you are sending the message from the Assistant focus view.
 - If the message is not recognized, it will go to the normal assistant endpoint.
 - Keep command wording simple for now: weather, music/media, or assistant.
+
+## Spotify says setup is needed
+
+The backend did not receive Spotify credentials.
+
+- Add `MIRRAGE_SPOTIFY_CLIENT_ID` and `MIRRAGE_SPOTIFY_CLIENT_SECRET` to `.env`.
+- Confirm the backend was restarted after editing `.env`.
+- For Docker, confirm the values are available to `docker compose`.
+
+## Spotify OAuth fails or returns to an error state
+
+- Confirm the Spotify app has this redirect URI exactly:
+  `http://127.0.0.1:8000/api/integrations/spotify/callback`.
+- Confirm `MIRRAGE_SPOTIFY_REDIRECT_URI` matches that value.
+- Confirm the backend is running at `http://127.0.0.1:8000`.
+- If the backend restarted, connect Spotify again because the current token store
+  is in memory.
+
+## Spotify controls fail
+
+- Start playback in the Spotify desktop, mobile, or web app first.
+- Confirm there is an active Spotify device.
+- Confirm the connected account can use playback controls.
+- Try `Refresh` in the Media focus view after opening Spotify on a device.

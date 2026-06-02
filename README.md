@@ -38,6 +38,7 @@ What works now:
 - browser text-to-speech for assistant replies
 - mute and browser voice settings in the assistant focus view
 - local command routing for opening weather, media, and assistant focus views
+- Spotify OAuth, currently playing, album artwork, and playback controls
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -47,7 +48,7 @@ What is still planned:
 - wake word support
 - backend or local speech-to-text option
 - backend or local text-to-speech option
-- Spotify or other music service integration
+- Spotify persistence, device picker, and voice playback commands
 - calendar integration
 - memory/context layer
 - smart home control
@@ -85,6 +86,7 @@ More detail:
 - [API notes](docs/api.md)
 - [Command routing](docs/command-routing.md)
 - [Roadmap](docs/roadmap.md)
+- [Spotify setup](docs/spotify.md)
 - [Voice plan](docs/voice.md)
 - [Run notes](docs/run-notes.md)
 - [Troubleshooting](docs/troubleshooting.md)
@@ -103,6 +105,7 @@ Hardware notes:
 | Backend | Python, FastAPI |
 | AI | Provider boundary for stub, Ollama, and OpenAI-compatible APIs |
 | Weather | Backend Open-Meteo integration with fallback behavior |
+| Music | Spotify OAuth and Web API through backend endpoints |
 | Voice | Browser push-to-talk speech recognition and speech synthesis foundation |
 | Commands | Frontend intent routing for local UI actions |
 | Dev setup | Docker Compose |
@@ -198,10 +201,16 @@ Current manual checks:
 - type `What is the weather?` in the assistant view and confirm Weather focus opens
 - type `Show my music` in the assistant view and confirm Media focus opens
 - type `Open assistant` and confirm Assistant focus opens
+- configure Spotify credentials, connect through the Media view, and confirm playback state loads
+- test Spotify play/pause/next/previous with an active Spotify device
 - send a message to `/api/assistant/message` and confirm the response shape stays stable
 - run `docker compose up --build` when Docker or shared run config changes
 
 Browser voice works best in Chrome or Edge because it uses browser speech recognition and speech synthesis. Wake word detection is not built yet.
+
+Spotify playback controls require a connected Spotify account and an active Spotify
+device. The first token store is in backend memory, so reconnect after backend
+restart.
 
 CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
@@ -229,18 +238,19 @@ Completed foundation work:
 - push-to-talk voice foundation
 - browser text-to-speech foundation
 - local command routing for focus views
+- Spotify media integration
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- command refinement: broader intent coverage, safer action boundaries, and voice-driven navigation polish
+- Spotify refinement: token persistence, device picker, and voice playback commands
 
 Future milestones:
 
 - Wake Word
-- Spotify Integration
+- Spotify Refinement
 - Calendar Integration
 - Memory Layer
 - Smart Home Integration

@@ -106,6 +106,40 @@ From the Assistant focus view, type each command:
 The assistant also adds a short action response to the message thread. Commands
 that are not recognized still go to the backend assistant endpoint.
 
+## Spotify setup check
+
+Spotify needs credentials before the Media focus view can connect.
+
+1. Create a Spotify app.
+2. Add this redirect URI to the Spotify app:
+
+```text
+http://127.0.0.1:8000/api/integrations/spotify/callback
+```
+
+3. Add credentials to `.env`:
+
+```powershell
+MIRRAGE_SPOTIFY_CLIENT_ID=your-client-id
+MIRRAGE_SPOTIFY_CLIENT_SECRET=your-client-secret
+MIRRAGE_SPOTIFY_REDIRECT_URI=http://127.0.0.1:8000/api/integrations/spotify/callback
+MIRRAGE_FRONTEND_URL=http://127.0.0.1:5173
+```
+
+4. Restart the backend.
+5. Open the Media focus view.
+6. Click `Connect Spotify`.
+7. Approve the Spotify OAuth request.
+
+Expected result:
+
+- Media focus view shows the current Spotify track if playback is active
+- album artwork appears when Spotify returns artwork
+- `Play`, `Pause`, `Next`, and `Previous` call the backend Spotify routes
+
+Spotify controls need an active Spotify device. Some player control endpoints
+also require Spotify Premium.
+
 ## Configuration
 
 Copy the example environment file and adjust as needed:

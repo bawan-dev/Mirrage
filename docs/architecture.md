@@ -19,6 +19,8 @@ Backend API
   |
   +-- AI Service Layer
   |
+  +-- Spotify Integration
+  |
   +-- Voice Service
   |
   +-- Hardware Status Layer
@@ -60,6 +62,7 @@ Its job:
 - return health and system status
 - receive assistant messages
 - report voice status
+- handle Spotify OAuth and Spotify Web API calls
 - provide clean boundaries for AI, voice, and hardware features
 
 The backend is the main coordination layer.
@@ -76,6 +79,31 @@ Its job:
 - keep provider details away from the frontend
 
 This lets Mirrage switch model providers without rewriting the dashboard.
+
+## Spotify Boundary
+
+Spotify is a backend integration. The frontend only calls Mirrage endpoints.
+
+```text
+Media focus view
+  -> Mirrage backend Spotify route
+  -> Spotify service
+  -> Spotify Web API
+  -> normalized playback response
+  -> Media focus view
+```
+
+The backend owns:
+
+- OAuth login and callback handling
+- access token refresh
+- current playback requests
+- play, pause, next, and previous actions
+- translating Spotify responses into dashboard-friendly JSON
+
+The current token store is in backend memory. That is enough for local,
+single-user development, but a persistent encrypted token store should be added
+before production deployment.
 
 ### `docs/`
 

@@ -289,6 +289,24 @@ Done when:
 Typing or speaking a known command can open the correct focus view, while
 unknown messages still use the existing assistant route.
 
+## Phase 19: Spotify Integration
+
+Goal: control real Spotify playback from the Media focus view.
+
+- [x] Add Spotify OAuth through the backend
+- [x] Add currently playing endpoint
+- [x] Return album artwork, artist, album, device, and progress
+- [x] Add play/pause endpoint
+- [x] Add next/previous endpoints
+- [x] Connect Media focus view to real Spotify state
+- [x] Keep Spotify API calls isolated in the backend service layer
+- [x] Document setup, scopes, and limitations
+
+Done when:
+
+The Media focus view can connect a Spotify account, show current playback, show
+album artwork, and control playback through Mirrage backend endpoints.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
@@ -297,12 +315,12 @@ unknown messages still use the existing assistant route.
 - [ ] Backend or local text-to-speech option
 - [ ] Return-to-home voice flow
 
-## Future: Spotify Integration
+## Future: Spotify Refinement
 
-- [ ] Connect real account authorization
-- [ ] Read current track
-- [ ] Add play, pause, previous, and next actions
-- [ ] Keep a clear fallback when the service is not connected
+- [ ] Persist Spotify token securely across backend restarts
+- [ ] Add device picker
+- [ ] Add better handling for Premium/device errors
+- [ ] Add voice commands for playback controls
 
 ## Future: Calendar Integration
 
@@ -337,6 +355,6 @@ unknown messages still use the existing assistant route.
 
 ## Current Focus
 
-Phase 18 is complete enough for now. Current focus is testing command wording,
-voice-driven navigation, and clean action boundaries before adding wake word or
-third-party integrations.
+Phase 19 is complete enough for now. Current focus is testing Spotify OAuth and
+device behavior before adding persistence, device selection, or voice playback
+commands.

@@ -36,3 +36,33 @@ export interface WeatherInfo {
   condition: string;
   updated: string | null;
 }
+
+export interface SpotifyStatus {
+  configured: boolean;
+  authenticated: boolean;
+  login_url: string | null;
+  scopes: string[];
+  message: string;
+}
+
+export interface SpotifyPlayback {
+  status: string;
+  authenticated: boolean;
+  is_playing: boolean;
+  title: string | null;
+  artist: string | null;
+  album: string | null;
+  artwork_url: string | null;
+  progress_ms: number | null;
+  duration_ms: number | null;
+  device_name: string | null;
+  device_type: string | null;
+  spotify_url: string | null;
+  updated: string | null;
+  message: string;
+}
+
+export interface SpotifyActionResult {
+  status: string;
+  message: string;
+}
