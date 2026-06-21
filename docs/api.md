@@ -121,7 +121,8 @@ Sends a message to the assistant layer.
 {
   "reply": "Assistant routing is ready, but no model is connected yet.",
   "provider": "stub",
-  "model": null
+  "model": null,
+  "memory_action": null
 }
 ```
 
@@ -138,7 +139,8 @@ Expected response:
 {
   "reply": "Assistant routing is ready, but no model is connected yet.",
   "provider": "stub",
-  "model": null
+  "model": null,
+  "memory_action": null
 }
 ```
 
@@ -146,6 +148,10 @@ Expected response:
 
 This routes the message through the AI service layer. With the default `stub`
 provider it returns a fixed response; with a real provider it returns a model reply.
+
+Local memory commands are handled before the AI provider is called. For example,
+`remember my favorite drink is coffee` stores a local memory and returns
+`provider: "memory"`.
 
 The active provider is selected with `MIRRAGE_AI_PROVIDER`:
 
@@ -156,6 +162,107 @@ The active provider is selected with `MIRRAGE_AI_PROVIDER`:
 The response shape is identical for every provider, so the dashboard never changes.
 If a provider fails, the endpoint still returns `200` with a short fallback reply so
 the dashboard stays usable.
+
+## Memory
+
+Memory is stored locally in SQLite. The backend owns the database and the
+assistant memory commands.
+
+Default database path:
+
+```text
+data/mirrage-memory.sqlite3
+```
+
+### `GET /api/memory`
+
+Lists local memories.
+
+Optional query parameters:
+
+| Parameter | Example | Purpose |
+| --- | --- | --- |
+| `kind` | `preference` | Filter by `preference`, `fact`, `goal`, or `routine` |
+| `q` | `coffee` | Search memory keys and values |
+| `status` | `active` | Filter by `active`, `archived`, or `done` |
+
+Example response:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "kind": "preference",
+      "key": "favorite drink",
+      "value": "coffee",
+      "status": "active",
+      "source": "assistant",
+      "created_at": "2026-06-21T20:00:00+00:00",
+      "updated_at": "2026-06-21T20:00:00+00:00"
+    }
+  ],
+  "count": 1
+}
+```
+
+### `GET /api/memory/summary`
+
+Returns memories grouped by type.
+
+### `POST /api/memory`
+
+Creates or updates a memory with the same `kind` and `key`.
+
+Example request:
+
+```json
+{
+  "kind": "preference",
+  "key": "temperature unit",
+  "value": "celsius"
+}
+```
+
+### `PATCH /api/memory/{memory_id}`
+
+Updates an existing memory.
+
+Example request:
+
+```json
+{
+  "value": "fahrenheit",
+  "status": "active"
+}
+```
+
+### Assistant Memory Test
+
+```powershell
+$body = @{ message = "remember my favorite drink is coffee" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected response includes:
+
+```json
+{
+  "provider": "memory",
+  "memory_action": "stored"
+}
+```
+
+Then check recall:
+
+```powershell
+$body = @{ message = "what do you remember about me?" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected response includes `favorite drink: coffee`.
+
+More detail: [memory.md](memory.md).
 
 ## Calendar Integration
 
@@ -174,7 +281,7 @@ Starts Google OAuth by redirecting the browser to Google.
 ### `GET /api/integrations/calendar/callback`
 
 Receives Google's OAuth callback. On success, the backend stores the token in
-memory and redirects back to the frontend.
+process memory and redirects back to the frontend.
 
 ### `GET /api/integrations/calendar/events/today`
 
@@ -230,7 +337,7 @@ Starts Spotify OAuth by redirecting the browser to Spotify.
 ### `GET /api/integrations/spotify/callback`
 
 Receives Spotify's OAuth callback. On success, the backend stores the token in
-memory and redirects back to the frontend.
+process memory and redirects back to the frontend.
 
 ### `GET /api/integrations/spotify/player/currently-playing`
 

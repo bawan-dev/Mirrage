@@ -80,7 +80,7 @@ delete calendar data.
 
 ## Token Storage
 
-The first implementation stores Google Calendar tokens in backend memory.
+The first implementation stores Google Calendar tokens in process memory.
 
 That means:
 

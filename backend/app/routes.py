@@ -8,6 +8,13 @@ from backend.app.schemas import (
     AssistantMessageResponse,
     CalendarScheduleResponse,
     CalendarStatusResponse,
+    MemoryCreateRequest,
+    MemoryKind,
+    MemoryRecordResponse,
+    MemorySearchResponse,
+    MemoryStatus,
+    MemorySummaryResponse,
+    MemoryUpdateRequest,
     SpotifyActionResponse,
     SpotifyPlaybackResponse,
     SpotifyStatusResponse,
@@ -22,6 +29,13 @@ from backend.app.services.calendar import (
     get_calendar_status,
     get_today_schedule,
     get_upcoming_events,
+)
+from backend.app.services.memory import (
+    MemoryNotFoundError,
+    create_memory,
+    list_memories,
+    summarize_memories,
+    update_memory,
 )
 from backend.app.services.spotify import (
     SpotifyAuthError,
@@ -76,6 +90,36 @@ def create_assistant_message(
     message: AssistantMessageRequest,
 ) -> AssistantMessageResponse:
     return create_assistant_reply(message)
+
+
+@router.get("/api/memory")
+def read_memories(
+    kind: MemoryKind | None = None,
+    q: str | None = None,
+    status: MemoryStatus | None = "active",
+) -> MemorySearchResponse:
+    return list_memories(kind=kind, query=q, status=status)
+
+
+@router.get("/api/memory/summary")
+def read_memory_summary() -> MemorySummaryResponse:
+    return summarize_memories()
+
+
+@router.post("/api/memory")
+def create_memory_record(memory: MemoryCreateRequest) -> MemoryRecordResponse:
+    return create_memory(memory)
+
+
+@router.patch("/api/memory/{memory_id}")
+def update_memory_record(
+    memory_id: int,
+    update: MemoryUpdateRequest,
+) -> MemoryRecordResponse:
+    try:
+        return update_memory(memory_id, update)
+    except MemoryNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/api/integrations/calendar/status")

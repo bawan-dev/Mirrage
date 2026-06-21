@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     google_calendar_id: str = "primary"
     google_calendar_time_zone: str = "Europe/London"
 
+    # Local privacy-first memory store.
+    memory_database_path: str = "data/mirrage-memory.sqlite3"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="MIRRAGE_",

@@ -107,6 +107,51 @@ From the Assistant focus view, type each command:
 The assistant also adds a short action response to the message thread. Commands
 that are not recognized still go to the backend assistant endpoint.
 
+## Memory checks
+
+Memory is local. The default database file is:
+
+```text
+data/mirrage-memory.sqlite3
+```
+
+Store a memory through the assistant route:
+
+```powershell
+$body = @{ message = "remember my favorite drink is coffee" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected result:
+
+- `provider` is `memory`
+- `memory_action` is `stored`
+- the reply says the memory was remembered
+
+Recall memory:
+
+```powershell
+$body = @{ message = "what do you remember about me?" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected result:
+
+- `provider` is `memory`
+- `memory_action` is `retrieved`
+- the reply includes `favorite drink: coffee`
+
+Check the raw summary:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/memory/summary
+```
+
+Expected result:
+
+- `count` is at least `1`
+- `preferences` includes the `favorite drink` memory
+
 ## Spotify setup check
 
 Spotify needs credentials before the Media focus view can connect.
@@ -191,6 +236,7 @@ Copy-Item .env.example .env
 | `MIRRAGE_FRONTEND_PORT` | `5173` | Frontend dev server port |
 | `MIRRAGE_AI_PROVIDER` | `stub` | Which AI provider the assistant uses |
 | `MIRRAGE_ALLOWED_ORIGINS` | localhost:5173 | CORS origins the backend accepts |
+| `MIRRAGE_MEMORY_DATABASE_PATH` | `data/mirrage-memory.sqlite3` | Local SQLite memory path |
 
 The frontend reads its backend URL from `VITE_API_BASE_URL`
 (see [frontend/.env.example](../frontend/.env.example)); it defaults to

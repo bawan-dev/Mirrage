@@ -10,21 +10,22 @@ pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload
 ```
 
-Health check: http://127.0.0.1:8000/health — interactive docs: http://127.0.0.1:8000/docs
+Health check: http://127.0.0.1:8000/health
+Interactive docs: http://127.0.0.1:8000/docs
 
 ## Develop
 
 ```powershell
 pip install -r backend/requirements-dev.txt
-ruff check .          # lint
-ruff format .         # format
-pytest                # run the test suite
+ruff check .
+ruff format --check .
+pytest
 ```
 
 ## Layout
 
-- `app/main.py` — FastAPI app and middleware
-- `app/routes.py` — route definitions
-- `app/schemas.py` — request/response models
-- `app/services/` — system, voice, and assistant service boundaries
-- `tests/` — pytest suite
+- `app/main.py` - FastAPI app and middleware
+- `app/routes.py` - route definitions
+- `app/schemas.py` - request and response models
+- `app/services/` - system, voice, assistant, memory, and integration boundaries
+- `tests/` - pytest suite

@@ -1,6 +1,11 @@
 """API request and response schemas."""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+MemoryKind = Literal["preference", "fact", "goal", "routine"]
+MemoryStatus = Literal["active", "archived", "done"]
 
 
 class AssistantMessageRequest(BaseModel):
@@ -11,6 +16,47 @@ class AssistantMessageResponse(BaseModel):
     reply: str
     provider: str
     model: str | None
+    memory_action: str | None = None
+
+
+class MemoryCreateRequest(BaseModel):
+    kind: MemoryKind
+    key: str = Field(..., min_length=1, max_length=120)
+    value: str = Field(..., min_length=1, max_length=2000)
+    status: MemoryStatus = "active"
+    source: str | None = Field(default=None, max_length=120)
+
+
+class MemoryUpdateRequest(BaseModel):
+    key: str | None = Field(default=None, min_length=1, max_length=120)
+    value: str | None = Field(default=None, min_length=1, max_length=2000)
+    status: MemoryStatus | None = None
+    source: str | None = Field(default=None, max_length=120)
+
+
+class MemoryRecordResponse(BaseModel):
+    id: int
+    kind: MemoryKind
+    key: str
+    value: str
+    status: MemoryStatus
+    source: str | None
+    created_at: str
+    updated_at: str
+
+
+class MemorySearchResponse(BaseModel):
+    items: list[MemoryRecordResponse]
+    count: int
+
+
+class MemorySummaryResponse(BaseModel):
+    preferences: list[MemoryRecordResponse]
+    facts: list[MemoryRecordResponse]
+    goals: list[MemoryRecordResponse]
+    routines: list[MemoryRecordResponse]
+    count: int
+    message: str
 
 
 class WeatherResponse(BaseModel):

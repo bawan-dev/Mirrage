@@ -27,6 +27,7 @@ export interface AssistantReply {
   reply: string;
   provider: string;
   model: string | null;
+  memory_action?: string | null;
 }
 
 export interface WeatherInfo {

@@ -325,6 +325,24 @@ Done when:
 The Calendar focus view can connect a Google account, show today's events, show
 upcoming events, and the assistant can answer what is on the calendar today.
 
+## Phase 21: Memory Layer
+
+Goal: give Mirrage a local place to remember useful context.
+
+- [x] Add a local SQLite database
+- [x] Add memory types for preferences, facts, goals, and routines
+- [x] Add backend routes to create, list, summarize, and update memories
+- [x] Route direct assistant memory commands through local storage
+- [x] Keep memory commands local before AI provider calls
+- [x] Mount the Docker `data/` folder so memory can survive container restarts
+- [x] Document the memory architecture, API, setup, and reset path
+- [x] Add backend tests for memory routes and assistant memory commands
+
+Done when:
+
+The assistant can store, retrieve, and update simple local memories without
+sending those memory commands to a model provider.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
@@ -348,11 +366,13 @@ upcoming events, and the assistant can answer what is on the calendar today.
 - [ ] Add create/update event support behind confirmations
 - [ ] Handle account permissions clearly
 
-## Future: Memory Layer
+## Future: Memory Refinement
 
-- [ ] Decide what Mirrage is allowed to remember
-- [ ] Keep memory local-first where possible
-- [ ] Add clear privacy controls before storing personal context
+- [ ] Add a memory editing UI
+- [ ] Add delete/archive controls
+- [ ] Add confirmation prompts for sensitive memories
+- [ ] Add optional encryption or OS keychain support
+- [ ] Add safer automatic memory extraction, only after clear controls exist
 
 ## Future: Smart Home Integration
 
@@ -375,6 +395,6 @@ upcoming events, and the assistant can answer what is on the calendar today.
 
 ## Current Focus
 
-Phase 20 is complete enough for now. Current focus is testing Google Calendar
-OAuth and daily schedule behavior before adding token persistence, event editing,
-or broader schedule commands.
+Phase 21 is complete enough for now. Current focus is testing local memory with
+real daily use before adding a memory editing UI, sensitive-memory prompts, or
+automatic memory extraction.

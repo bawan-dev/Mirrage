@@ -77,7 +77,7 @@ devices.
 
 ## Current Token Storage
 
-The first implementation stores Spotify tokens in backend memory.
+The first implementation stores Spotify tokens in process memory.
 
 That means:
 

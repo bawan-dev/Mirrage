@@ -29,7 +29,7 @@ Planned direction:
 What works now:
 
 - React + TypeScript + Tailwind mirror interface
-- FastAPI backend with health, system, voice, weather, assistant, Spotify, and Calendar routes
+- FastAPI backend with health, system, voice, weather, assistant, memory, Spotify, and Calendar routes
 - dashboard connected to backend status data
 - weather endpoint and card using Open-Meteo with a fallback state
 - AI provider boundary with `stub`, `ollama`, and `openai` provider options
@@ -40,6 +40,8 @@ What works now:
 - local command routing for opening weather, media, assistant, and calendar focus views
 - Spotify OAuth, currently playing, album artwork, and playback controls
 - Google Calendar OAuth, today's schedule, upcoming events, and calendar assistant command
+- local SQLite memory layer for preferences, facts, goals, and routines
+- assistant memory commands for storing, recalling, and updating local memories
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -51,7 +53,7 @@ What is still planned:
 - backend or local text-to-speech option
 - Spotify persistence, device picker, and voice playback commands
 - Calendar token persistence and richer schedule actions
-- memory/context layer
+- memory editing UI and stronger privacy controls
 - smart home control
 - physical mirror installation
 - production deployment
@@ -74,6 +76,8 @@ FastAPI Backend
       |
       +-- AI Service Layer
       |
+      +-- Local Memory Store
+      |
       +-- Calendar Integration
       |
       +-- Spotify Integration
@@ -83,7 +87,7 @@ FastAPI Backend
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, and external data. AI providers, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, local memory, and external data. AI providers, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
 
 More detail:
 
@@ -91,6 +95,7 @@ More detail:
 - [API notes](docs/api.md)
 - [Calendar setup](docs/calendar.md)
 - [Command routing](docs/command-routing.md)
+- [Memory layer](docs/memory.md)
 - [Roadmap](docs/roadmap.md)
 - [Spotify setup](docs/spotify.md)
 - [Voice plan](docs/voice.md)
@@ -115,6 +120,7 @@ Hardware notes:
 | Calendar | Google Calendar OAuth and read-only events through backend endpoints |
 | Voice | Browser push-to-talk speech recognition and speech synthesis foundation |
 | Commands | Frontend intent routing for local UI actions |
+| Memory | Local SQLite storage for preferences, facts, goals, and routines |
 | Dev setup | Docker Compose |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
 | CI | GitHub Actions |
@@ -209,6 +215,9 @@ Current manual checks:
 - type `Show my music` in the assistant view and confirm Media focus opens
 - type `What is on my calendar today?` and confirm Calendar focus opens with a schedule response
 - type `Open assistant` and confirm Assistant focus opens
+- type `remember my favorite drink is coffee` and confirm the assistant replies with `provider: memory`
+- type `what do you remember about me?` and confirm the response includes `favorite drink: coffee`
+- open `http://127.0.0.1:8000/api/memory/summary` and confirm the memory appears under preferences
 - configure Spotify credentials, connect through the Media view, and confirm playback state loads
 - test Spotify play/pause/next/previous with an active Spotify device
 - configure Google Calendar credentials, connect through the Calendar view, and confirm today's events load
@@ -218,11 +227,15 @@ Current manual checks:
 Browser voice works best in Chrome or Edge because it uses browser speech recognition and speech synthesis. Wake word detection is not built yet.
 
 Spotify playback controls require a connected Spotify account and an active Spotify
-device. The first token store is in backend memory, so reconnect after backend
+device. The first token store is in process memory, so reconnect after backend
 restart.
 
 Google Calendar uses a read-only events scope. The first token store is also in
-backend memory, so reconnect after backend restart.
+process memory, so reconnect after backend restart.
+
+Memory records are stored locally in `data/mirrage-memory.sqlite3`. That file is
+ignored by Git. Docker Compose mounts `./data` into the backend container so
+local memory can survive container restarts.
 
 CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
@@ -233,6 +246,7 @@ mirrage/
   frontend/       mirror interface
   backend/        FastAPI service
   ai/             assistant provider layer
+  data/           local runtime data placeholder
   docs/           architecture, API, roadmap, run notes
   hardware/       physical build planning
   assets/         screenshots and diagrams
@@ -252,20 +266,21 @@ Completed foundation work:
 - local command routing for focus views
 - Spotify media integration
 - Google Calendar daily schedule integration
+- local memory layer
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- Calendar refinement: token persistence, event detail polish, and broader schedule commands
+- Memory refinement: edit/delete UI, safer confirmations, and better privacy controls
 
 Future milestones:
 
 - Wake Word
 - Spotify Refinement
 - Calendar Refinement
-- Memory Layer
+- Memory Refinement
 - Smart Home Integration
 - Physical Mirror Build
 - Home Installation

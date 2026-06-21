@@ -77,6 +77,54 @@ through the backend and AI service layer.
 Use `MIRRAGE_AI_PROVIDER=ollama` for a local Ollama model or
 `MIRRAGE_AI_PROVIDER=openai` for an OpenAI-compatible API provider.
 
+## Assistant memory commands do not store anything
+
+The first memory parser only handles direct memory phrases.
+
+Try this exact command first:
+
+```text
+remember my favorite drink is coffee
+```
+
+Expected result:
+
+- `provider` is `memory`
+- `memory_action` is `stored`
+
+Then check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/memory/summary
+```
+
+If the memory still does not appear:
+
+- confirm the backend is running
+- confirm `MIRRAGE_MEMORY_DATABASE_PATH` points to a writable path
+- check that the backend process can create the `data/` folder
+
+## Memory disappears after restart
+
+Local memory is stored in `data/mirrage-memory.sqlite3`.
+
+If you run locally, confirm that file exists after storing a memory. If you run
+Docker, confirm `docker-compose.yml` still mounts `./data:/app/data`.
+
+The SQLite file is private runtime data and is ignored by Git, so it will not
+appear on GitHub.
+
+## Reset local memory
+
+Stop the backend first, then delete the SQLite file:
+
+```powershell
+Remove-Item data/mirrage-memory.sqlite3
+```
+
+Start the backend again. The database will be recreated the next time memory is
+used.
+
 ## Push to talk says speech recognition is unsupported
 
 The current voice foundation uses browser speech recognition. Use Chrome or Edge
@@ -158,7 +206,7 @@ The backend did not receive Google Calendar credentials.
 - Confirm `MIRRAGE_GOOGLE_CALENDAR_REDIRECT_URI` matches that value.
 - Confirm the backend is running at `http://127.0.0.1:8000`.
 - If the backend restarted, connect Google Calendar again because the current
-  token store is in memory.
+  token store is in process memory.
 
 ## Calendar events do not appear
 
@@ -182,7 +230,7 @@ The backend did not receive Spotify credentials.
 - Confirm `MIRRAGE_SPOTIFY_REDIRECT_URI` matches that value.
 - Confirm the backend is running at `http://127.0.0.1:8000`.
 - If the backend restarted, connect Spotify again because the current token store
-  is in memory.
+  is in process memory.
 
 ## Spotify controls fail
 

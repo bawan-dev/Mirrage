@@ -19,6 +19,8 @@ Backend API
   |
   +-- AI Service Layer
   |
+  +-- Local Memory Store
+  |
   +-- Calendar Integration
   |
   +-- Spotify Integration
@@ -28,7 +30,7 @@ Backend API
   +-- Hardware Status Layer
 ```
 
-The frontend should ask for data. The backend should decide where that data comes from. The AI, voice, and hardware layers should stay behind backend boundaries so they can be replaced or upgraded later.
+The frontend should ask for data. The backend should decide where that data comes from. The AI, memory, voice, and hardware layers should stay behind backend boundaries so they can be replaced or upgraded later.
 
 There is one current frontend-local exception: simple command routing. Mirrage
 can recognize a small set of screen-navigation commands before calling the
@@ -66,7 +68,8 @@ Its job:
 - report voice status
 - handle Google Calendar OAuth and Calendar API calls
 - handle Spotify OAuth and Spotify Web API calls
-- provide clean boundaries for AI, voice, and hardware features
+- store local memory for preferences, facts, goals, and routines
+- provide clean boundaries for AI, memory, voice, and hardware features
 
 The backend is the main coordination layer.
 
@@ -105,7 +108,7 @@ The backend owns:
 - upcoming event requests
 - translating Google event responses into dashboard-friendly JSON
 
-The current token store is in backend memory. That is enough for local,
+The current token store is in process memory. That is enough for local,
 single-user development, but a persistent encrypted token store should be added
 before production deployment.
 
@@ -130,7 +133,7 @@ The backend owns:
 - play, pause, next, and previous actions
 - translating Spotify responses into dashboard-friendly JSON
 
-The current token store is in backend memory. That is enough for local,
+The current token store is in process memory. That is enough for local,
 single-user development, but a persistent encrypted token store should be added
 before production deployment.
 
@@ -192,9 +195,9 @@ This keeps the dashboard simple. It asks for state and renders it. The backend o
 
 ## API Boundary
 
-The backend API should start small.
+The backend API stays small and service-focused.
 
-Planned initial endpoints:
+Core endpoints:
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -202,9 +205,12 @@ Planned initial endpoints:
 | `GET` | `/api/system/status` | Return basic system status |
 | `GET` | `/api/voice/status` | Return voice service status |
 | `POST` | `/api/assistant/message` | Send a message to the assistant layer |
+| `GET` | `/api/memory/summary` | Return local memory grouped by type |
+| `POST` | `/api/memory` | Create or update a local memory |
 | `GET` | `/api/integrations/calendar/events/today` | Return today's schedule |
 
-More endpoints can be added later, but the first version should stay focused.
+More endpoints can be added later, but each one should stay behind a clear
+service boundary.
 
 ## AI Boundary
 
@@ -228,6 +234,45 @@ Provider selection is controlled by `MIRRAGE_AI_PROVIDER`. Supported providers a
 (hosted, OpenAI-compatible). All sit behind the same backend route, and a provider
 failure degrades to a short fallback reply rather than an error page. See
 [../ai/README.md](../ai/README.md) for details.
+
+## Memory Boundary
+
+Memory is a backend-owned local storage layer. It uses SQLite so the first
+version can run privately on the user's machine without a hosted database.
+
+```text
+assistant memory command
+  -> backend assistant route
+  -> memory command parser
+  -> SQLite memory store
+  -> assistant response
+```
+
+The current memory types are:
+
+| Type | Purpose |
+| --- | --- |
+| `preference` | User choices the assistant should remember |
+| `fact` | Stable personal context |
+| `goal` | Things the user is working toward |
+| `routine` | Repeated habits or schedule patterns |
+
+Memory commands are handled before a message reaches the AI provider. That is
+intentional: storing and recalling personal context should stay local unless a
+future feature clearly asks for model access.
+
+The default database path is `data/mirrage-memory.sqlite3`. The database file is
+ignored by Git, and Docker Compose mounts `./data` into the backend container so
+memory can survive container restarts.
+
+The first parser handles direct commands such as:
+
+- `remember my favorite drink is coffee`
+- `what do you remember about me?`
+- `update my favorite drink to tea`
+
+The memory API is documented in [api.md](api.md), and the design notes are in
+[memory.md](memory.md).
 
 ## Command Routing Boundary
 
