@@ -50,6 +50,7 @@ Its job:
 
 - show the mirror interface
 - display time, date, weather, assistant, voice, system, and hardware status
+- provide optional Mirror Mode for a wall-mounted/kiosk display
 - call backend endpoints when real data is available
 - route simple screen-navigation commands into UI actions
 - stay focused on presentation and user interaction
@@ -57,6 +58,32 @@ Its job:
 The frontend should not directly talk to AI providers or hardware devices.
 Browser voice input/output and simple UI command routing are currently local
 because they depend on browser APIs and screen state.
+
+## Mirror Mode Boundary
+
+Mirror Mode is a frontend display mode, enabled with `VITE_MIRROR_MODE=true`.
+It does not add a new backend service or a new AI provider.
+
+```text
+same React app
+  -> normal home state for desktop development
+  -> Mirror Mode home state for wall display use
+  -> shared focus views
+```
+
+Mirror Mode owns:
+
+- ambient home layout
+- startup service check overlay
+- inactivity dimming and return-to-home behavior
+- small burn-in movement for static UI elements
+- assistant orb presentation states
+
+The backend still owns health, weather, Calendar, Spotify, memory, and context
+data. Mirror Mode only changes how that state is presented.
+
+The current dimming behavior is a visual overlay. It does not control monitor
+brightness or operating system power settings.
 
 ### `backend/`
 

@@ -21,6 +21,16 @@ Status fields should use short lowercase values where possible, for example:
 
 The first backend version can return static data. Live data can replace it later without changing the dashboard shape.
 
+## Frontend Display Modes
+
+The API does not change between normal dashboard mode and Mirror Mode. Mirror
+Mode is enabled in the frontend with `VITE_MIRROR_MODE=true` and still reads the
+same backend routes for health, weather, voice, Calendar, Spotify, memory, and
+daily context.
+
+Mirror Mode should not require a new backend endpoint unless a future hardware
+brightness or display-control service is added.
+
 ## `GET /health`
 
 Checks whether the backend is running.

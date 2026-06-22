@@ -24,6 +24,10 @@ Planned direction:
 - push-to-talk voice interaction first, with wake word and backend/local audio later
 - physical mirror build after the display, material, audio, heat, and wiring choices are tested
 
+Development note: I use AI-assisted development heavily on this project, but I
+define the product direction, architecture, roadmap, acceptance criteria, testing
+process, and review the implementation as it evolves.
+
 ## Current Build
 
 What works now:
@@ -44,6 +48,7 @@ What works now:
 - assistant memory commands for storing, recalling, and updating local memories
 - provider-independent daily context aggregation from weather, calendar, and memory
 - Context focus view for daily overview, goals, routines, and suggested focus
+- optional Mirror Mode for kiosk-style wall display use
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -63,9 +68,38 @@ What is still planned:
 
 The default assistant provider is still `stub`. Real model replies require configuring Ollama or an OpenAI-compatible API provider.
 
-## Screenshot
+## Current Status
+
+| Area | Status |
+| --- | --- |
+| Mirror UI | Working local React app |
+| Mirror Mode | Working behind `VITE_MIRROR_MODE=true` |
+| Backend API | Working FastAPI service |
+| Assistant | Provider boundary works; default provider is still `stub` |
+| Voice | Browser push-to-talk and browser speech synthesis |
+| Weather | Live backend weather endpoint with fallback |
+| Calendar | Google Calendar OAuth and read-only schedule views |
+| Spotify | OAuth, current playback, artwork, and basic controls |
+| Memory | Local SQLite preferences, facts, goals, and routines |
+| Hardware | Planning docs only |
+| Wake word / smart home / vision | Not built yet |
+
+## Screenshots And Demo
 
 ![Mirrage dashboard foundation](assets/screenshots/dashboard.png)
+
+| View | Screenshot |
+| --- | --- |
+| Mirror home | [assets/screenshots/mirror-home.png](assets/screenshots/mirror-home.png) |
+| Weather focus | [assets/screenshots/weather-focus.png](assets/screenshots/weather-focus.png) |
+| Assistant focus | [assets/screenshots/assistant-focus.png](assets/screenshots/assistant-focus.png) |
+| Calendar focus | [assets/screenshots/calendar-focus.png](assets/screenshots/calendar-focus.png) |
+| Context focus | [assets/screenshots/context-focus.png](assets/screenshots/context-focus.png) |
+| Media focus | [assets/screenshots/media-focus.png](assets/screenshots/media-focus.png) |
+
+Demo video: `TBD`
+
+Demo flow: [docs/demo-guide.md](docs/demo-guide.md)
 
 ## Architecture
 
@@ -102,11 +136,13 @@ More detail:
 - [Command routing](docs/command-routing.md)
 - [Context system](docs/context.md)
 - [Memory layer](docs/memory.md)
+- [Mirror Mode](docs/mirror-mode.md)
 - [Roadmap](docs/roadmap.md)
 - [Spotify setup](docs/spotify.md)
 - [Voice plan](docs/voice.md)
 - [Run notes](docs/run-notes.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [Website update notes](docs/website-update-notes.md)
 
 Hardware notes:
 
@@ -128,6 +164,7 @@ Hardware notes:
 | Commands | Frontend intent routing for local UI actions |
 | Context | Backend aggregation across weather, Calendar, and local memory |
 | Memory | Local SQLite storage for preferences, facts, goals, and routines |
+| Mirror Mode | Frontend kiosk mode behind `VITE_MIRROR_MODE=true` |
 | Dev setup | Docker Compose |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
 | CI | GitHub Actions |
@@ -147,6 +184,16 @@ Open:
 ```text
 http://127.0.0.1:5173
 ```
+
+Mirror Mode is optional:
+
+```powershell
+cd frontend
+$env:VITE_MIRROR_MODE="true"
+npm run dev
+```
+
+Details: [docs/mirror-mode.md](docs/mirror-mode.md).
 
 ### Backend
 
@@ -211,6 +258,8 @@ pytest
 Current manual checks:
 
 - open `http://127.0.0.1:5173` and confirm the mirror UI loads
+- set `VITE_MIRROR_MODE=true`, reload the frontend, and confirm the ambient Mirror Mode home appears
+- confirm Mirror Mode dims after inactivity and returns to home from a focus view after the second timeout
 - open `http://127.0.0.1:8000/health` and confirm the backend is online
 - check the dashboard system card shows backend status when the API is running
 - check the weather card either shows live data or a clear fallback
@@ -277,6 +326,7 @@ Completed foundation work:
 - Google Calendar daily schedule integration
 - local memory layer
 - personal context system
+- mirror mode
 - Docker development setup
 - tests and CI
 - first hardware planning notes

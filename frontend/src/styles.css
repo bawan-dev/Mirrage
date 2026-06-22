@@ -53,6 +53,361 @@ body {
   .animate-focus-in {
     animation: focus-in 420ms ease-out both;
   }
+
+  .mirror-mode {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 22%),
+      radial-gradient(
+        circle at 48% 62%,
+        rgba(109, 215, 232, 0.1),
+        transparent 26%
+      ),
+      radial-gradient(
+        circle at 86% 12%,
+        rgba(240, 195, 106, 0.08),
+        transparent 24%
+      ),
+      #020406;
+  }
+
+  .mirror-mode .focus-panel {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    border-radius: 24px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 36%),
+      rgba(5, 7, 10, 0.88);
+  }
+
+  .mirror-home {
+    position: relative;
+    min-height: calc(100vh - 4rem);
+    isolation: isolate;
+  }
+
+  .mirror-burn {
+    transition: transform 1800ms ease;
+  }
+
+  .mirror-clock {
+    position: absolute;
+    left: clamp(1rem, 4vw, 4rem);
+    top: clamp(1rem, 5vh, 4rem);
+  }
+
+  .mirror-clock h1 {
+    margin: 1.25rem 0 0;
+    color: var(--color-text);
+    font-size: clamp(5.5rem, 13vw, 15rem);
+    font-weight: 650;
+    line-height: 0.9;
+  }
+
+  .mirror-clock p:last-child {
+    margin: 1.2rem 0 0;
+    color: var(--color-muted);
+    font-size: clamp(1rem, 1.8vw, 2rem);
+  }
+
+  .mirror-weather {
+    position: absolute;
+    right: clamp(1rem, 4vw, 4rem);
+    top: clamp(1rem, 5vh, 4rem);
+    display: grid;
+    width: min(28rem, 36vw);
+    gap: 0.8rem;
+    border: 1px solid var(--color-line);
+    border-radius: 20px;
+    background: rgba(7, 10, 14, 0.5);
+    padding: clamp(1rem, 2vw, 1.5rem);
+    text-align: left;
+    box-shadow: var(--shadow-mirror);
+    transition:
+      border-color 250ms ease,
+      background 250ms ease,
+      transform 1800ms ease;
+  }
+
+  .mirror-weather:hover {
+    border-color: rgba(109, 215, 232, 0.7);
+    background: rgba(12, 17, 23, 0.72);
+  }
+
+  .mirror-weather strong {
+    color: var(--color-amber);
+    font-size: clamp(2.6rem, 5vw, 5rem);
+    font-weight: 650;
+    line-height: 1;
+  }
+
+  .mirror-weather span:last-child {
+    color: var(--color-muted);
+    font-size: clamp(0.95rem, 1.2vw, 1.3rem);
+    line-height: 1.5;
+  }
+
+  .mirror-orb-zone {
+    position: absolute;
+    left: 50%;
+    top: 56%;
+    transform: translate(-50%, -50%);
+  }
+
+  .assistant-orb {
+    position: relative;
+    display: grid;
+    width: clamp(9rem, 17vw, 16rem);
+    aspect-ratio: 1;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(109, 215, 232, 0.38);
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 50% 44%,
+        rgba(245, 247, 248, 0.18),
+        transparent 21%
+      ),
+      radial-gradient(
+        circle at 50% 54%,
+        rgba(109, 215, 232, 0.22),
+        rgba(7, 10, 14, 0.82) 58%
+      );
+    box-shadow:
+      0 0 34px rgba(109, 215, 232, 0.18),
+      inset 0 0 42px rgba(109, 215, 232, 0.14);
+    color: var(--color-text);
+    font-size: clamp(0.75rem, 1.1vw, 1rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    transition:
+      border-color 300ms ease,
+      box-shadow 300ms ease,
+      transform 1800ms ease;
+  }
+
+  .assistant-orb::before,
+  .assistant-orb::after {
+    position: absolute;
+    content: '';
+    inset: 18%;
+    border: 1px solid rgba(245, 247, 248, 0.15);
+    border-radius: 50%;
+  }
+
+  .assistant-orb::after {
+    inset: 32%;
+    background: rgba(245, 247, 248, 0.06);
+  }
+
+  .assistant-orb span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .assistant-orb-idle {
+    animation: orb-idle 5s ease-in-out infinite;
+  }
+
+  .assistant-orb-listening {
+    border-color: rgba(122, 217, 165, 0.78);
+    box-shadow:
+      0 0 46px rgba(122, 217, 165, 0.28),
+      inset 0 0 48px rgba(122, 217, 165, 0.16);
+    animation: orb-listening 1.7s ease-in-out infinite;
+  }
+
+  .assistant-orb-thinking {
+    border-color: rgba(240, 195, 106, 0.78);
+    box-shadow:
+      0 0 48px rgba(240, 195, 106, 0.24),
+      inset 0 0 48px rgba(240, 195, 106, 0.14);
+    animation: orb-thinking 2.4s ease-in-out infinite;
+  }
+
+  .assistant-orb-speaking {
+    border-color: rgba(109, 215, 232, 0.92);
+    box-shadow:
+      0 0 58px rgba(109, 215, 232, 0.32),
+      inset 0 0 52px rgba(109, 215, 232, 0.18);
+    animation: orb-speaking 1.4s ease-in-out infinite;
+  }
+
+  .assistant-orb-error {
+    border-color: rgba(240, 195, 106, 0.78);
+    box-shadow:
+      0 0 42px rgba(240, 195, 106, 0.2),
+      inset 0 0 42px rgba(240, 195, 106, 0.12);
+  }
+
+  .mirror-status {
+    position: absolute;
+    bottom: clamp(1rem, 4vh, 3rem);
+    left: clamp(1rem, 4vw, 4rem);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: rgba(148, 163, 173, 0.78);
+    font-size: clamp(0.85rem, 1vw, 1.05rem);
+  }
+
+  .mirror-status-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px;
+    background: var(--color-green);
+    box-shadow: 0 0 18px rgba(122, 217, 165, 0.55);
+  }
+
+  .mirror-status-dot-warn {
+    background: var(--color-amber);
+    box-shadow: 0 0 18px rgba(240, 195, 106, 0.45);
+  }
+
+  .mirror-focus-rail {
+    position: absolute;
+    bottom: clamp(1rem, 4vh, 3rem);
+    left: 50%;
+    display: flex;
+    gap: 0.75rem;
+    transform: translateX(-50%);
+    opacity: 0.58;
+    transition: opacity 250ms ease;
+  }
+
+  .mirror-focus-rail:hover {
+    opacity: 1;
+  }
+
+  .mirror-focus-rail button {
+    border: 1px solid rgba(203, 220, 226, 0.16);
+    border-radius: 999px;
+    background: rgba(7, 10, 14, 0.48);
+    padding: 0.7rem 1rem;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    transition:
+      border-color 250ms ease,
+      color 250ms ease,
+      background 250ms ease;
+  }
+
+  .mirror-focus-rail button:hover {
+    border-color: rgba(109, 215, 232, 0.68);
+    background: rgba(12, 17, 23, 0.72);
+    color: var(--color-cyan);
+  }
+
+  .mirror-context-peek {
+    position: absolute;
+    right: clamp(1rem, 4vw, 4rem);
+    bottom: clamp(1rem, 4vh, 3rem);
+    display: grid;
+    max-width: min(26rem, 32vw);
+    gap: 0.4rem;
+    color: rgba(148, 163, 173, 0.62);
+    font-size: 0.9rem;
+    text-align: right;
+  }
+
+  .mirror-home-sleep .mirror-context-peek,
+  .mirror-home-sleep .mirror-focus-rail {
+    opacity: 0.12;
+  }
+
+  .mirror-dim-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    background: transparent;
+    transition: background 650ms ease;
+  }
+
+  .mirror-dim-dimmed {
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  .mirror-dim-sleep {
+    background: rgba(0, 0, 0, 0.68);
+  }
+
+  .mirror-startup {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(
+        circle at 50% 46%,
+        rgba(109, 215, 232, 0.12),
+        transparent 28%
+      ),
+      rgba(2, 4, 6, 0.94);
+    animation: startup-in 420ms ease both;
+  }
+
+  .mirror-startup > div {
+    width: min(38rem, calc(100vw - 3rem));
+  }
+
+  .mirror-startup h2 {
+    margin: 1rem 0 2rem;
+    color: var(--color-text);
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 650;
+    line-height: 0.95;
+  }
+
+  .mirror-startup-checks {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .mirror-startup-check {
+    display: grid;
+    grid-template-columns: auto 7rem 1fr;
+    align-items: center;
+    gap: 0.9rem;
+    border: 1px solid var(--color-line);
+    border-radius: 14px;
+    background: rgba(7, 10, 14, 0.62);
+    padding: 0.85rem 1rem;
+    color: var(--color-muted);
+  }
+
+  .mirror-startup-check strong {
+    overflow: hidden;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mirror-startup-dot {
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 999px;
+    background: var(--color-muted);
+  }
+
+  .mirror-startup-dot-checking {
+    background: var(--color-cyan);
+    animation: startup-pulse 1.2s ease-in-out infinite;
+  }
+
+  .mirror-startup-dot-online {
+    background: var(--color-green);
+  }
+
+  .mirror-startup-dot-offline,
+  .mirror-startup-dot-planned {
+    background: var(--color-amber);
+  }
 }
 
 @keyframes focus-in {
@@ -64,5 +419,110 @@ body {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes orb-idle {
+  0%,
+  100% {
+    box-shadow:
+      0 0 34px rgba(109, 215, 232, 0.16),
+      inset 0 0 42px rgba(109, 215, 232, 0.13);
+  }
+
+  50% {
+    box-shadow:
+      0 0 44px rgba(109, 215, 232, 0.24),
+      inset 0 0 48px rgba(109, 215, 232, 0.16);
+  }
+}
+
+@keyframes orb-listening {
+  50% {
+    transform: scale(1.035);
+  }
+}
+
+@keyframes orb-thinking {
+  50% {
+    filter: brightness(1.12);
+  }
+}
+
+@keyframes orb-speaking {
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+@keyframes startup-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes startup-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 760px) {
+  .mirror-home {
+    display: grid;
+    min-height: calc(100vh - 3rem);
+    gap: 1rem;
+    align-content: center;
+  }
+
+  .mirror-clock,
+  .mirror-weather,
+  .mirror-status,
+  .mirror-focus-rail,
+  .mirror-context-peek,
+  .mirror-orb-zone {
+    position: static;
+    transform: none;
+  }
+
+  .mirror-weather {
+    width: 100%;
+  }
+
+  .mirror-orb-zone {
+    display: grid;
+    place-items: center;
+  }
+
+  .mirror-status,
+  .mirror-focus-rail {
+    justify-content: center;
+  }
+
+  .mirror-context-peek {
+    max-width: none;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-focus-in,
+  .assistant-orb-idle,
+  .assistant-orb-listening,
+  .assistant-orb-thinking,
+  .assistant-orb-speaking,
+  .mirror-startup-dot-checking {
+    animation: none;
+  }
+
+  .mirror-burn,
+  .mirror-dim-overlay,
+  .mirror-focus-rail,
+  .mirror-weather {
+    transition: none;
   }
 }

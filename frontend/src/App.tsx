@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react';
 
 import {
   getCalendarLoginUrl,
@@ -21,6 +28,7 @@ import {
   type AssistantCommandRoute,
   type AssistantUiAction,
 } from './intentRouting';
+import { mirrorModeConfig } from './config';
 import type {
   AssistantReply,
   CalendarEvent,
@@ -43,6 +51,15 @@ type FocusView =
   | 'calendar'
   | 'context';
 
+const focusViewValues: FocusView[] = [
+  'home',
+  'weather',
+  'assistant',
+  'media',
+  'calendar',
+  'context',
+];
+
 interface BackendState {
   error: string | null;
   isLoading: boolean;
@@ -62,6 +79,26 @@ interface CalendarUiState {
 interface ContextUiState {
   error: string | null;
   isLoading: boolean;
+}
+
+type AssistantOrbState =
+  | 'error'
+  | 'idle'
+  | 'listening'
+  | 'speaking'
+  | 'thinking';
+
+type MirrorInactivityLevel = 'active' | 'dimmed' | 'sleep';
+
+interface BurnInOffset {
+  x: number;
+  y: number;
+}
+
+interface MirrorStartupCheck {
+  label: string;
+  status: string;
+  tone: 'checking' | 'offline' | 'online' | 'planned';
 }
 
 interface AssistantMessage {
@@ -113,7 +150,26 @@ const labelClass =
   'text-[0.72rem] font-bold uppercase tracking-[0.18em] text-cyan';
 const mutedClass = 'text-sm leading-relaxed text-muted';
 const focusPanelClass =
-  'animate-focus-in rounded-xl border border-line bg-panel p-5 shadow-mirror md:p-8';
+  'focus-panel animate-focus-in rounded-xl border border-line bg-panel p-5 shadow-mirror md:p-8';
+
+const burnInOffsets: BurnInOffset[] = [
+  { x: 0, y: 0 },
+  { x: 4, y: -3 },
+  { x: -4, y: 3 },
+  { x: 3, y: 4 },
+  { x: -3, y: -4 },
+  { x: 2, y: -2 },
+];
+
+function getInitialFocusView(): FocusView {
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+
+  if (focusViewValues.includes(requestedView as FocusView)) {
+    return requestedView as FocusView;
+  }
+
+  return 'home';
+}
 
 function formatStatus(value?: string): string {
   if (!value) {
@@ -264,9 +320,19 @@ function getVoiceErrorMessage(error: string): string {
 }
 
 export default function App() {
-  const [activeView, setActiveView] = useState<FocusView>('home');
+  const [activeView, setActiveView] = useState<FocusView>(() =>
+    getInitialFocusView(),
+  );
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const inactivityDimTimerRef = useRef<number | null>(null);
+  const inactivitySleepTimerRef = useRef<number | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
+  const isMirrorMode = mirrorModeConfig.enabled;
+  const [mirrorInactivityLevel, setMirrorInactivityLevel] =
+    useState<MirrorInactivityLevel>('active');
+  const [mirrorStartupVisible, setMirrorStartupVisible] =
+    useState(isMirrorMode);
+  const [burnInIndex, setBurnInIndex] = useState(0);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus | null>(null);
@@ -334,6 +400,36 @@ export default function App() {
     },
   ]);
 
+  const clearMirrorInactivityTimers = useCallback(() => {
+    if (inactivityDimTimerRef.current !== null) {
+      window.clearTimeout(inactivityDimTimerRef.current);
+      inactivityDimTimerRef.current = null;
+    }
+
+    if (inactivitySleepTimerRef.current !== null) {
+      window.clearTimeout(inactivitySleepTimerRef.current);
+      inactivitySleepTimerRef.current = null;
+    }
+  }, []);
+
+  const registerMirrorActivity = useCallback(() => {
+    if (!isMirrorMode) {
+      return;
+    }
+
+    clearMirrorInactivityTimers();
+    setMirrorInactivityLevel('active');
+
+    inactivityDimTimerRef.current = window.setTimeout(() => {
+      setMirrorInactivityLevel('dimmed');
+    }, mirrorModeConfig.dimTimeoutMs);
+
+    inactivitySleepTimerRef.current = window.setTimeout(() => {
+      setActiveView('home');
+      setMirrorInactivityLevel('sleep');
+    }, mirrorModeConfig.sleepTimeoutMs);
+  }, [clearMirrorInactivityTimers, isMirrorMode]);
+
   useEffect(() => {
     const timer = window.setInterval(() => {
       setNow(new Date());
@@ -341,6 +437,64 @@ export default function App() {
 
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!isMirrorMode) {
+      setMirrorStartupVisible(false);
+      return;
+    }
+
+    setMirrorStartupVisible(true);
+
+    const timer = window.setTimeout(() => {
+      setMirrorStartupVisible(false);
+    }, mirrorModeConfig.startupMs);
+
+    return () => window.clearTimeout(timer);
+  }, [isMirrorMode]);
+
+  useEffect(() => {
+    if (!isMirrorMode) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setBurnInIndex((current) => (current + 1) % burnInOffsets.length);
+    }, mirrorModeConfig.burnInShiftMs);
+
+    return () => window.clearInterval(timer);
+  }, [isMirrorMode]);
+
+  useEffect(() => {
+    if (!isMirrorMode) {
+      clearMirrorInactivityTimers();
+      setMirrorInactivityLevel('active');
+      return;
+    }
+
+    const activityEvents = [
+      'click',
+      'keydown',
+      'mousemove',
+      'pointerdown',
+      'touchstart',
+      'wheel',
+    ] as const;
+
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, registerMirrorActivity, {
+        passive: true,
+      });
+    });
+    registerMirrorActivity();
+
+    return () => {
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, registerMirrorActivity);
+      });
+      clearMirrorInactivityTimers();
+    };
+  }, [clearMirrorInactivityTimers, isMirrorMode, registerMirrorActivity]);
 
   useEffect(() => {
     setVoiceSupported(getSpeechRecognitionConstructor() !== null);
@@ -649,8 +803,84 @@ export default function App() {
   const systemLabel = backendState.error
     ? 'System offline'
     : formatStatus(systemStatus?.status);
+  const assistantOrbState: AssistantOrbState = voiceListening
+    ? 'listening'
+    : assistantBusy
+      ? 'thinking'
+      : ttsSpeaking
+        ? 'speaking'
+        : assistantError || voiceError || backendState.error
+          ? 'error'
+          : 'idle';
+  const burnInOffset = burnInOffsets[burnInIndex] ?? burnInOffsets[0];
+  const mirrorStartupChecks = useMemo<MirrorStartupCheck[]>(
+    () => [
+      {
+        label: 'Backend',
+        status: backendLabel,
+        tone: backendState.isLoading
+          ? 'checking'
+          : backendState.error
+            ? 'offline'
+            : 'online',
+      },
+      {
+        label: 'Weather',
+        status: weatherSummary,
+        tone: backendState.isLoading
+          ? 'checking'
+          : weather?.status === 'online'
+            ? 'online'
+            : 'offline',
+      },
+      {
+        label: 'Voice',
+        status: voiceLabel,
+        tone: voiceSupported || voiceStatus?.listening ? 'online' : 'planned',
+      },
+      {
+        label: 'Calendar',
+        status: calendarSummary,
+        tone: calendarState.isLoading
+          ? 'checking'
+          : calendarState.error || !calendarStatus?.configured
+            ? 'planned'
+            : calendarStatus.authenticated
+              ? 'online'
+              : 'planned',
+      },
+      {
+        label: 'Context',
+        status: contextSummary,
+        tone: contextState.isLoading
+          ? 'checking'
+          : contextState.error
+            ? 'offline'
+            : 'online',
+      },
+    ],
+    [
+      backendLabel,
+      backendState.error,
+      backendState.isLoading,
+      calendarState.error,
+      calendarState.isLoading,
+      calendarStatus,
+      calendarSummary,
+      contextState.error,
+      contextState.isLoading,
+      contextSummary,
+      voiceLabel,
+      voiceStatus,
+      voiceSupported,
+      weather,
+      weatherSummary,
+    ],
+  );
 
   function performUiAction(action: AssistantUiAction) {
+    registerMirrorActivity();
+
     if (action.type === 'open_focus_view') {
       setActiveView(action.target);
     }
@@ -922,6 +1152,8 @@ export default function App() {
   }
 
   async function startVoiceCapture() {
+    registerMirrorActivity();
+
     if (assistantBusy || voiceListening) {
       return;
     }
@@ -1002,18 +1234,23 @@ export default function App() {
   }
 
   function stopVoiceCapture() {
+    registerMirrorActivity();
     recognitionRef.current?.stop();
   }
 
   function openFocus(view: Exclude<FocusView, 'home'>) {
+    registerMirrorActivity();
     setActiveView(view);
   }
 
   function closeFocus() {
+    registerMirrorActivity();
     setActiveView('home');
   }
 
   async function refreshSpotify() {
+    registerMirrorActivity();
+
     setSpotifyState((current) => ({
       ...current,
       error: null,
@@ -1042,6 +1279,8 @@ export default function App() {
   }
 
   async function refreshCalendar() {
+    registerMirrorActivity();
+
     setCalendarState({
       error: null,
       isLoading: true,
@@ -1069,6 +1308,8 @@ export default function App() {
   }
 
   async function refreshContext() {
+    registerMirrorActivity();
+
     setContextState({
       error: null,
       isLoading: true,
@@ -1094,6 +1335,8 @@ export default function App() {
   async function handleSpotifyAction(
     action: 'play' | 'pause' | 'next' | 'previous',
   ) {
+    registerMirrorActivity();
+
     setSpotifyState((current) => ({
       ...current,
       actionMessage: null,
@@ -1120,7 +1363,13 @@ export default function App() {
   }
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-[min(1180px,100%)] flex-col justify-center overflow-hidden px-4 py-8 md:px-8">
+    <main
+      className={`relative mx-auto flex min-h-screen flex-col overflow-hidden ${
+        isMirrorMode
+          ? 'mirror-mode w-full max-w-none justify-stretch px-6 py-6 md:px-10 md:py-8'
+          : 'w-[min(1180px,100%)] justify-center px-4 py-8 md:px-8'
+      }`}
+    >
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(109,215,232,0.10),transparent_28%),radial-gradient(circle_at_85%_70%,rgba(122,217,165,0.08),transparent_28%)]" />
 
       <section
@@ -1131,18 +1380,35 @@ export default function App() {
         }`}
         aria-hidden={activeView !== 'home'}
       >
-        <HomeState
-          backendLabel={backendLabel}
-          calendarSummary={calendarSummary}
-          contextSummary={contextSummary}
-          currentDate={currentDate}
-          currentTime={currentTime}
-          onOpen={openFocus}
-          systemLabel={systemLabel}
-          voiceLabel={voiceLabel}
-          weather={weather}
-          weatherSummary={weatherSummary}
-        />
+        {isMirrorMode ? (
+          <MirrorHomeState
+            assistantOrbState={assistantOrbState}
+            backendLabel={backendLabel}
+            burnInOffset={burnInOffset}
+            calendarSummary={calendarSummary}
+            contextSummary={contextSummary}
+            currentDate={currentDate}
+            currentTime={currentTime}
+            inactivityLevel={mirrorInactivityLevel}
+            onOpen={openFocus}
+            voiceLabel={voiceLabel}
+            weather={weather}
+            weatherSummary={weatherSummary}
+          />
+        ) : (
+          <HomeState
+            backendLabel={backendLabel}
+            calendarSummary={calendarSummary}
+            contextSummary={contextSummary}
+            currentDate={currentDate}
+            currentTime={currentTime}
+            onOpen={openFocus}
+            systemLabel={systemLabel}
+            voiceLabel={voiceLabel}
+            weather={weather}
+            weatherSummary={weatherSummary}
+          />
+        )}
       </section>
 
       <section
@@ -1224,6 +1490,14 @@ export default function App() {
           />
         )}
       </section>
+      {isMirrorMode && (
+        <>
+          <MirrorDimmingOverlay level={mirrorInactivityLevel} />
+          {mirrorStartupVisible && (
+            <MirrorStartup checks={mirrorStartupChecks} />
+          )}
+        </>
+      )}
     </main>
   );
 }
@@ -1343,6 +1617,129 @@ function HomeState({
         <p>{voiceLabel}</p>
         <p>Hardware planning only</p>
       </footer>
+    </div>
+  );
+}
+
+interface MirrorHomeStateProps {
+  assistantOrbState: AssistantOrbState;
+  backendLabel: string;
+  burnInOffset: BurnInOffset;
+  calendarSummary: string;
+  contextSummary: string;
+  currentDate: string;
+  currentTime: string;
+  inactivityLevel: MirrorInactivityLevel;
+  onOpen: (view: Exclude<FocusView, 'home'>) => void;
+  voiceLabel: string;
+  weather: WeatherInfo | null;
+  weatherSummary: string;
+}
+
+function MirrorHomeState({
+  assistantOrbState,
+  backendLabel,
+  burnInOffset,
+  calendarSummary,
+  contextSummary,
+  currentDate,
+  currentTime,
+  inactivityLevel,
+  onOpen,
+  voiceLabel,
+  weather,
+  weatherSummary,
+}: MirrorHomeStateProps) {
+  const transform = `translate(${burnInOffset.x}px, ${burnInOffset.y}px)`;
+
+  return (
+    <div
+      className={`mirror-home ${inactivityLevel === 'sleep' ? 'mirror-home-sleep' : ''}`}
+    >
+      <div className="mirror-clock mirror-burn" style={{ transform }}>
+        <p className={labelClass}>Mirrage</p>
+        <h1>{currentTime}</h1>
+        <p>{currentDate}</p>
+      </div>
+
+      <button
+        type="button"
+        className="mirror-weather mirror-burn"
+        style={{ transform }}
+        onClick={() => onOpen('weather')}
+        aria-label="Open weather focus"
+      >
+        <span className={labelClass}>Weather</span>
+        <strong>{formatTemperature(weather)}</strong>
+        <span>{weatherSummary}</span>
+      </button>
+
+      <div className="mirror-orb-zone">
+        <button
+          type="button"
+          className={`assistant-orb assistant-orb-${assistantOrbState} mirror-burn`}
+          style={{ transform }}
+          onClick={() => onOpen('assistant')}
+          aria-label="Open assistant focus"
+        >
+          <span>{formatStatus(assistantOrbState)}</span>
+        </button>
+      </div>
+
+      <div className="mirror-status mirror-burn" style={{ transform }}>
+        <span
+          className={`mirror-status-dot ${
+            backendLabel.toLowerCase().includes('offline')
+              ? 'mirror-status-dot-warn'
+              : ''
+          }`}
+        />
+        <span>{backendLabel}</span>
+        <span>{voiceLabel}</span>
+      </div>
+
+      <nav className="mirror-focus-rail" aria-label="Mirror focus views">
+        <button type="button" onClick={() => onOpen('context')}>
+          Context
+        </button>
+        <button type="button" onClick={() => onOpen('calendar')}>
+          Calendar
+        </button>
+        <button type="button" onClick={() => onOpen('media')}>
+          Media
+        </button>
+      </nav>
+
+      <div className="mirror-context-peek" aria-hidden="true">
+        <span>{contextSummary}</span>
+        <span>{calendarSummary}</span>
+      </div>
+    </div>
+  );
+}
+
+function MirrorDimmingOverlay({ level }: { level: MirrorInactivityLevel }) {
+  return <div className={`mirror-dim-overlay mirror-dim-${level}`} />;
+}
+
+function MirrorStartup({ checks }: { checks: MirrorStartupCheck[] }) {
+  return (
+    <div className="mirror-startup" role="status" aria-live="polite">
+      <div>
+        <p className={labelClass}>Mirrage</p>
+        <h2>Starting mirror mode</h2>
+        <div className="mirror-startup-checks">
+          {checks.map((check) => (
+            <div className="mirror-startup-check" key={check.label}>
+              <span
+                className={`mirror-startup-dot mirror-startup-dot-${check.tone}`}
+              />
+              <span>{check.label}</span>
+              <strong>{check.status}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

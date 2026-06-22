@@ -189,6 +189,51 @@ The first command router only handles a small set of local screen commands.
 - Keep command wording simple for now: weather, music/media, calendar, context,
   or assistant.
 
+## Mirror Mode does not appear
+
+Mirror Mode is off by default.
+
+- Confirm `VITE_MIRROR_MODE=true` is set before starting the frontend.
+- If Vite is already running, stop it and start it again after changing the env
+  value.
+- For Docker, confirm the variable is set in the shell or `.env` before running
+  `docker compose up --build`.
+
+Quick local check:
+
+```powershell
+cd frontend
+$env:VITE_MIRROR_MODE="true"
+npm run dev
+```
+
+Expected result: the home screen shows the large ambient clock, top-right
+weather summary, and assistant orb.
+
+## Mirror Mode dims too quickly or too slowly
+
+Change the frontend timeout values:
+
+```text
+VITE_MIRROR_DIM_TIMEOUT_SECONDS=60
+VITE_MIRROR_SLEEP_TIMEOUT_SECONDS=120
+```
+
+Restart the frontend after editing `.env`.
+
+The dimming is a visual overlay. It does not change monitor brightness or power
+settings.
+
+## Mirror Mode startup shows planned or unavailable services
+
+That can be normal in local development.
+
+- `Calendar` is planned until Google Calendar credentials are configured and the
+  account is connected.
+- `Voice` depends on browser speech support and microphone permission.
+- `Weather` can show unavailable if the backend or provider cannot be reached.
+- `Context` can be partial if weather, Calendar, or memory has a fallback state.
+
 ## Daily context is partial
 
 This is usually expected. The context route combines weather, Calendar, and local

@@ -362,6 +362,41 @@ Done when:
 Mirrage can answer daily-context questions from backend-owned weather, Calendar,
 and memory data without requiring a model provider.
 
+## Phase 26: Mirror Mode
+
+Goal: make Mirrage feel like a real wall-mounted mirror interface.
+
+- [x] Add `VITE_MIRROR_MODE=true` as an optional frontend display mode
+- [x] Keep normal development mode unchanged by default
+- [x] Add a minimal ambient home state for mirror use
+- [x] Show top-left time/date, top-right weather, assistant orb, and subtle status
+- [x] Keep Weather, Assistant, Media, Calendar, and Context focus views working
+- [x] Add inactivity dimming and automatic return to home
+- [x] Add light burn-in movement for static elements
+- [x] Add a startup sequence with non-blocking service checks
+- [x] Document setup, behavior, and limitations
+
+Done when:
+
+Mirror Mode can run locally or through Docker as the wall-display version of the
+existing app, without claiming wake word, smart home, vision, or physical
+hardware support.
+
+## Phase 26.5: Portfolio Assets
+
+Goal: make the project easier to review quickly.
+
+- [x] Add a recruiter-friendly demo guide
+- [x] Add website update notes and an honest AI-assisted development note
+- [x] Add README status table and demo section
+- [x] Add a screenshot gallery section for the main views
+- [x] Track the expected screenshot asset names
+
+Done when:
+
+A visitor can understand the current product, what is working, what is still
+planned, and how to demo the project without reading the entire codebase.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
@@ -422,6 +457,6 @@ and memory data without requiring a model provider.
 
 ## Current Focus
 
-Phase 22 is complete enough for now. Current focus is testing the daily context
-flow with real local data before adding richer scoring, tomorrow/week briefings,
-or AI-enhanced summaries.
+Phase 26 and 26.5 are complete enough for now. Current focus is recording clean
+portfolio screenshots, testing Mirror Mode on different screen sizes, and then
+refining daily context and memory controls.

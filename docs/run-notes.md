@@ -54,6 +54,47 @@ Verify: http://127.0.0.1:5173 shows the dashboard. The System and Voice cards sh
 read live values from the backend; if the backend is not running they show
 "Backend unavailable".
 
+## Mirror Mode check
+
+Mirror Mode is optional. Use it when testing the wall-display version of the UI.
+
+```powershell
+cd frontend
+$env:VITE_MIRROR_MODE="true"
+npm run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173
+```
+
+Expected result:
+
+- a short Mirrage startup screen appears
+- the ambient home shows a large clock, weather summary, assistant orb, and
+  subtle status text
+- Weather, Assistant, Media, Calendar, and Context focus views still open
+- `Close` or `Esc` returns to the ambient home
+- after inactivity, the screen dims and then returns to the home state
+
+Tune the timeouts in `frontend/.env`:
+
+```text
+VITE_MIRROR_DIM_TIMEOUT_SECONDS=60
+VITE_MIRROR_SLEEP_TIMEOUT_SECONDS=120
+VITE_MIRROR_STARTUP_SECONDS=3
+VITE_MIRROR_BURN_IN_SHIFT_SECONDS=45
+```
+
+Docker can run the same mode:
+
+```powershell
+$env:VITE_MIRROR_MODE="true"
+docker compose up --build
+```
+
 ## Browser voice setup
 
 Voice input is push-to-talk inside the Assistant focus view. Voice output uses
@@ -280,6 +321,7 @@ Copy-Item .env.example .env
 | `MIRRAGE_AI_PROVIDER` | `stub` | Which AI provider the assistant uses |
 | `MIRRAGE_ALLOWED_ORIGINS` | localhost:5173 | CORS origins the backend accepts |
 | `MIRRAGE_MEMORY_DATABASE_PATH` | `data/mirrage-memory.sqlite3` | Local SQLite memory path |
+| `VITE_MIRROR_MODE` | `false` | Enables the wall-display Mirror Mode frontend |
 
 The frontend reads its backend URL from `VITE_API_BASE_URL`
 (see [frontend/.env.example](../frontend/.env.example)); it defaults to
