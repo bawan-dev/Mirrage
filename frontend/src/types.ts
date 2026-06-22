@@ -28,6 +28,7 @@ export interface AssistantReply {
   provider: string;
   model: string | null;
   memory_action?: string | null;
+  context_action?: string | null;
 }
 
 export interface WeatherInfo {
@@ -95,5 +96,63 @@ export interface SpotifyPlayback {
 
 export interface SpotifyActionResult {
   status: string;
+  message: string;
+}
+
+export interface MemoryRecord {
+  id: number;
+  kind: 'preference' | 'fact' | 'goal' | 'routine';
+  key: string;
+  value: string;
+  status: 'active' | 'archived' | 'done';
+  source: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContextWeatherSummary {
+  status: string;
+  location: string;
+  temperature_c: number | null;
+  condition: string;
+  summary: string;
+  updated: string | null;
+  message: string;
+}
+
+export interface ContextCalendarSummary {
+  status: string;
+  authenticated: boolean;
+  today_event_count: number;
+  upcoming_event_count: number;
+  today_events: CalendarEvent[];
+  upcoming_events: CalendarEvent[];
+  message: string;
+}
+
+export interface ContextMemorySummary {
+  status: string;
+  preferences: MemoryRecord[];
+  goals: MemoryRecord[];
+  routines: MemoryRecord[];
+  facts_count: number;
+  message: string;
+}
+
+export interface ContextFocusSuggestion {
+  title: string;
+  reason: string;
+  source: string;
+  priority: string;
+}
+
+export interface DailyContext {
+  status: string;
+  date: string;
+  generated_at: string;
+  weather: ContextWeatherSummary;
+  calendar: ContextCalendarSummary;
+  memory: ContextMemorySummary;
+  suggested_focus: ContextFocusSuggestion[];
   message: string;
 }

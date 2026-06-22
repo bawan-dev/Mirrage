@@ -122,7 +122,8 @@ Sends a message to the assistant layer.
   "reply": "Assistant routing is ready, but no model is connected yet.",
   "provider": "stub",
   "model": null,
-  "memory_action": null
+  "memory_action": null,
+  "context_action": null
 }
 ```
 
@@ -140,7 +141,8 @@ Expected response:
   "reply": "Assistant routing is ready, but no model is connected yet.",
   "provider": "stub",
   "model": null,
-  "memory_action": null
+  "memory_action": null,
+  "context_action": null
 }
 ```
 
@@ -153,6 +155,10 @@ Local memory commands are handled before the AI provider is called. For example,
 `remember my favorite drink is coffee` stores a local memory and returns
 `provider: "memory"`.
 
+Daily context commands are also handled before the AI provider is called. For
+example, `Give me my daily briefing` returns `provider: "context"` and uses the
+backend context service.
+
 The active provider is selected with `MIRRAGE_AI_PROVIDER`:
 
 - `stub` — fixed response, no network (default; used in development and CI)
@@ -162,6 +168,95 @@ The active provider is selected with `MIRRAGE_AI_PROVIDER`:
 The response shape is identical for every provider, so the dashboard never changes.
 If a provider fails, the endpoint still returns `200` with a short fallback reply so
 the dashboard stays usable.
+
+## Context
+
+The context API returns a provider-independent daily briefing object assembled by
+the backend.
+
+### `GET /api/context/daily`
+
+Combines:
+
+- current weather
+- today's calendar events
+- upcoming calendar events
+- local memory preferences
+- local memory goals
+- local memory routines
+- suggested focus items
+
+Example response:
+
+```json
+{
+  "status": "partial",
+  "date": "2026-06-22",
+  "generated_at": "2026-06-22T09:00:00+00:00",
+  "weather": {
+    "status": "online",
+    "location": "London",
+    "temperature_c": 18.2,
+    "condition": "Partly cloudy",
+    "summary": "18 C and partly cloudy in London.",
+    "updated": "2026-06-22T09:00:00+01:00",
+    "message": "Weather loaded."
+  },
+  "calendar": {
+    "status": "not_authenticated",
+    "authenticated": false,
+    "today_event_count": 0,
+    "upcoming_event_count": 0,
+    "today_events": [],
+    "upcoming_events": [],
+    "message": "Calendar is configured but not connected."
+  },
+  "memory": {
+    "status": "empty",
+    "preferences": [],
+    "goals": [],
+    "routines": [],
+    "facts_count": 0,
+    "message": "No local memories are stored yet."
+  },
+  "suggested_focus": [
+    {
+      "title": "Keep the day light",
+      "reason": "No calendar items or local goals are available yet.",
+      "source": "context",
+      "priority": "low"
+    }
+  ],
+  "message": "Daily context loaded with one or more fallback states."
+}
+```
+
+Status values:
+
+| Field | Values |
+| --- | --- |
+| top-level `status` | `ready`, `partial`, `unavailable` |
+| `weather.status` | `online`, `unavailable`, or provider status |
+| `calendar.status` | `ready`, `not_configured`, `not_authenticated`, `unavailable` |
+| `memory.status` | `ready`, `empty`, `unavailable` |
+
+### Assistant Context Test
+
+```powershell
+$body = @{ message = "Give me my daily briefing" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected response includes:
+
+```json
+{
+  "provider": "context",
+  "context_action": "daily"
+}
+```
+
+More detail: [context.md](context.md).
 
 ## Memory
 

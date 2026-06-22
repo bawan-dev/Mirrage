@@ -186,8 +186,41 @@ The first command router only handles a small set of local screen commands.
 - Try one of the known phrases from [run notes](run-notes.md#command-routing-checks).
 - Confirm you are sending the message from the Assistant focus view.
 - If the message is not recognized, it will go to the normal assistant endpoint.
-- Keep command wording simple for now: weather, music/media, calendar, or
-  assistant.
+- Keep command wording simple for now: weather, music/media, calendar, context,
+  or assistant.
+
+## Daily context is partial
+
+This is usually expected. The context route combines weather, Calendar, and local
+memory. If one source is unavailable, the response still loads with a fallback.
+
+Check the raw context response:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/context/daily
+```
+
+Look at:
+
+- `weather.status`
+- `calendar.status`
+- `memory.status`
+- top-level `message`
+
+Examples:
+
+- `calendar.status: not_configured` means Google Calendar credentials are not set.
+- `calendar.status: not_authenticated` means Calendar needs to be connected.
+- `weather.status: unavailable` means the weather provider or network failed.
+- `memory.status: empty` means local memory is working but has no stored context.
+
+## Daily briefing uses `provider: context`
+
+That is expected. Daily context questions are handled by deterministic backend
+logic before model provider routing. This keeps local memory and personal context
+out of external model providers for this phase.
+
+AI-enhanced context summaries are not enabled yet.
 
 ## Calendar says setup is needed
 

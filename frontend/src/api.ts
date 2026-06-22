@@ -2,6 +2,7 @@ import type {
   AssistantReply,
   CalendarSchedule,
   CalendarStatus,
+  DailyContext,
   HealthStatus,
   SpotifyActionResult,
   SpotifyPlayback,
@@ -52,6 +53,10 @@ export function getHealthStatus(): Promise<HealthStatus> {
 
 export function getWeather(): Promise<WeatherInfo> {
   return fetchJson<WeatherInfo>('/api/info/weather');
+}
+
+export function getDailyContext(): Promise<DailyContext> {
+  return fetchJson<DailyContext>('/api/context/daily');
 }
 
 export function sendAssistantMessage(message: string): Promise<AssistantReply> {

@@ -1,5 +1,7 @@
 """API request and response schemas."""
 
+from __future__ import annotations
+
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -17,6 +19,7 @@ class AssistantMessageResponse(BaseModel):
     provider: str
     model: str | None
     memory_action: str | None = None
+    context_action: str | None = None
 
 
 class MemoryCreateRequest(BaseModel):
@@ -56,6 +59,53 @@ class MemorySummaryResponse(BaseModel):
     goals: list[MemoryRecordResponse]
     routines: list[MemoryRecordResponse]
     count: int
+    message: str
+
+
+class ContextWeatherSummary(BaseModel):
+    status: str
+    location: str
+    temperature_c: float | None
+    condition: str
+    summary: str
+    updated: str | None
+    message: str
+
+
+class ContextCalendarSummary(BaseModel):
+    status: str
+    authenticated: bool
+    today_event_count: int
+    upcoming_event_count: int
+    today_events: list[CalendarEventResponse]
+    upcoming_events: list[CalendarEventResponse]
+    message: str
+
+
+class ContextMemorySummary(BaseModel):
+    status: str
+    preferences: list[MemoryRecordResponse]
+    goals: list[MemoryRecordResponse]
+    routines: list[MemoryRecordResponse]
+    facts_count: int
+    message: str
+
+
+class ContextFocusSuggestion(BaseModel):
+    title: str
+    reason: str
+    source: str
+    priority: str
+
+
+class DailyContext(BaseModel):
+    status: str
+    date: str
+    generated_at: str
+    weather: ContextWeatherSummary
+    calendar: ContextCalendarSummary
+    memory: ContextMemorySummary
+    suggested_focus: list[ContextFocusSuggestion]
     message: str
 
 

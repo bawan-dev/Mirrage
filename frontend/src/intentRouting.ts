@@ -1,11 +1,17 @@
-export type CommandFocusTarget = 'weather' | 'assistant' | 'media' | 'calendar';
+export type CommandFocusTarget =
+  | 'weather'
+  | 'assistant'
+  | 'media'
+  | 'calendar'
+  | 'context';
 
 export type AssistantIntent =
   | 'open_weather'
   | 'open_assistant'
   | 'open_media'
   | 'open_calendar'
-  | 'calendar_today';
+  | 'calendar_today'
+  | 'daily_context';
 
 export interface AssistantUiAction {
   type: 'open_focus_view';
@@ -47,6 +53,17 @@ const CALENDAR_TERMS = [
 ];
 
 const TODAY_TERMS = ['today', 'daily', 'day'];
+
+const CONTEXT_PHRASES = [
+  'daily briefing',
+  'what is my day like',
+  'what does my day look like',
+  'what should i focus on',
+  'what goals am i working on',
+  'what do i have today',
+  'show my context',
+  'show context',
+];
 
 const ACTION_TERMS = [
   'open',
@@ -100,6 +117,14 @@ export function routeAssistantCommand(
 
   if (!command) {
     return null;
+  }
+
+  if (CONTEXT_PHRASES.some((phrase) => command.includes(phrase))) {
+    return createRoute(
+      'daily_context',
+      'context',
+      'Opening your daily context.',
+    );
   }
 
   if (

@@ -343,6 +343,25 @@ Done when:
 The assistant can store, retrieve, and update simple local memories without
 sending those memory commands to a model provider.
 
+## Phase 22: Personal Context System
+
+Goal: give Mirrage a backend-owned daily context layer.
+
+- [x] Add a context aggregation service
+- [x] Combine weather, Calendar, and local memory into one daily context response
+- [x] Add `GET /api/context/daily`
+- [x] Add provider-independent assistant replies for daily briefing and focus prompts
+- [x] Add Context focus view in the frontend
+- [x] Route typed and spoken context commands to the Context view
+- [x] Keep context responses deterministic and local before AI provider calls
+- [x] Document context architecture, fallback behavior, privacy boundary, and tests
+- [x] Add backend tests for context response, fallbacks, assistant commands, and memory goals
+
+Done when:
+
+Mirrage can answer daily-context questions from backend-owned weather, Calendar,
+and memory data without requiring a model provider.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
@@ -374,6 +393,14 @@ sending those memory commands to a model provider.
 - [ ] Add optional encryption or OS keychain support
 - [ ] Add safer automatic memory extraction, only after clear controls exist
 
+## Future: Context Refinement
+
+- [ ] Add richer focus scoring
+- [ ] Add tomorrow and week briefings
+- [ ] Add Spotify/media context once playback state is stable enough
+- [ ] Add explicit opt-in AI-enhanced briefings
+- [ ] Add UI controls for what context sources are included
+
 ## Future: Smart Home Integration
 
 - [ ] Pick the first home control target
@@ -395,6 +422,6 @@ sending those memory commands to a model provider.
 
 ## Current Focus
 
-Phase 21 is complete enough for now. Current focus is testing local memory with
-real daily use before adding a memory editing UI, sensitive-memory prompts, or
-automatic memory extraction.
+Phase 22 is complete enough for now. Current focus is testing the daily context
+flow with real local data before adding richer scoring, tomorrow/week briefings,
+or AI-enhanced summaries.

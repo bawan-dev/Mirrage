@@ -8,6 +8,7 @@ from backend.app.schemas import (
     AssistantMessageResponse,
     CalendarScheduleResponse,
     CalendarStatusResponse,
+    DailyContext,
     MemoryCreateRequest,
     MemoryKind,
     MemoryRecordResponse,
@@ -30,6 +31,7 @@ from backend.app.services.calendar import (
     get_today_schedule,
     get_upcoming_events,
 )
+from backend.app.services.context import get_daily_context
 from backend.app.services.memory import (
     MemoryNotFoundError,
     create_memory,
@@ -90,6 +92,11 @@ def create_assistant_message(
     message: AssistantMessageRequest,
 ) -> AssistantMessageResponse:
     return create_assistant_reply(message)
+
+
+@router.get("/api/context/daily")
+def read_daily_context() -> DailyContext:
+    return get_daily_context()
 
 
 @router.get("/api/memory")

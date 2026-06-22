@@ -15,6 +15,8 @@ Supported examples:
 | `What is the weather?` | Opens the Weather focus view |
 | `Show my music` | Opens the Media focus view |
 | `What is on my calendar today?` | Opens the Calendar focus view and summarizes today's events |
+| `daily briefing` | Opens the Context focus view and asks the backend context service for a briefing |
+| `What should I focus on today?` | Opens the Context focus view and asks for suggested focus |
 | `Open assistant` | Opens the Assistant focus view |
 
 If a message is not recognized as a UI command, it still goes to the existing
@@ -54,10 +56,18 @@ Supported targets:
 - `media`
 - `assistant`
 - `calendar`
+- `context`
 
-Most commands return a short local response. Calendar has one extra path:
+Most commands return a short local response. Calendar and context have extra
+backend paths:
+
 `What is on my calendar today?` opens the Calendar focus view and fetches today's
 events from the backend Calendar endpoint before answering.
+
+`daily briefing` and similar context commands open the Context focus view, fetch
+`GET /api/context/daily`, and send the original prompt to
+`POST /api/assistant/message`. The backend handles that prompt with deterministic
+context logic before model provider routing.
 
 ## Why It Is Local For Now
 
@@ -69,6 +79,7 @@ Later, the same shape can move behind the backend if Mirrage needs:
 - richer intent detection
 - smart home actions
 - broader calendar actions
+- broader context actions
 - command permissions
 - confirmations for risky actions
 

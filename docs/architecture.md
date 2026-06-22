@@ -21,6 +21,8 @@ Backend API
   |
   +-- Local Memory Store
   |
+  +-- Personal Context Layer
+  |
   +-- Calendar Integration
   |
   +-- Spotify Integration
@@ -30,7 +32,7 @@ Backend API
   +-- Hardware Status Layer
 ```
 
-The frontend should ask for data. The backend should decide where that data comes from. The AI, memory, voice, and hardware layers should stay behind backend boundaries so they can be replaced or upgraded later.
+The frontend should ask for data. The backend should decide where that data comes from. The AI, context, memory, voice, and hardware layers should stay behind backend boundaries so they can be replaced or upgraded later.
 
 There is one current frontend-local exception: simple command routing. Mirrage
 can recognize a small set of screen-navigation commands before calling the
@@ -68,8 +70,9 @@ Its job:
 - report voice status
 - handle Google Calendar OAuth and Calendar API calls
 - handle Spotify OAuth and Spotify Web API calls
+- aggregate daily context from weather, calendar, and memory
 - store local memory for preferences, facts, goals, and routines
-- provide clean boundaries for AI, memory, voice, and hardware features
+- provide clean boundaries for AI, context, memory, voice, and hardware features
 
 The backend is the main coordination layer.
 
@@ -205,6 +208,7 @@ Core endpoints:
 | `GET` | `/api/system/status` | Return basic system status |
 | `GET` | `/api/voice/status` | Return voice service status |
 | `POST` | `/api/assistant/message` | Send a message to the assistant layer |
+| `GET` | `/api/context/daily` | Return provider-independent daily context |
 | `GET` | `/api/memory/summary` | Return local memory grouped by type |
 | `POST` | `/api/memory` | Create or update a local memory |
 | `GET` | `/api/integrations/calendar/events/today` | Return today's schedule |
@@ -274,6 +278,39 @@ The first parser handles direct commands such as:
 The memory API is documented in [api.md](api.md), and the design notes are in
 [memory.md](memory.md).
 
+## Context Boundary
+
+The personal context layer is a backend service that aggregates existing sources
+into one daily object.
+
+```text
+context focus view or assistant context prompt
+  -> Mirrage backend context route
+  -> weather service
+  -> calendar service
+  -> local memory service
+  -> normalized daily context response
+```
+
+The context service currently uses:
+
+- current weather summary
+- today's Calendar events
+- upcoming Calendar events
+- local memory preferences
+- local memory goals
+- local memory routines
+
+Each source has a fallback state. Weather can be unavailable, Calendar can be
+unconfigured, and memory can be empty without breaking the whole response.
+
+Context assistant replies are provider-independent. The backend generates a
+short deterministic briefing locally before model provider routing. It does not
+send the full context bundle or local memories to OpenAI, Ollama, or any other
+provider in this phase.
+
+More detail is in [context.md](context.md).
+
 ## Command Routing Boundary
 
 The current command router lives in the frontend and handles only local UI
@@ -294,6 +331,7 @@ Examples:
 | `What is the weather?` | Open Weather focus view |
 | `Show my music` | Open Media focus view |
 | `What is on my calendar today?` | Open Calendar focus view and summarize today's events |
+| `daily briefing` | Open Context focus view and request a backend context briefing |
 | `Open assistant` | Open Assistant focus view |
 
 If the router does not recognize a command, the message follows the normal

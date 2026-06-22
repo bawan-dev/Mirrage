@@ -37,11 +37,13 @@ What works now:
 - speech transcripts sent through the existing assistant endpoint
 - browser text-to-speech for assistant replies
 - mute and browser voice settings in the assistant focus view
-- local command routing for opening weather, media, assistant, and calendar focus views
+- local command routing for opening weather, media, assistant, calendar, and context focus views
 - Spotify OAuth, currently playing, album artwork, and playback controls
 - Google Calendar OAuth, today's schedule, upcoming events, and calendar assistant command
 - local SQLite memory layer for preferences, facts, goals, and routines
 - assistant memory commands for storing, recalling, and updating local memories
+- provider-independent daily context aggregation from weather, calendar, and memory
+- Context focus view for daily overview, goals, routines, and suggested focus
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -54,6 +56,7 @@ What is still planned:
 - Spotify persistence, device picker, and voice playback commands
 - Calendar token persistence and richer schedule actions
 - memory editing UI and stronger privacy controls
+- AI-enhanced context summaries behind explicit privacy controls
 - smart home control
 - physical mirror installation
 - production deployment
@@ -78,6 +81,8 @@ FastAPI Backend
       |
       +-- Local Memory Store
       |
+      +-- Personal Context Layer
+      |
       +-- Calendar Integration
       |
       +-- Spotify Integration
@@ -87,7 +92,7 @@ FastAPI Backend
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, local memory, and external data. AI providers, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, local memory, and external data. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
 
 More detail:
 
@@ -95,6 +100,7 @@ More detail:
 - [API notes](docs/api.md)
 - [Calendar setup](docs/calendar.md)
 - [Command routing](docs/command-routing.md)
+- [Context system](docs/context.md)
 - [Memory layer](docs/memory.md)
 - [Roadmap](docs/roadmap.md)
 - [Spotify setup](docs/spotify.md)
@@ -120,6 +126,7 @@ Hardware notes:
 | Calendar | Google Calendar OAuth and read-only events through backend endpoints |
 | Voice | Browser push-to-talk speech recognition and speech synthesis foundation |
 | Commands | Frontend intent routing for local UI actions |
+| Context | Backend aggregation across weather, Calendar, and local memory |
 | Memory | Local SQLite storage for preferences, facts, goals, and routines |
 | Dev setup | Docker Compose |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
@@ -214,6 +221,8 @@ Current manual checks:
 - type `What is the weather?` in the assistant view and confirm Weather focus opens
 - type `Show my music` in the assistant view and confirm Media focus opens
 - type `What is on my calendar today?` and confirm Calendar focus opens with a schedule response
+- type `daily briefing` and confirm Context focus opens with a provider-independent briefing
+- open `http://127.0.0.1:8000/api/context/daily` and confirm weather, calendar, memory, and suggested focus fields exist
 - type `Open assistant` and confirm Assistant focus opens
 - type `remember my favorite drink is coffee` and confirm the assistant replies with `provider: memory`
 - type `what do you remember about me?` and confirm the response includes `favorite drink: coffee`
@@ -267,13 +276,14 @@ Completed foundation work:
 - Spotify media integration
 - Google Calendar daily schedule integration
 - local memory layer
+- personal context system
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- Memory refinement: edit/delete UI, safer confirmations, and better privacy controls
+- Context refinement: richer focus scoring, memory editing UI, and clearer privacy controls
 
 Future milestones:
 
@@ -281,6 +291,7 @@ Future milestones:
 - Spotify Refinement
 - Calendar Refinement
 - Memory Refinement
+- Context Refinement
 - Smart Home Integration
 - Physical Mirror Build
 - Home Installation

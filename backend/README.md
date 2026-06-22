@@ -27,5 +27,5 @@ pytest
 - `app/main.py` - FastAPI app and middleware
 - `app/routes.py` - route definitions
 - `app/schemas.py` - request and response models
-- `app/services/` - system, voice, assistant, memory, and integration boundaries
+- `app/services/` - system, voice, assistant, context, memory, and integration boundaries
 - `tests/` - pytest suite

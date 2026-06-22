@@ -102,10 +102,53 @@ From the Assistant focus view, type each command:
 | `What is the weather?` | Weather focus view opens |
 | `Show my music` | Media focus view opens |
 | `What is on my calendar today?` | Calendar focus view opens and replies with today's schedule |
+| `daily briefing` | Context focus view opens and replies with provider-independent daily context |
+| `What should I focus on today?` | Context focus view opens and replies with suggested focus |
 | `Open assistant` | Assistant focus view opens |
 
 The assistant also adds a short action response to the message thread. Commands
 that are not recognized still go to the backend assistant endpoint.
+
+## Daily context checks
+
+Open the Context focus view from the dashboard, or ask from the Assistant focus
+view:
+
+```text
+daily briefing
+```
+
+Expected result:
+
+- Context focus view opens
+- the assistant reply uses `provider: context`
+- the reply mentions weather, calendar, memory, and suggested focus when those
+  sources are available
+
+Check the backend endpoint directly:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/context/daily
+```
+
+Expected result:
+
+- top-level `status` is `ready`, `partial`, or `unavailable`
+- `weather`, `calendar`, `memory`, and `suggested_focus` fields are present
+- unavailable sources report a clear status instead of crashing
+
+Assistant context check:
+
+```powershell
+$body = @{ message = "What should I focus on today?" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected result:
+
+- `provider` is `context`
+- `context_action` is `focus`
+- the reply includes `Suggested focus`
 
 ## Memory checks
 

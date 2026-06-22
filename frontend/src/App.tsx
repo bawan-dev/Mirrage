@@ -5,6 +5,7 @@ import {
   getCalendarStatus,
   getCalendarToday,
   getCalendarUpcoming,
+  getDailyContext,
   getHealthStatus,
   getSpotifyLoginUrl,
   getSpotifyPlayback,
@@ -25,6 +26,7 @@ import type {
   CalendarEvent,
   CalendarSchedule,
   CalendarStatus,
+  DailyContext,
   HealthStatus,
   SpotifyPlayback,
   SpotifyStatus,
@@ -33,7 +35,13 @@ import type {
   WeatherInfo,
 } from './types';
 
-type FocusView = 'home' | 'weather' | 'assistant' | 'media' | 'calendar';
+type FocusView =
+  | 'home'
+  | 'weather'
+  | 'assistant'
+  | 'media'
+  | 'calendar'
+  | 'context';
 
 interface BackendState {
   error: string | null;
@@ -47,6 +55,11 @@ interface SpotifyUiState {
 }
 
 interface CalendarUiState {
+  error: string | null;
+  isLoading: boolean;
+}
+
+interface ContextUiState {
   error: string | null;
   isLoading: boolean;
 }
@@ -266,6 +279,7 @@ export default function App() {
   );
   const [calendarUpcoming, setCalendarUpcoming] =
     useState<CalendarSchedule | null>(null);
+  const [dailyContext, setDailyContext] = useState<DailyContext | null>(null);
   const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatus | null>(
     null,
   );
@@ -281,6 +295,10 @@ export default function App() {
     isLoading: true,
   });
   const [calendarState, setCalendarState] = useState<CalendarUiState>({
+    error: null,
+    isLoading: true,
+  });
+  const [contextState, setContextState] = useState<ContextUiState>({
     error: null,
     isLoading: true,
   });
@@ -495,6 +513,41 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadContext() {
+      try {
+        const context = await getDailyContext();
+
+        if (!isActive) {
+          return;
+        }
+
+        setDailyContext(context);
+        setContextState({
+          error: null,
+          isLoading: false,
+        });
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setContextState({
+          error: 'Context API unavailable',
+          isLoading: false,
+        });
+      }
+    }
+
+    loadContext();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const currentTime = useMemo(
     () =>
       new Intl.DateTimeFormat('en-GB', {
@@ -569,6 +622,23 @@ export default function App() {
     calendarToday,
   ]);
 
+  const contextSummary = useMemo(() => {
+    if (contextState.isLoading) {
+      return 'Building daily context';
+    }
+
+    if (contextState.error || !dailyContext) {
+      return 'Context unavailable';
+    }
+
+    const suggestion = dailyContext.suggested_focus[0];
+    if (suggestion) {
+      return suggestion.title;
+    }
+
+    return dailyContext.message;
+  }, [contextState.error, contextState.isLoading, dailyContext]);
+
   const voiceLabel = voiceListening
     ? 'Listening now'
     : voiceSupported
@@ -602,6 +672,53 @@ export default function App() {
         meta: source === 'voice' ? 'Voice transcript' : undefined,
       },
     ]);
+
+    if (command.intent === 'daily_context') {
+      setAssistantBusy(true);
+
+      try {
+        const [context, result] = await Promise.all([
+          getDailyContext(),
+          sendAssistantMessage(message),
+        ]);
+
+        setDailyContext(context);
+        setContextState({
+          error: null,
+          isLoading: false,
+        });
+        setAssistantProvider(result.provider);
+        setAssistantMessages((messages) => [
+          ...messages,
+          {
+            role: 'assistant',
+            text: result.reply,
+            meta: `Context / ${formatStatus(result.context_action ?? command.intent)}`,
+          },
+        ]);
+        speakText(result.reply);
+      } catch {
+        const fallback =
+          'Daily context is unavailable right now. Check the backend context route.';
+        setContextState({
+          error: 'Context API unavailable',
+          isLoading: false,
+        });
+        setAssistantMessages((messages) => [
+          ...messages,
+          {
+            role: 'assistant',
+            text: fallback,
+            meta: 'Context fallback',
+          },
+        ]);
+        speakText(fallback);
+      } finally {
+        setAssistantBusy(false);
+      }
+
+      return;
+    }
 
     if (command.intent === 'calendar_today') {
       setAssistantBusy(true);
@@ -951,6 +1068,29 @@ export default function App() {
     }
   }
 
+  async function refreshContext() {
+    setContextState({
+      error: null,
+      isLoading: true,
+    });
+
+    try {
+      const context = await getDailyContext();
+      setDailyContext(context);
+      setContextState({
+        error: null,
+        isLoading: false,
+      });
+      return context;
+    } catch {
+      setContextState({
+        error: 'Context API unavailable',
+        isLoading: false,
+      });
+      return null;
+    }
+  }
+
   async function handleSpotifyAction(
     action: 'play' | 'pause' | 'next' | 'previous',
   ) {
@@ -994,6 +1134,7 @@ export default function App() {
         <HomeState
           backendLabel={backendLabel}
           calendarSummary={calendarSummary}
+          contextSummary={contextSummary}
           currentDate={currentDate}
           currentTime={currentTime}
           onOpen={openFocus}
@@ -1073,6 +1214,15 @@ export default function App() {
             upcoming={calendarUpcoming}
           />
         )}
+
+        {activeView === 'context' && (
+          <ContextFocus
+            context={dailyContext}
+            contextState={contextState}
+            onClose={closeFocus}
+            onRefresh={() => void refreshContext()}
+          />
+        )}
       </section>
     </main>
   );
@@ -1081,6 +1231,7 @@ export default function App() {
 interface HomeStateProps {
   backendLabel: string;
   calendarSummary: string;
+  contextSummary: string;
   currentDate: string;
   currentTime: string;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
@@ -1093,6 +1244,7 @@ interface HomeStateProps {
 function HomeState({
   backendLabel,
   calendarSummary,
+  contextSummary,
   currentDate,
   currentTime,
   onOpen,
@@ -1118,7 +1270,7 @@ function HomeState({
       </header>
 
       <section
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5"
         aria-label="Ambient focus controls"
       >
         <button
@@ -1171,6 +1323,18 @@ function HomeState({
             Today
           </strong>
           <p className={`mt-3 ${mutedClass}`}>{calendarSummary}</p>
+        </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('context')}
+        >
+          <span className={labelClass}>Context</span>
+          <strong className="mt-8 block text-4xl font-semibold text-green">
+            Daily
+          </strong>
+          <p className={`mt-3 ${mutedClass}`}>{contextSummary}</p>
         </button>
       </section>
 
@@ -1232,6 +1396,190 @@ function WeatherFocus({ backendState, onClose, weather }: WeatherFocusProps) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface ContextFocusProps {
+  context: DailyContext | null;
+  contextState: ContextUiState;
+  onClose: () => void;
+  onRefresh: () => void;
+}
+
+function ContextFocus({
+  context,
+  contextState,
+  onClose,
+  onRefresh,
+}: ContextFocusProps) {
+  const suggestions = context?.suggested_focus ?? [];
+  const goals = context?.memory.goals ?? [];
+  const routines = context?.memory.routines ?? [];
+  const preferences = context?.memory.preferences ?? [];
+  const todayEvents = context?.calendar.today_events ?? [];
+
+  return (
+    <div className={focusPanelClass}>
+      <FocusHeader
+        eyebrow="Daily Context"
+        onClose={onClose}
+        title={context ? 'Today' : 'Context unavailable'}
+      />
+
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={contextState.isLoading}
+          className="rounded-lg border border-cyan/50 bg-cyan/10 px-4 py-3 text-sm font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {contextState.isLoading ? 'Refreshing...' : 'Refresh context'}
+        </button>
+        <p className="text-sm text-muted">
+          {context?.message ??
+            'Context loads from backend weather, calendar, and local memory.'}
+        </p>
+      </div>
+
+      {contextState.error && (
+        <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
+          {contextState.error}
+        </p>
+      )}
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="rounded-lg border border-line bg-page/40 p-5">
+          <p className={labelClass}>Overview</p>
+          <h2 className="mt-3 text-4xl font-semibold text-text">
+            {context?.date ?? 'No daily context yet'}
+          </h2>
+          <p className="mt-4 text-lg leading-relaxed text-muted">
+            {context
+              ? `${context.weather.summary} ${context.calendar.message}`
+              : 'Start the backend and refresh this view.'}
+          </p>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <ContextMetric
+              label="Weather"
+              value={formatStatus(context?.weather.status)}
+            />
+            <ContextMetric
+              label="Calendar"
+              value={`${context?.calendar.today_event_count ?? 0} today`}
+            />
+            <ContextMetric
+              label="Memory"
+              value={formatStatus(context?.memory.status)}
+            />
+          </div>
+
+          <div className="mt-8">
+            <p className={labelClass}>Suggested focus</p>
+            <div className="mt-4 grid gap-3">
+              {suggestions.map((suggestion) => (
+                <article
+                  className="rounded-lg border border-line bg-panel p-4"
+                  key={`${suggestion.source}-${suggestion.title}`}
+                >
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <h3 className="text-2xl font-semibold text-text">
+                        {suggestion.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted">
+                        {suggestion.reason}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-cyan">
+                      {suggestion.priority}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <aside className="grid gap-4">
+          <section className="rounded-lg border border-line bg-page/40 p-5">
+            <p className={labelClass}>Calendar</p>
+            <p className="mt-2 text-sm text-muted">
+              {context?.calendar.message ?? 'Calendar context is not loaded.'}
+            </p>
+            {todayEvents.length > 0 && (
+              <CalendarEventList
+                events={todayEvents.slice(0, 3)}
+                mode="today"
+              />
+            )}
+          </section>
+
+          <section className="rounded-lg border border-line bg-page/40 p-5">
+            <p className={labelClass}>Goals</p>
+            <MemoryLineList
+              emptyText="No local goals saved yet."
+              items={goals}
+            />
+          </section>
+
+          <section className="rounded-lg border border-line bg-page/40 p-5">
+            <p className={labelClass}>Routines</p>
+            <MemoryLineList
+              emptyText="No routines saved yet."
+              items={routines}
+            />
+          </section>
+
+          <section className="rounded-lg border border-line bg-page/40 p-5">
+            <p className={labelClass}>Preferences</p>
+            <MemoryLineList
+              emptyText="No preferences saved yet."
+              items={preferences.slice(0, 3)}
+            />
+          </section>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function ContextMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-line bg-panel p-4">
+      <p className={labelClass}>{label}</p>
+      <p className="mt-2 text-lg font-semibold text-text">{value}</p>
+    </div>
+  );
+}
+
+function MemoryLineList({
+  emptyText,
+  items,
+}: {
+  emptyText: string;
+  items: DailyContext['memory']['goals'];
+}) {
+  if (items.length === 0) {
+    return <p className="mt-3 text-sm text-muted">{emptyText}</p>;
+  }
+
+  return (
+    <div className="mt-4 grid gap-3">
+      {items.map((item) => (
+        <div
+          className="rounded-lg border border-line bg-panel p-4"
+          key={item.id}
+        >
+          <p className="font-semibold text-text">
+            {item.key.replace(/^goal: /, '')}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {item.value}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }

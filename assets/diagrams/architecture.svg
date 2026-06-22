@@ -31,7 +31,7 @@
 
   <rect x="310" y="350" width="380" height="105" class="core" />
   <text x="500" y="392" text-anchor="middle" class="label">FastAPI Backend</text>
-  <text x="500" y="422" text-anchor="middle" class="small">assistant, memory, integration routes</text>
+  <text x="500" y="422" text-anchor="middle" class="small">assistant, context, memory routes</text>
 
   <path d="M 310 405 L 185 405" class="line" />
   <path d="M 500 455 L 500 520" class="line" />
