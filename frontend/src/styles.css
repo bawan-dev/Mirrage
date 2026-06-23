@@ -56,16 +56,23 @@ body {
 
   .mirror-mode {
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 22%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 24%),
       radial-gradient(
-        circle at 48% 62%,
-        rgba(109, 215, 232, 0.1),
-        transparent 26%
+        circle at 50% 58%,
+        rgba(109, 215, 232, 0.12),
+        transparent 22%
       ),
       radial-gradient(
-        circle at 86% 12%,
-        rgba(240, 195, 106, 0.08),
-        transparent 24%
+        circle at 82% 14%,
+        rgba(240, 195, 106, 0.06),
+        transparent 21%
+      ),
+      linear-gradient(
+        115deg,
+        rgba(109, 215, 232, 0.045),
+        transparent 30%,
+        rgba(122, 217, 165, 0.035) 82%,
+        transparent
       ),
       #020406;
   }
@@ -73,10 +80,40 @@ body {
   .mirror-mode .focus-panel {
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
-    border-radius: 24px;
+    border-color: rgba(203, 220, 226, 0.08);
+    border-radius: 30px;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 36%),
-      rgba(5, 7, 10, 0.88);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 34%),
+      radial-gradient(
+        circle at 78% 8%,
+        rgba(109, 215, 232, 0.06),
+        transparent 24%
+      ),
+      rgba(3, 5, 8, 0.72);
+    box-shadow:
+      0 34px 120px rgba(0, 0, 0, 0.58),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(28px);
+  }
+
+  .mirror-mode .focus-panel .border-line {
+    border-color: rgba(203, 220, 226, 0.09);
+  }
+
+  .mirror-mode .focus-panel [class*='bg-page'],
+  .mirror-mode .focus-panel [class*='bg-panel'] {
+    background-color: rgba(5, 8, 12, 0.34);
+    background-image: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      transparent
+    );
+  }
+
+  .mirror-mode .focus-panel header button,
+  .mirror-mode .focus-panel button,
+  .mirror-mode .focus-panel a {
+    border-radius: 999px;
   }
 
   .mirror-home {
@@ -116,12 +153,12 @@ body {
     display: grid;
     width: min(28rem, 36vw);
     gap: 0.8rem;
-    border: 1px solid var(--color-line);
-    border-radius: 20px;
-    background: rgba(7, 10, 14, 0.5);
+    border: 1px solid transparent;
+    border-radius: 28px;
+    background: rgba(7, 10, 14, 0.18);
     padding: clamp(1rem, 2vw, 1.5rem);
     text-align: left;
-    box-shadow: var(--shadow-mirror);
+    box-shadow: 0 26px 90px rgba(0, 0, 0, 0.3);
     transition:
       border-color 250ms ease,
       background 250ms ease,
@@ -129,8 +166,8 @@ body {
   }
 
   .mirror-weather:hover {
-    border-color: rgba(109, 215, 232, 0.7);
-    background: rgba(12, 17, 23, 0.72);
+    border-color: rgba(109, 215, 232, 0.26);
+    background: rgba(12, 17, 23, 0.34);
   }
 
   .mirror-weather strong {
@@ -160,7 +197,7 @@ body {
     aspect-ratio: 1;
     place-items: center;
     overflow: hidden;
-    border: 1px solid rgba(109, 215, 232, 0.38);
+    border: 1px solid rgba(109, 215, 232, 0.3);
     border-radius: 50%;
     background:
       radial-gradient(
@@ -174,7 +211,8 @@ body {
         rgba(7, 10, 14, 0.82) 58%
       );
     box-shadow:
-      0 0 34px rgba(109, 215, 232, 0.18),
+      0 0 40px rgba(109, 215, 232, 0.16),
+      0 0 120px rgba(109, 215, 232, 0.07),
       inset 0 0 42px rgba(109, 215, 232, 0.14);
     color: var(--color-text);
     font-size: clamp(0.75rem, 1.1vw, 1rem);
@@ -217,6 +255,11 @@ body {
     animation: orb-listening 1.7s ease-in-out infinite;
   }
 
+  .assistant-orb-listening::before {
+    animation: waveform-ring 1.7s ease-in-out infinite;
+    border-color: rgba(122, 217, 165, 0.34);
+  }
+
   .assistant-orb-thinking {
     border-color: rgba(240, 195, 106, 0.78);
     box-shadow:
@@ -231,6 +274,11 @@ body {
       0 0 58px rgba(109, 215, 232, 0.32),
       inset 0 0 52px rgba(109, 215, 232, 0.18);
     animation: orb-speaking 1.4s ease-in-out infinite;
+  }
+
+  .assistant-orb-speaking::before {
+    animation: audio-ripple 1.4s ease-in-out infinite;
+    border-color: rgba(109, 215, 232, 0.34);
   }
 
   .assistant-orb-error {
@@ -307,9 +355,142 @@ body {
     display: grid;
     max-width: min(26rem, 32vw);
     gap: 0.4rem;
-    color: rgba(148, 163, 173, 0.62);
+    color: rgba(148, 163, 173, 0.72);
     font-size: 0.9rem;
+    line-height: 1.5;
     text-align: right;
+  }
+
+  .mirror-priority {
+    justify-self: end;
+    color: var(--color-cyan);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .mirror-priority-high {
+    color: var(--color-amber);
+  }
+
+  .mirror-priority-medium {
+    color: var(--color-green);
+  }
+
+  .ambient-proactive-briefing {
+    margin-top: 1.5rem;
+    max-width: 56rem;
+    border-left: 1px solid rgba(109, 215, 232, 0.32);
+    padding: 0.2rem 0 0.2rem 1.4rem;
+  }
+
+  .ambient-proactive-briefing h2 {
+    margin-top: 0.7rem;
+    color: var(--color-text);
+    font-size: clamp(2rem, 3vw, 3.4rem);
+    font-weight: 650;
+    line-height: 1;
+  }
+
+  .ambient-proactive-briefing p:last-child {
+    margin-top: 0.8rem;
+    color: var(--color-muted);
+    font-size: clamp(1rem, 1.3vw, 1.25rem);
+  }
+
+  .ambient-assistant-focus {
+    display: grid;
+    min-height: calc(100vh - 4rem);
+    grid-template-rows: auto 1fr auto auto;
+    gap: 1.4rem;
+  }
+
+  .ambient-assistant-stage {
+    display: grid;
+    place-items: center;
+    gap: 1.5rem;
+    padding: clamp(1rem, 4vh, 4rem) 0;
+    text-align: center;
+  }
+
+  .ambient-assistant-orb {
+    width: clamp(12rem, 20vw, 18rem);
+  }
+
+  .ambient-transcript,
+  .ambient-reply {
+    max-width: min(52rem, 90vw);
+  }
+
+  .ambient-transcript p:last-child {
+    margin-top: 0.65rem;
+    color: var(--color-text);
+    font-size: clamp(1.5rem, 3vw, 3.2rem);
+    font-weight: 600;
+    line-height: 1.12;
+  }
+
+  .ambient-reply p:last-of-type {
+    margin-top: 0.65rem;
+    color: var(--color-muted);
+    font-size: clamp(1.05rem, 1.55vw, 1.55rem);
+    line-height: 1.5;
+  }
+
+  .ambient-reply span {
+    display: inline-block;
+    margin-top: 0.8rem;
+    color: rgba(148, 163, 173, 0.55);
+    font-size: 0.8rem;
+  }
+
+  .ambient-assistant-input {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.8rem;
+    width: min(44rem, 100%);
+    justify-self: center;
+  }
+
+  .ambient-assistant-input input {
+    min-width: 0;
+    border: 1px solid rgba(203, 220, 226, 0.12);
+    border-radius: 999px;
+    background: rgba(5, 8, 12, 0.42);
+    padding: 0.9rem 1.2rem;
+    color: var(--color-text);
+    outline: none;
+  }
+
+  .ambient-assistant-input button,
+  .ambient-assistant-tools button {
+    border: 1px solid rgba(109, 215, 232, 0.24);
+    border-radius: 999px;
+    background: rgba(109, 215, 232, 0.08);
+    padding: 0.85rem 1.2rem;
+    color: var(--color-cyan);
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+
+  .ambient-assistant-input button:disabled,
+  .ambient-assistant-tools button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  .ambient-assistant-tools {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.7rem;
+  }
+
+  .ambient-assistant-status {
+    color: rgba(148, 163, 173, 0.68);
+    font-size: 0.9rem;
+    text-align: center;
   }
 
   .mirror-home-sleep .mirror-context-peek,
@@ -443,6 +624,13 @@ body {
   }
 }
 
+@keyframes waveform-ring {
+  50% {
+    inset: 10%;
+    opacity: 0.36;
+  }
+}
+
 @keyframes orb-thinking {
   50% {
     filter: brightness(1.12);
@@ -452,6 +640,18 @@ body {
 @keyframes orb-speaking {
   50% {
     transform: scale(1.045);
+  }
+}
+
+@keyframes audio-ripple {
+  0%,
+  100% {
+    inset: 22%;
+  }
+
+  50% {
+    inset: 8%;
+    opacity: 0.42;
   }
 }
 

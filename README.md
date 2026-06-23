@@ -47,6 +47,7 @@ What works now:
 - local SQLite memory layer for preferences, facts, goals, and routines
 - assistant memory commands for storing, recalling, and updating local memories
 - provider-independent daily context aggregation from weather, calendar, and memory
+- provider-independent proactive summary for calm daily nudges
 - Context focus view for daily overview, goals, routines, and suggested focus
 - optional Mirror Mode for kiosk-style wall display use
 - Docker Compose for running frontend and backend together
@@ -81,6 +82,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Calendar | Google Calendar OAuth and read-only schedule views |
 | Spotify | OAuth, current playback, artwork, and basic controls |
 | Memory | Local SQLite preferences, facts, goals, and routines |
+| Proactive assistant | Local rule-based daily nudge from context sources |
 | Hardware | Planning docs only |
 | Wake word / smart home / vision | Not built yet |
 
@@ -117,6 +119,8 @@ FastAPI Backend
       |
       +-- Personal Context Layer
       |
+      +-- Proactive Assistant Layer
+      |
       +-- Calendar Integration
       |
       +-- Spotify Integration
@@ -126,7 +130,7 @@ FastAPI Backend
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, local memory, and external data. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, and external data. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
 
 More detail:
 
@@ -137,6 +141,7 @@ More detail:
 - [Context system](docs/context.md)
 - [Memory layer](docs/memory.md)
 - [Mirror Mode](docs/mirror-mode.md)
+- [Proactive assistant](docs/proactive-assistant.md)
 - [Roadmap](docs/roadmap.md)
 - [Spotify setup](docs/spotify.md)
 - [Voice plan](docs/voice.md)
@@ -164,6 +169,7 @@ Hardware notes:
 | Commands | Frontend intent routing for local UI actions |
 | Context | Backend aggregation across weather, Calendar, and local memory |
 | Memory | Local SQLite storage for preferences, facts, goals, and routines |
+| Proactive | Deterministic backend summary for non-intrusive daily nudges |
 | Mirror Mode | Frontend kiosk mode behind `VITE_MIRROR_MODE=true` |
 | Dev setup | Docker Compose |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
@@ -267,10 +273,13 @@ Current manual checks:
 - confirm the voice transcript is sent to `/api/assistant/message` and the assistant reply appears in the assistant view
 - confirm assistant replies are spoken aloud when speech output is not muted
 - confirm `Mute`, `Test voice`, and the browser voice selector work in the assistant focus view
+- open `http://127.0.0.1:8000/api/proactive/summary` and confirm it returns `headline`, `message`, `priority`, `suggestions`, and `should_interrupt`
+- in Mirror Mode, confirm the lower-right nudge shows a calm daily summary or fallback
 - type `What is the weather?` in the assistant view and confirm Weather focus opens
 - type `Show my music` in the assistant view and confirm Media focus opens
 - type `What is on my calendar today?` and confirm Calendar focus opens with a schedule response
-- type `daily briefing` and confirm Context focus opens with a provider-independent briefing
+- type `daily briefing` and confirm Context focus opens with a provider-independent proactive briefing
+- type `Good morning` or `What needs my attention?` and confirm the assistant replies with `provider: proactive`
 - open `http://127.0.0.1:8000/api/context/daily` and confirm weather, calendar, memory, and suggested focus fields exist
 - type `Open assistant` and confirm Assistant focus opens
 - type `remember my favorite drink is coffee` and confirm the assistant replies with `provider: memory`
@@ -327,6 +336,7 @@ Completed foundation work:
 - local memory layer
 - personal context system
 - mirror mode
+- proactive ambient intelligence layer
 - Docker development setup
 - tests and CI
 - first hardware planning notes

@@ -259,13 +259,47 @@ Examples:
 - `weather.status: unavailable` means the weather provider or network failed.
 - `memory.status: empty` means local memory is working but has no stored context.
 
-## Daily briefing uses `provider: context`
+## Day question uses `provider: context`
 
-That is expected. Daily context questions are handled by deterministic backend
-logic before model provider routing. This keeps local memory and personal context
-out of external model providers for this phase.
+That is expected for direct context questions such as `What is my day like?`.
+Daily context questions are handled by deterministic backend logic before model
+provider routing. This keeps local memory and personal context out of external
+model providers for this phase.
 
 AI-enhanced context summaries are not enabled yet.
+
+## Morning or focus prompts use `provider: proactive`
+
+That is expected for prompts such as:
+
+- `Good morning`
+- `Brief me`
+- `What should I focus on today?`
+- `What needs my attention?`
+
+The proactive layer reads the local daily context response and returns a short
+priority-based nudge before any model provider is called.
+
+## Proactive nudge is unavailable
+
+Check the raw endpoint:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/proactive/summary
+```
+
+Expected result:
+
+- a JSON response appears even when context is partial or unavailable
+- `status: unavailable` means Mirrage could not load local context right now
+- `priority: none` means nothing needs attention or the fallback path is active
+
+If the browser still shows no nudge:
+
+- confirm the backend is running
+- refresh the frontend
+- check `VITE_API_BASE_URL` points at the backend
+- open `/api/context/daily` and confirm context itself returns JSON
 
 ## Calendar says setup is needed
 

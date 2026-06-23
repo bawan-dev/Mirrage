@@ -14,6 +14,7 @@ import {
   getCalendarUpcoming,
   getDailyContext,
   getHealthStatus,
+  getProactiveSummary,
   getSpotifyLoginUrl,
   getSpotifyPlayback,
   getSpotifyStatus,
@@ -36,6 +37,7 @@ import type {
   CalendarStatus,
   DailyContext,
   HealthStatus,
+  ProactiveSummary,
   SpotifyPlayback,
   SpotifyStatus,
   SystemStatus,
@@ -77,6 +79,11 @@ interface CalendarUiState {
 }
 
 interface ContextUiState {
+  error: string | null;
+  isLoading: boolean;
+}
+
+interface ProactiveUiState {
   error: string | null;
   isLoading: boolean;
 }
@@ -346,6 +353,8 @@ export default function App() {
   const [calendarUpcoming, setCalendarUpcoming] =
     useState<CalendarSchedule | null>(null);
   const [dailyContext, setDailyContext] = useState<DailyContext | null>(null);
+  const [proactiveSummary, setProactiveSummary] =
+    useState<ProactiveSummary | null>(null);
   const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatus | null>(
     null,
   );
@@ -365,6 +374,10 @@ export default function App() {
     isLoading: true,
   });
   const [contextState, setContextState] = useState<ContextUiState>({
+    error: null,
+    isLoading: true,
+  });
+  const [proactiveState, setProactiveState] = useState<ProactiveUiState>({
     error: null,
     isLoading: true,
   });
@@ -702,6 +715,41 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadProactiveSummary() {
+      try {
+        const summary = await getProactiveSummary();
+
+        if (!isActive) {
+          return;
+        }
+
+        setProactiveSummary(summary);
+        setProactiveState({
+          error: null,
+          isLoading: false,
+        });
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setProactiveState({
+          error: 'Proactive summary unavailable',
+          isLoading: false,
+        });
+      }
+    }
+
+    loadProactiveSummary();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const currentTime = useMemo(
     () =>
       new Intl.DateTimeFormat('en-GB', {
@@ -793,6 +841,27 @@ export default function App() {
     return dailyContext.message;
   }, [contextState.error, contextState.isLoading, dailyContext]);
 
+  const proactiveNudge = useMemo(() => {
+    if (proactiveState.isLoading) {
+      return 'Reading the day';
+    }
+
+    if (proactiveState.error || !proactiveSummary) {
+      return contextSummary;
+    }
+
+    if (proactiveSummary.priority === 'none') {
+      return proactiveSummary.message;
+    }
+
+    return `${proactiveSummary.headline}. ${proactiveSummary.message}`;
+  }, [
+    contextSummary,
+    proactiveState.error,
+    proactiveState.isLoading,
+    proactiveSummary,
+  ]);
+
   const voiceLabel = voiceListening
     ? 'Listening now'
     : voiceSupported
@@ -858,6 +927,15 @@ export default function App() {
             ? 'offline'
             : 'online',
       },
+      {
+        label: 'Proactive',
+        status: proactiveNudge,
+        tone: proactiveState.isLoading
+          ? 'checking'
+          : proactiveState.error
+            ? 'planned'
+            : 'online',
+      },
     ],
     [
       backendLabel,
@@ -870,6 +948,9 @@ export default function App() {
       contextState.error,
       contextState.isLoading,
       contextSummary,
+      proactiveNudge,
+      proactiveState.error,
+      proactiveState.isLoading,
       voiceLabel,
       voiceStatus,
       voiceSupported,
@@ -1386,11 +1467,12 @@ export default function App() {
             backendLabel={backendLabel}
             burnInOffset={burnInOffset}
             calendarSummary={calendarSummary}
-            contextSummary={contextSummary}
             currentDate={currentDate}
             currentTime={currentTime}
             inactivityLevel={mirrorInactivityLevel}
             onOpen={openFocus}
+            proactiveNudge={proactiveNudge}
+            proactiveSummary={proactiveSummary}
             voiceLabel={voiceLabel}
             weather={weather}
             weatherSummary={weatherSummary}
@@ -1429,11 +1511,13 @@ export default function App() {
 
         {activeView === 'assistant' && (
           <AssistantFocus
+            assistantOrbState={assistantOrbState}
             assistantBusy={assistantBusy}
             assistantError={assistantError}
             assistantMessages={assistantMessages}
             assistantProvider={assistantProvider}
             draft={draft}
+            isMirrorMode={isMirrorMode}
             microphoneReady={microphoneReady}
             onClose={closeFocus}
             onDraftChange={setDraft}
@@ -1487,6 +1571,7 @@ export default function App() {
             contextState={contextState}
             onClose={closeFocus}
             onRefresh={() => void refreshContext()}
+            proactiveSummary={proactiveSummary}
           />
         )}
       </section>
@@ -1626,11 +1711,12 @@ interface MirrorHomeStateProps {
   backendLabel: string;
   burnInOffset: BurnInOffset;
   calendarSummary: string;
-  contextSummary: string;
   currentDate: string;
   currentTime: string;
   inactivityLevel: MirrorInactivityLevel;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
+  proactiveNudge: string;
+  proactiveSummary: ProactiveSummary | null;
   voiceLabel: string;
   weather: WeatherInfo | null;
   weatherSummary: string;
@@ -1641,11 +1727,12 @@ function MirrorHomeState({
   backendLabel,
   burnInOffset,
   calendarSummary,
-  contextSummary,
   currentDate,
   currentTime,
   inactivityLevel,
   onOpen,
+  proactiveNudge,
+  proactiveSummary,
   voiceLabel,
   weather,
   weatherSummary,
@@ -1711,7 +1798,14 @@ function MirrorHomeState({
       </nav>
 
       <div className="mirror-context-peek" aria-hidden="true">
-        <span>{contextSummary}</span>
+        <span>{proactiveNudge}</span>
+        {proactiveSummary && (
+          <span
+            className={`mirror-priority mirror-priority-${proactiveSummary.priority}`}
+          >
+            {formatStatus(proactiveSummary.priority)}
+          </span>
+        )}
         <span>{calendarSummary}</span>
       </div>
     </div>
@@ -1802,6 +1896,7 @@ interface ContextFocusProps {
   contextState: ContextUiState;
   onClose: () => void;
   onRefresh: () => void;
+  proactiveSummary: ProactiveSummary | null;
 }
 
 function ContextFocus({
@@ -1809,6 +1904,7 @@ function ContextFocus({
   contextState,
   onClose,
   onRefresh,
+  proactiveSummary,
 }: ContextFocusProps) {
   const suggestions = context?.suggested_focus ?? [];
   const goals = context?.memory.goals ?? [];
@@ -1843,6 +1939,16 @@ function ContextFocus({
         <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
           {contextState.error}
         </p>
+      )}
+
+      {proactiveSummary && (
+        <div className="ambient-proactive-briefing">
+          <p className={labelClass}>
+            Proactive {formatStatus(proactiveSummary.priority)}
+          </p>
+          <h2>{proactiveSummary.headline}</h2>
+          <p>{proactiveSummary.message}</p>
+        </div>
       )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -2152,11 +2258,13 @@ function CalendarEventList({
 }
 
 interface AssistantFocusProps {
+  assistantOrbState: AssistantOrbState;
   assistantBusy: boolean;
   assistantError: string | null;
   assistantMessages: AssistantMessage[];
   assistantProvider: string | null;
   draft: string;
+  isMirrorMode: boolean;
   microphoneReady: boolean;
   onClose: () => void;
   onDraftChange: (value: string) => void;
@@ -2180,11 +2288,13 @@ interface AssistantFocusProps {
 }
 
 function AssistantFocus({
+  assistantOrbState,
   assistantBusy,
   assistantError,
   assistantMessages,
   assistantProvider,
   draft,
+  isMirrorMode,
   microphoneReady,
   onClose,
   onDraftChange,
@@ -2214,6 +2324,101 @@ function AssistantFocus({
       : ttsSpeaking
         ? 'Speaking assistant response.'
         : 'Assistant replies will be spoken aloud.';
+  const latestUserMessage = [...assistantMessages]
+    .reverse()
+    .find((message) => message.role === 'user');
+  const latestAssistantMessage = [...assistantMessages]
+    .reverse()
+    .find((message) => message.role === 'assistant');
+
+  if (isMirrorMode) {
+    return (
+      <div className={`${focusPanelClass} ambient-assistant-focus`}>
+        <FocusHeader
+          eyebrow="Assistant"
+          onClose={onClose}
+          title="Talk to Mirrage"
+        />
+
+        <div className="ambient-assistant-stage">
+          <button
+            type="button"
+            className={`assistant-orb assistant-orb-${assistantOrbState} ambient-assistant-orb`}
+            onClick={voiceListening ? onStopVoice : onStartVoice}
+            disabled={!voiceSupported || assistantBusy}
+            aria-label={voiceButtonLabel}
+          >
+            <span>{formatStatus(assistantOrbState)}</span>
+          </button>
+
+          <div className="ambient-transcript">
+            <p className={labelClass}>Transcript</p>
+            <p>
+              {voiceTranscript ||
+                voiceInterimTranscript ||
+                latestUserMessage?.text ||
+                'Press the orb or type below.'}
+            </p>
+          </div>
+
+          <div className="ambient-reply">
+            <p className={labelClass}>Mirrage</p>
+            <p>{latestAssistantMessage?.text ?? 'Standing by.'}</p>
+            {latestAssistantMessage?.meta && (
+              <span>{latestAssistantMessage.meta}</span>
+            )}
+          </div>
+        </div>
+
+        <form onSubmit={onSubmit} className="ambient-assistant-input">
+          <input
+            type="text"
+            value={draft}
+            onChange={(event) => onDraftChange(event.target.value)}
+            placeholder="Type quietly to Mirrage"
+            aria-label="Message the assistant"
+          />
+          <button type="submit" disabled={assistantBusy}>
+            {assistantBusy ? 'Sending' : 'Send'}
+          </button>
+        </form>
+
+        <div className="ambient-assistant-tools">
+          <button
+            type="button"
+            onClick={voiceListening ? onStopVoice : onStartVoice}
+            disabled={!voiceSupported || assistantBusy}
+          >
+            {voiceButtonLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => onTtsMutedChange(!ttsMuted)}
+            disabled={!ttsSupported}
+          >
+            {ttsMuted ? 'Unmute' : 'Mute'}
+          </button>
+          <button
+            type="button"
+            onClick={onStopSpeech}
+            disabled={!ttsSupported || !ttsSpeaking}
+          >
+            Stop speech
+          </button>
+        </div>
+
+        <p className="ambient-assistant-status">
+          {voiceError ??
+            assistantError ??
+            (voiceSupported
+              ? microphoneReady
+                ? speechStatus
+                : 'Microphone permission is requested on first use.'
+              : 'Speech recognition is not supported in this browser.')}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={focusPanelClass}>

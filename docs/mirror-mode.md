@@ -43,6 +43,7 @@ Mirror Mode replaces the normal dashboard home screen with an ambient home state
 - weather summary in the top-right
 - assistant orb in the center/lower area
 - small system and voice status near the bottom
+- lower-right proactive nudge from the backend context layer
 - subtle controls for Context, Calendar, and Media
 
 The existing focus views still work:
@@ -128,6 +129,7 @@ On load, Mirror Mode briefly shows a startup screen with service checks for:
 - voice
 - calendar
 - context
+- proactive summary
 
 The startup sequence does not block forever. It fades out after the configured
 time even if a service is still checking or unavailable.
@@ -144,5 +146,6 @@ VITE_MIRROR_STARTUP_SECONDS=3
 - No smart home control.
 - No computer vision.
 - No new AI model is added by Mirror Mode.
+- Proactive nudges are rule-based local summaries, not model-generated advice.
 - Dimming is an overlay, not hardware brightness control.
 - Burn-in protection is light UI movement, not a guarantee for every display.

@@ -16,6 +16,7 @@ from backend.app.schemas import (
     MemoryStatus,
     MemorySummaryResponse,
     MemoryUpdateRequest,
+    ProactiveSummaryResponse,
     SpotifyActionResponse,
     SpotifyPlaybackResponse,
     SpotifyStatusResponse,
@@ -39,6 +40,7 @@ from backend.app.services.memory import (
     summarize_memories,
     update_memory,
 )
+from backend.app.services.proactive import get_proactive_summary
 from backend.app.services.spotify import (
     SpotifyAuthError,
     SpotifyServiceError,
@@ -97,6 +99,11 @@ def create_assistant_message(
 @router.get("/api/context/daily")
 def read_daily_context() -> DailyContext:
     return get_daily_context()
+
+
+@router.get("/api/proactive/summary")
+def read_proactive_summary() -> ProactiveSummaryResponse:
+    return get_proactive_summary()
 
 
 @router.get("/api/memory")

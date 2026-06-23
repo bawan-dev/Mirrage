@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620" role="img" aria-labelledby="title desc">
   <title id="title">Mirrage architecture</title>
-  <desc id="desc">A simple diagram showing the mirror dashboard calling the FastAPI backend, which owns AI, memory, integrations, voice, and hardware boundaries.</desc>
+  <desc id="desc">A simple diagram showing the mirror dashboard calling the FastAPI backend, which owns AI, context, proactive, memory, integrations, voice, and hardware boundaries.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#6ee7ff" />
@@ -31,7 +31,7 @@
 
   <rect x="310" y="350" width="380" height="105" class="core" />
   <text x="500" y="392" text-anchor="middle" class="label">FastAPI Backend</text>
-  <text x="500" y="422" text-anchor="middle" class="small">assistant, context, memory routes</text>
+  <text x="500" y="422" text-anchor="middle" class="small">assistant, context, proactive, memory routes</text>
 
   <path d="M 310 405 L 185 405" class="line" />
   <path d="M 500 455 L 500 520" class="line" />

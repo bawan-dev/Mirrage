@@ -166,8 +166,12 @@ Local memory commands are handled before the AI provider is called. For example,
 `provider: "memory"`.
 
 Daily context commands are also handled before the AI provider is called. For
-example, `Give me my daily briefing` returns `provider: "context"` and uses the
+example, `What is my day like?` returns `provider: "context"` and uses the
 backend context service.
+
+Proactive briefing commands are handled locally before the AI provider is
+called. For example, `Good morning`, `Brief me`, and `What needs my attention?`
+return `provider: "proactive"` and use the backend proactive service.
 
 The active provider is selected with `MIRRAGE_AI_PROVIDER`:
 
@@ -253,7 +257,7 @@ Status values:
 ### Assistant Context Test
 
 ```powershell
-$body = @{ message = "Give me my daily briefing" } | ConvertTo-Json
+$body = @{ message = "What is my day like?" } | ConvertTo-Json
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
 ```
 
@@ -267,6 +271,58 @@ Expected response includes:
 ```
 
 More detail: [context.md](context.md).
+
+## Proactive Assistant
+
+The proactive API returns a small daily nudge assembled from the backend context
+service. It is deterministic local logic, not a model response.
+
+### `GET /api/proactive/summary`
+
+Example response:
+
+```json
+{
+  "status": "ready",
+  "generated_at": "2026-06-23T09:00:00+00:00",
+  "priority": "medium",
+  "headline": "Finish mirror prototype",
+  "message": "Finish the wall-mounted prototype.",
+  "suggestions": ["Ask what should I focus on", "Open Context"],
+  "sources": ["context", "weather", "calendar", "memory"],
+  "should_interrupt": false
+}
+```
+
+Priority values currently used:
+
+| Priority | Meaning |
+| --- | --- |
+| `high` | A calendar event starts soon and the UI may interrupt gently |
+| `medium` | Something is worth noticing, such as weather, a busy day, or a goal |
+| `low` | A useful calm nudge is available |
+| `none` | Nothing needs attention or context could not be loaded |
+
+If context fails unexpectedly, the route still returns `200` with
+`status: "unavailable"` and a clear fallback message.
+
+### Assistant Proactive Test
+
+```powershell
+$body = @{ message = "Good morning" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected response includes:
+
+```json
+{
+  "provider": "proactive",
+  "context_action": "proactive"
+}
+```
+
+More detail: [proactive-assistant.md](proactive-assistant.md).
 
 ## Memory
 

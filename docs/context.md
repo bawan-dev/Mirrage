@@ -5,6 +5,7 @@ for a daily briefing and returns one structured response.
 
 This phase is deliberately provider-independent. Context answers are generated
 by deterministic backend logic, not by OpenAI, Ollama, or another model provider.
+The proactive assistant layer also reads this context, but it still stays local.
 
 ## What Context Uses
 
@@ -31,9 +32,11 @@ POST /api/assistant/message
 Examples:
 
 - `What is my day like?`
-- `Give me my daily briefing`
-- `What should I focus on today?`
 - `What goals am I working on?`
+
+Some attention-style prompts, such as `Good morning`, `Brief me`, and
+`What should I focus on today?`, now go through the proactive assistant layer
+first. They still use the same backend context sources.
 
 ## Fallback Behavior
 
@@ -80,6 +83,7 @@ The frontend has a `context` focus view. It shows:
 - local goals
 - routines and preferences
 - suggested focus items
+- the latest proactive briefing when available
 
 The view reads from `/api/context/daily`. It does not call Google Calendar,
 Open-Meteo, or the local memory database directly.
@@ -91,3 +95,6 @@ Open-Meteo, or the local memory database directly.
 - Spotify is not part of daily context yet.
 - Calendar token persistence is still separate future work.
 - AI-enhanced context summaries are intentionally not enabled yet.
+
+See [proactive-assistant.md](proactive-assistant.md) for the small nudge layer
+that sits on top of daily context.

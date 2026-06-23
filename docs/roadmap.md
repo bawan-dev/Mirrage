@@ -397,6 +397,30 @@ Done when:
 A visitor can understand the current product, what is working, what is still
 planned, and how to demo the project without reading the entire codebase.
 
+## Phase 27/29: Ambient Intelligence Experience
+
+Goal: make Mirror Mode feel more like an ambient product experience and less
+like a regular dashboard.
+
+- [x] Refine Mirror Mode toward a calmer premium mirror UI
+- [x] Improve assistant orb states for idle, listening, thinking, speaking, and error
+- [x] Make the Mirror Mode Assistant focus view voice-first
+- [x] Keep detailed assistant provider/debug information in normal development mode
+- [x] Add a backend proactive assistant service
+- [x] Add `GET /api/proactive/summary`
+- [x] Build proactive summaries from existing daily context instead of a model provider
+- [x] Route morning, briefing, focus, reminder, and attention prompts through the proactive layer
+- [x] Show a subtle proactive nudge on the Mirror Mode home screen
+- [x] Surface the proactive briefing inside the Context focus flow
+- [x] Keep proactive logic deterministic and local for privacy
+- [x] Add backend tests for proactive endpoint, fallback behavior, goals, and assistant commands
+- [x] Document the proactive assistant boundary and manual checks
+
+Done when:
+
+Mirror Mode has a quieter product feel, and Mirrage can surface a small local
+daily nudge without sending private context to an AI provider.
+
 ## Future: Voice Interaction
 
 - [ ] Wake phrase
@@ -457,6 +481,6 @@ planned, and how to demo the project without reading the entire codebase.
 
 ## Current Focus
 
-Phase 26 and 26.5 are complete enough for now. Current focus is recording clean
-portfolio screenshots, testing Mirror Mode on different screen sizes, and then
-refining daily context and memory controls.
+Phase 27/29 is the current milestone. Current focus is testing the ambient
+Mirror Mode experience, recording updated screenshots, and then refining context
+scoring, memory controls, and privacy settings.

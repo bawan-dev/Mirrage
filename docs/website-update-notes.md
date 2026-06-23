@@ -7,7 +7,7 @@ after the Mirror Mode milestone.
 
 Mirrage is a privacy-first smart mirror assistant with a React mirror interface,
 FastAPI backend, provider-based assistant routing, local memory, daily context,
-Spotify, Calendar, and a kiosk-style Mirror Mode.
+rule-based proactive nudges, Spotify, Calendar, and a kiosk-style Mirror Mode.
 
 ## Honest AI-Assisted Development Note
 
@@ -30,6 +30,7 @@ hardware.
 | Calendar | Google Calendar OAuth and read-only event views |
 | Spotify | OAuth, current playback, artwork, and basic controls |
 | Memory | Local SQLite preferences, facts, goals, and routines |
+| Proactive nudges | Local rule-based summaries from weather, Calendar, and memory context |
 | Hardware | Planning docs only |
 | Wake word | Not built |
 | Smart home | Not built |
@@ -42,6 +43,8 @@ hardware.
 - Designed a backend-owned personal context layer that combines weather,
   calendar, and local memory without sending private context to a model by
   default.
+- Added a local proactive assistant layer that surfaces small daily nudges from
+  context without relying on an external model.
 - Added a kiosk-friendly Mirror Mode with startup checks, inactivity dimming,
   burn-in movement, and ambient focus transitions.
 - Integrated Spotify and Google Calendar through isolated backend service
@@ -65,6 +68,7 @@ Recommended docs to link:
 - `docs/architecture.md`
 - `docs/mirror-mode.md`
 - `docs/context.md`
+- `docs/proactive-assistant.md`
 - `docs/demo-guide.md`
 - `hardware/build-plan.md`
 

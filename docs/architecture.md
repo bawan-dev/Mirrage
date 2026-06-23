@@ -23,6 +23,8 @@ Backend API
   |
   +-- Personal Context Layer
   |
+  +-- Proactive Assistant Layer
+  |
   +-- Calendar Integration
   |
   +-- Spotify Integration
@@ -98,6 +100,7 @@ Its job:
 - handle Google Calendar OAuth and Calendar API calls
 - handle Spotify OAuth and Spotify Web API calls
 - aggregate daily context from weather, calendar, and memory
+- generate local proactive summaries from the daily context layer
 - store local memory for preferences, facts, goals, and routines
 - provide clean boundaries for AI, context, memory, voice, and hardware features
 
@@ -236,6 +239,7 @@ Core endpoints:
 | `GET` | `/api/voice/status` | Return voice service status |
 | `POST` | `/api/assistant/message` | Send a message to the assistant layer |
 | `GET` | `/api/context/daily` | Return provider-independent daily context |
+| `GET` | `/api/proactive/summary` | Return a local proactive daily nudge |
 | `GET` | `/api/memory/summary` | Return local memory grouped by type |
 | `POST` | `/api/memory` | Create or update a local memory |
 | `GET` | `/api/integrations/calendar/events/today` | Return today's schedule |
@@ -338,6 +342,37 @@ provider in this phase.
 
 More detail is in [context.md](context.md).
 
+## Proactive Assistant Boundary
+
+The proactive assistant layer sits on top of daily context. It does not call a
+model provider.
+
+```text
+Mirror Mode home or proactive assistant prompt
+  -> Mirrage backend proactive route
+  -> daily context service
+  -> deterministic priority, headline, message, and suggestions
+```
+
+The current proactive service looks for simple signals:
+
+- a calendar event starting soon
+- a busier-than-normal calendar day
+- weather conditions that may affect plans
+- the first active local goal
+- otherwise the top daily context suggestion
+
+The result is intentionally small: `priority`, `headline`, `message`,
+`suggestions`, `sources`, and `should_interrupt`. Mirror Mode uses it as a quiet
+home-screen nudge, and the assistant can answer prompts such as `Good morning`,
+`Brief me`, or `What needs my attention?` with `provider: proactive`.
+
+This is still privacy-first local logic. It does not send Calendar events or
+memory records to OpenAI, Ollama, or another model provider. AI-enhanced
+proactive summaries are future work and should stay behind an explicit opt-in.
+
+More detail is in [proactive-assistant.md](proactive-assistant.md).
+
 ## Command Routing Boundary
 
 The current command router lives in the frontend and handles only local UI
@@ -358,7 +393,8 @@ Examples:
 | `What is the weather?` | Open Weather focus view |
 | `Show my music` | Open Media focus view |
 | `What is on my calendar today?` | Open Calendar focus view and summarize today's events |
-| `daily briefing` | Open Context focus view and request a backend context briefing |
+| `daily briefing` | Open Context focus view and request a proactive backend briefing |
+| `Good morning` | Open Context focus view and request a proactive backend briefing |
 | `Open assistant` | Open Assistant focus view |
 
 If the router does not recognize a command, the message follows the normal

@@ -162,7 +162,7 @@ def test_daily_context_handles_all_sources_unavailable(
     assert body["memory"]["status"] == "unavailable"
 
 
-def test_assistant_daily_briefing_uses_context_provider(
+def test_assistant_day_question_uses_context_provider(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -170,7 +170,7 @@ def test_assistant_daily_briefing_uses_context_provider(
 
     response = client.post(
         "/api/assistant/message",
-        json={"message": "Give me my daily briefing"},
+        json={"message": "What is my day like?"},
     )
 
     assert response.status_code == 200
@@ -182,7 +182,7 @@ def test_assistant_daily_briefing_uses_context_provider(
     assert "calendar event" in body["reply"]
 
 
-def test_assistant_focus_command_uses_context_suggestions(
+def test_assistant_goal_command_uses_context_goals(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -197,15 +197,15 @@ def test_assistant_focus_command_uses_context_suggestions(
 
     response = client.post(
         "/api/assistant/message",
-        json={"message": "What should I focus on today?"},
+        json={"message": "What goals am I working on?"},
     )
 
     assert response.status_code == 200
     body = response.json()
     assert body["provider"] == "context"
-    assert body["context_action"] == "focus"
-    assert "Suggested focus" in body["reply"]
-    assert "Ship context phase" in body["reply"]
+    assert body["context_action"] == "goals"
+    assert "active local goals" in body["reply"]
+    assert "ship context phase" in body["reply"]
 
 
 def test_calendar_and_weather_unavailable_states_are_safe(

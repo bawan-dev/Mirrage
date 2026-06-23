@@ -4,6 +4,7 @@ import type {
   CalendarStatus,
   DailyContext,
   HealthStatus,
+  ProactiveSummary,
   SpotifyActionResult,
   SpotifyPlayback,
   SpotifyStatus,
@@ -57,6 +58,10 @@ export function getWeather(): Promise<WeatherInfo> {
 
 export function getDailyContext(): Promise<DailyContext> {
   return fetchJson<DailyContext>('/api/context/daily');
+}
+
+export function getProactiveSummary(): Promise<ProactiveSummary> {
+  return fetchJson<ProactiveSummary>('/api/proactive/summary');
 }
 
 export function sendAssistantMessage(message: string): Promise<AssistantReply> {

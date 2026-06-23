@@ -109,6 +109,17 @@ class DailyContext(BaseModel):
     message: str
 
 
+class ProactiveSummaryResponse(BaseModel):
+    status: str
+    generated_at: str
+    priority: str
+    headline: str
+    message: str
+    suggestions: list[str]
+    sources: list[str]
+    should_interrupt: bool
+
+
 class WeatherResponse(BaseModel):
     status: str
     location: str

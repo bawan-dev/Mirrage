@@ -56,11 +56,18 @@ const TODAY_TERMS = ['today', 'daily', 'day'];
 
 const CONTEXT_PHRASES = [
   'daily briefing',
+  'brief me',
+  'give me my daily briefing',
+  'good morning',
+  'what should i know today',
   'what is my day like',
   'what does my day look like',
   'what should i focus on',
+  'what should i focus on today',
   'what goals am i working on',
   'what do i have today',
+  'any reminders',
+  'what needs my attention',
   'show my context',
   'show context',
 ];

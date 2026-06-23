@@ -156,3 +156,14 @@ export interface DailyContext {
   suggested_focus: ContextFocusSuggestion[];
   message: string;
 }
+
+export interface ProactiveSummary {
+  status: string;
+  generated_at: string;
+  priority: 'none' | 'low' | 'medium' | 'high' | string;
+  headline: string;
+  message: string;
+  suggestions: string[];
+  sources: string[];
+  should_interrupt: boolean;
+}

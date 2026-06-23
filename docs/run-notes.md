@@ -75,6 +75,7 @@ Expected result:
 - a short Mirrage startup screen appears
 - the ambient home shows a large clock, weather summary, assistant orb, and
   subtle status text
+- a quiet proactive nudge appears near the bottom-right when context is available
 - Weather, Assistant, Media, Calendar, and Context focus views still open
 - `Close` or `Esc` returns to the ambient home
 - after inactivity, the screen dims and then returns to the home state
@@ -143,8 +144,9 @@ From the Assistant focus view, type each command:
 | `What is the weather?` | Weather focus view opens |
 | `Show my music` | Media focus view opens |
 | `What is on my calendar today?` | Calendar focus view opens and replies with today's schedule |
-| `daily briefing` | Context focus view opens and replies with provider-independent daily context |
-| `What should I focus on today?` | Context focus view opens and replies with suggested focus |
+| `daily briefing` | Context focus view opens and replies with a proactive local briefing |
+| `What should I focus on today?` | Context focus view opens and replies with a proactive focus nudge |
+| `What is my day like?` | Context focus view opens and replies with provider-independent daily context |
 | `Open assistant` | Assistant focus view opens |
 
 The assistant also adds a short action response to the message thread. Commands
@@ -162,7 +164,8 @@ daily briefing
 Expected result:
 
 - Context focus view opens
-- the assistant reply uses `provider: context`
+- the assistant reply uses `provider: proactive` for `daily briefing`, or
+  `provider: context` for `What is my day like?`
 - the reply mentions weather, calendar, memory, and suggested focus when those
   sources are available
 
@@ -181,15 +184,49 @@ Expected result:
 Assistant context check:
 
 ```powershell
-$body = @{ message = "What should I focus on today?" } | ConvertTo-Json
+$body = @{ message = "What is my day like?" } | ConvertTo-Json
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
 ```
 
 Expected result:
 
 - `provider` is `context`
-- `context_action` is `focus`
-- the reply includes `Suggested focus`
+- `context_action` is `daily`
+- the reply includes `Daily briefing`
+
+## Proactive assistant checks
+
+Check the raw proactive endpoint:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/proactive/summary
+```
+
+Expected result:
+
+- `status` is `ready`, `partial`, or `unavailable`
+- `priority` is `high`, `medium`, `low`, or `none`
+- `headline`, `message`, `suggestions`, `sources`, and `should_interrupt` are present
+- unavailable context returns a clear fallback instead of an error page
+
+Assistant proactive check:
+
+```powershell
+$body = @{ message = "Good morning" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/assistant/message" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected result:
+
+- `provider` is `proactive`
+- `context_action` is `proactive`
+- the reply contains a short headline-style briefing
+
+Mirror Mode check:
+
+- start the frontend with `VITE_MIRROR_MODE=true`
+- confirm the home screen shows the lower-right proactive nudge
+- open Context and confirm the proactive briefing appears above the daily context panels
 
 ## Memory checks
 

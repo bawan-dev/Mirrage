@@ -32,7 +32,8 @@ Say:
 
 ```text
 This is Mirrage, a privacy-first smart mirror assistant. The home screen is meant
-to stay quiet: time, weather, assistant state, and light system status.
+to stay quiet: time, weather, assistant state, light system status, and one
+small proactive nudge when the day has useful context.
 ```
 
 2. Open Weather focus.
@@ -54,14 +55,14 @@ or an OpenAI-compatible provider. Voice is push-to-talk in the browser for now,
 and responses can be spoken with browser text-to-speech.
 ```
 
-4. Type `daily briefing` or open Context.
+4. Type `Good morning`, `daily briefing`, or open Context.
 
 Say:
 
 ```text
 Daily context is generated locally by the backend from weather, calendar, and
-local memory. It does not automatically send personal memory to an external AI
-provider.
+local memory. The proactive briefing is rule-based and local too; it does not
+automatically send personal memory to an external AI provider.
 ```
 
 5. Open Calendar or Media.
@@ -86,6 +87,7 @@ next work is refinement, hardware testing, and stronger privacy controls.
 
 - Use Chrome or Edge for browser voice features.
 - Keep the backend running so the status and context paths can show live data.
+- Use `Good morning` to show the proactive assistant path.
 - If Spotify or Google Calendar is not connected, say that those integrations are
   wired but not authenticated in this local demo.
 - Do not claim wake word, smart home, vision, or physical hardware is complete.
