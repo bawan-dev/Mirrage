@@ -50,9 +50,9 @@ npm install
 npm run dev
 ```
 
-Verify: http://127.0.0.1:5173 shows the dashboard. The System and Voice cards should
-read live values from the backend; if the backend is not running they show
-"Backend unavailable".
+Verify: http://127.0.0.1:5173 shows the local mirror interface. Backend-aware
+status text should read live values from the API; if the backend is not running,
+the interface should show a clear unavailable state instead of crashing.
 
 ## Mirror Mode check
 
@@ -73,8 +73,8 @@ http://127.0.0.1:5173
 Expected result:
 
 - a short Mirrage startup screen appears
-- the ambient home shows a large clock, weather summary, assistant orb, and
-  subtle status text
+- the ambient home shows a large clock, weather summary, assistant presence, and
+  only subtle status text
 - a quiet proactive nudge appears near the bottom-right when context is available
 - Weather, Assistant, Media, Calendar, and Context focus views still open
 - `Close` or `Esc` returns to the ambient home
@@ -154,7 +154,7 @@ that are not recognized still go to the backend assistant endpoint.
 
 ## Daily context checks
 
-Open the Context focus view from the dashboard, or ask from the Assistant focus
+Open the Context focus view from the mirror home, or ask from the Assistant focus
 view:
 
 ```text
@@ -226,7 +226,7 @@ Mirror Mode check:
 
 - start the frontend with `VITE_MIRROR_MODE=true`
 - confirm the home screen shows the lower-right proactive nudge
-- open Context and confirm the proactive briefing appears above the daily context panels
+- open Context and confirm the proactive briefing appears in the Daily Briefing view
 
 ## Memory checks
 
@@ -339,7 +339,7 @@ MIRRAGE_FRONTEND_URL=http://127.0.0.1:5173
 Expected result:
 
 - Calendar focus view shows today's events if the account has events today
-- upcoming events appear in the side panel
+- upcoming events appear in the schedule timeline
 - asking `What is on my calendar today?` in the Assistant focus view returns a
   schedule answer
 

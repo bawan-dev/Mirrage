@@ -36,6 +36,9 @@ to stay quiet: time, weather, assistant state, light system status, and one
 small proactive nudge when the day has useful context.
 ```
 
+Point out that the current home screen is intentionally sparse. It should feel
+more like information behind glass than a dashboard.
+
 2. Open Weather focus.
 
 Say:

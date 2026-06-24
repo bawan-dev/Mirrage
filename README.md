@@ -34,8 +34,8 @@ What works now:
 
 - React + TypeScript + Tailwind mirror interface
 - FastAPI backend with health, system, voice, weather, assistant, memory, Spotify, and Calendar routes
-- dashboard connected to backend status data
-- weather endpoint and card using Open-Meteo with a fallback state
+- mirror interface connected to backend status data
+- weather endpoint using Open-Meteo with a fallback state
 - AI provider boundary with `stub`, `ollama`, and `openai` provider options
 - browser push-to-talk voice input in the assistant focus view
 - speech transcripts sent through the existing assistant endpoint
@@ -48,8 +48,8 @@ What works now:
 - assistant memory commands for storing, recalling, and updating local memories
 - provider-independent daily context aggregation from weather, calendar, and memory
 - provider-independent proactive summary for calm daily nudges
-- Context focus view for daily overview, goals, routines, and suggested focus
-- optional Mirror Mode for kiosk-style wall display use
+- Daily Briefing view for daily overview, goals, routines, and suggested focus
+- optional Mirror Mode for kiosk-style wall display use, now styled as an ambient glass surface instead of a dashboard
 - Docker Compose for running frontend and backend together
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
@@ -88,7 +88,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 
 ## Screenshots And Demo
 
-![Mirrage dashboard foundation](assets/screenshots/dashboard.png)
+![Mirrage ambient mirror home](assets/screenshots/mirror-home.png)
 
 | View | Screenshot |
 | --- | --- |
@@ -130,7 +130,7 @@ FastAPI Backend
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, and external data. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the dashboard.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, and external data. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
 
 More detail:
 
@@ -267,8 +267,8 @@ Current manual checks:
 - set `VITE_MIRROR_MODE=true`, reload the frontend, and confirm the ambient Mirror Mode home appears
 - confirm Mirror Mode dims after inactivity and returns to home from a focus view after the second timeout
 - open `http://127.0.0.1:8000/health` and confirm the backend is online
-- check the dashboard system card shows backend status when the API is running
-- check the weather card either shows live data or a clear fallback
+- check the mirror home shows backend status when the API is running
+- check the weather view either shows live data or a clear fallback
 - open the assistant focus view, press `Push to talk`, allow microphone access, and confirm the transcript appears
 - confirm the voice transcript is sent to `/api/assistant/message` and the assistant reply appears in the assistant view
 - confirm assistant replies are spoken aloud when speech output is not muted
@@ -323,10 +323,10 @@ mirrage/
 
 Completed foundation work:
 
-- frontend dashboard
+- frontend mirror interface
 - backend API
 - AI provider boundary
-- live weather endpoint and dashboard card
+- live weather endpoint and ambient weather view
 - Ambient Interaction Layer with focus views
 - push-to-talk voice foundation
 - browser text-to-speech foundation
@@ -337,6 +337,7 @@ Completed foundation work:
 - personal context system
 - mirror mode
 - proactive ambient intelligence layer
+- ambient intelligence redesign with sparse typography, fewer containers, and refreshed screenshots
 - Docker development setup
 - tests and CI
 - first hardware planning notes

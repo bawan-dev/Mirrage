@@ -37,14 +37,14 @@ docker compose up --build
 
 ## What Changes
 
-Mirror Mode replaces the normal dashboard home screen with an ambient home state:
+Mirror Mode replaces the normal development home screen with an ambient home
+state:
 
 - large time and date in the top-left
 - weather summary in the top-right
-- assistant orb in the center/lower area
-- small system and voice status near the bottom
+- assistant presence line in the center/lower area
 - lower-right proactive nudge from the backend context layer
-- subtle controls for Context, Calendar, and Media
+- quiet word controls for Assistant, Weather, Context, Calendar, and Media
 
 The existing focus views still work:
 
@@ -66,9 +66,9 @@ http://127.0.0.1:5173/?view=context
 http://127.0.0.1:5173/?view=media
 ```
 
-## Assistant Orb States
+## Assistant Presence States
 
-The orb reflects the current assistant state:
+The center presence reflects the current assistant state:
 
 | State | Meaning |
 | --- | --- |
@@ -102,13 +102,21 @@ VITE_MIRROR_SLEEP_TIMEOUT_SECONDS=120
 
 The dimming is visual only. It does not turn off the monitor.
 
+## Phase 30A Visual Direction
+
+The current Mirror Mode UI intentionally avoids dashboard cards, panel grids,
+and admin-style widgets. Most information is placed directly on the mirror
+surface with typography, spacing, and subtle motion.
+
+The goal is for the display to stay mostly empty until a focus view is needed.
+
 ## Burn-In Protection
 
 Static elements gently shift by a few pixels over time in Mirror Mode:
 
 - clock/date
 - weather block
-- assistant orb
+- assistant presence
 - status text
 
 Default:

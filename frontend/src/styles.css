@@ -26,14 +26,17 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    linear-gradient(145deg, rgba(109, 215, 232, 0.12), transparent 34%),
-    linear-gradient(315deg, rgba(122, 217, 165, 0.08), transparent 36%),
-    var(--color-page);
+  background: #020304;
   color: var(--color-text);
   font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select {
+  font: inherit;
 }
 
 /* Multi-layer gradients that do not map cleanly to single utilities. */
@@ -724,5 +727,679 @@ body {
   .mirror-focus-rail,
   .mirror-weather {
     transition: none;
+  }
+}
+
+@layer components {
+  .ambient-glass-layer {
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 26%),
+      linear-gradient(90deg, rgba(109, 215, 232, 0.025), transparent 24%),
+      #020304;
+  }
+
+  .mirror-mode {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 26%),
+      linear-gradient(90deg, rgba(109, 215, 232, 0.018), transparent 22%),
+      #020304;
+  }
+
+  .focus-panel,
+  .mirror-mode .focus-panel {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    border-color: transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .ambient-home {
+    position: relative;
+    min-height: 82vh;
+    isolation: isolate;
+  }
+
+  .ambient-home-clock {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .ambient-home-clock h1 {
+    text-shadow: 0 0 36px rgba(245, 247, 248, 0.06);
+  }
+
+  .ambient-home-weather {
+    position: absolute;
+    top: 0.35rem;
+    right: 0;
+    max-width: 22rem;
+    text-align: right;
+  }
+
+  .ambient-home-weather button,
+  .mirror-weather {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+  }
+
+  .ambient-home-weather strong,
+  .mirror-weather strong {
+    display: block;
+    margin-top: 1rem;
+    color: var(--color-amber);
+    font-size: 3.5rem;
+    font-weight: 620;
+    line-height: 0.95;
+  }
+
+  .ambient-home-weather span:last-child,
+  .mirror-weather span:last-child {
+    display: block;
+    margin-top: 0.7rem;
+    color: rgba(148, 163, 173, 0.78);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .ambient-presence,
+  .mirror-presence-zone {
+    position: absolute;
+    left: 50%;
+    top: 57%;
+    width: min(34rem, 70vw);
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .ambient-presence-button,
+  .mirror-presence-button {
+    display: inline-grid;
+    gap: 0.45rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    text-transform: uppercase;
+  }
+
+  .ambient-presence-button span,
+  .mirror-presence-button span {
+    color: var(--color-cyan);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+
+  .ambient-presence-button strong,
+  .mirror-presence-button strong {
+    font-size: 1.35rem;
+    font-weight: 540;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .presence-wave {
+    position: relative;
+    height: 1px;
+    margin: 1.4rem auto 0;
+    overflow: hidden;
+    background: rgba(203, 220, 226, 0.13);
+  }
+
+  .presence-wave::before {
+    position: absolute;
+    inset: 0;
+    content: '';
+    width: 35%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(109, 215, 232, 0.85),
+      transparent
+    );
+    animation: presence-breathe 4.5s ease-in-out infinite;
+  }
+
+  .ambient-word-nav,
+  .mirror-focus-rail {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    justify-content: center;
+    transform: translateX(-50%);
+    opacity: 0.46;
+  }
+
+  .ambient-focus-word,
+  .mirror-focus-rail button,
+  .ambient-text-button,
+  .ambient-close,
+  .ambient-media-controls button,
+  .ambient-assistant-tools button {
+    border: 0;
+    background: transparent;
+    color: rgba(148, 163, 173, 0.82);
+    font-size: 0.78rem;
+    font-weight: 750;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .ambient-focus-word:hover,
+  .mirror-focus-rail button:hover,
+  .ambient-text-button:hover,
+  .ambient-close:hover,
+  .ambient-media-controls button:hover,
+  .ambient-assistant-tools button:hover {
+    color: var(--color-cyan);
+  }
+
+  .ambient-focus-word:disabled,
+  .ambient-text-button:disabled,
+  .ambient-media-controls button:disabled,
+  .ambient-assistant-tools button:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+
+  .ambient-home-status {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    gap: 0.35rem;
+    color: rgba(148, 163, 173, 0.58);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .mirror-clock {
+    left: 3.5rem;
+    top: 3rem;
+  }
+
+  .mirror-clock h1 {
+    margin-top: 1.3rem;
+    font-size: 9rem;
+    font-weight: 620;
+    text-shadow: 0 0 36px rgba(245, 247, 248, 0.06);
+  }
+
+  .mirror-clock p:last-child {
+    font-size: 1.25rem;
+  }
+
+  .mirror-weather {
+    right: 3.5rem;
+    top: 3.25rem;
+    width: 22rem;
+    padding: 0;
+    text-align: right;
+  }
+
+  .mirror-context-peek {
+    right: 3.5rem;
+    bottom: 3rem;
+    max-width: 28rem;
+    color: rgba(148, 163, 173, 0.62);
+  }
+
+  .mirror-priority {
+    letter-spacing: 0.16em;
+  }
+
+  .ambient-focus-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .ambient-focus-header h1 {
+    margin-top: 0.9rem;
+    color: var(--color-text);
+    font-size: 4.8rem;
+    font-weight: 620;
+    line-height: 0.98;
+  }
+
+  .ambient-close {
+    margin-top: 0.25rem;
+  }
+
+  .ambient-quiet-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    color: rgba(148, 163, 173, 0.66);
+    font-size: 0.9rem;
+  }
+
+  .ambient-warning,
+  .ambient-success {
+    margin-top: 1.4rem;
+    color: var(--color-amber);
+    font-size: 0.92rem;
+  }
+
+  .ambient-success {
+    color: var(--color-green);
+  }
+
+  .ambient-weather-scene {
+    margin-top: 6rem;
+  }
+
+  .ambient-temperature {
+    color: var(--color-amber);
+    font-size: 10rem;
+    font-weight: 620;
+    line-height: 0.88;
+  }
+
+  .ambient-condition {
+    margin-top: 1.6rem;
+    color: var(--color-text);
+    font-size: 2.3rem;
+    font-weight: 520;
+  }
+
+  .ambient-detail-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.8rem;
+    margin-top: 3.5rem;
+    color: rgba(148, 163, 173, 0.66);
+    font-size: 0.9rem;
+  }
+
+  .ambient-briefing {
+    display: grid;
+    max-width: 64rem;
+    gap: 3rem;
+    margin-top: 4rem;
+  }
+
+  .ambient-briefing-lead span,
+  .ambient-calendar-summary span {
+    color: rgba(148, 163, 173, 0.68);
+    font-size: 0.95rem;
+  }
+
+  .ambient-briefing-lead p,
+  .ambient-calendar-summary p {
+    margin-top: 1rem;
+    color: var(--color-text);
+    font-size: 2.2rem;
+    font-weight: 540;
+    line-height: 1.18;
+  }
+
+  .ambient-briefing-list {
+    display: grid;
+    gap: 2.2rem;
+  }
+
+  .ambient-briefing-list div {
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .ambient-briefing-list dt {
+    color: var(--color-cyan);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .ambient-briefing-list dd {
+    margin: 0;
+    color: rgba(245, 247, 248, 0.9);
+    font-size: 1.5rem;
+    line-height: 1.35;
+  }
+
+  .ambient-line-list {
+    display: grid;
+    gap: 1.2rem;
+    margin-top: 1rem;
+  }
+
+  .ambient-line-item p:last-child {
+    margin-top: 0.35rem;
+  }
+
+  .ambient-onboarding {
+    max-width: 48rem;
+    margin-top: 6rem;
+  }
+
+  .ambient-onboarding h2 {
+    margin-top: 1rem;
+    color: var(--color-text);
+    font-size: 3.8rem;
+    font-weight: 620;
+    line-height: 1.02;
+  }
+
+  .ambient-onboarding p {
+    margin-top: 1.5rem;
+    color: rgba(148, 163, 173, 0.76);
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .ambient-onboarding a {
+    display: inline-block;
+    margin-top: 2rem;
+  }
+
+  .ambient-calendar-scene {
+    margin-top: 4rem;
+  }
+
+  .ambient-timeline {
+    display: grid;
+    gap: 1.8rem;
+    margin-top: 2.5rem;
+  }
+
+  .ambient-event {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr) auto;
+    gap: 2rem;
+    align-items: baseline;
+  }
+
+  .ambient-event time {
+    color: var(--color-cyan);
+    font-size: 0.9rem;
+    font-weight: 760;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ambient-event h2 {
+    color: var(--color-text);
+    font-size: 1.8rem;
+    font-weight: 560;
+  }
+
+  .ambient-event p,
+  .ambient-upcoming p,
+  .ambient-empty-line {
+    margin-top: 0.45rem;
+    color: rgba(148, 163, 173, 0.72);
+    font-size: 1rem;
+  }
+
+  .ambient-event a {
+    color: rgba(148, 163, 173, 0.72);
+    font-size: 0.78rem;
+    font-weight: 760;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .ambient-upcoming {
+    margin-top: 5rem;
+  }
+
+  .ambient-conversation {
+    display: grid;
+    max-width: 62rem;
+    gap: 2.5rem;
+    margin: 5rem auto 0;
+    text-align: center;
+  }
+
+  .ambient-transcript p:last-child {
+    margin-top: 0.8rem;
+    color: var(--color-text);
+    font-size: 3.4rem;
+    font-weight: 580;
+    line-height: 1.08;
+  }
+
+  .ambient-reply p:last-of-type {
+    margin-top: 0.8rem;
+    color: rgba(148, 163, 173, 0.82);
+    font-size: 1.45rem;
+    line-height: 1.5;
+  }
+
+  .ambient-reply span {
+    display: block;
+    margin-top: 1rem;
+    color: rgba(148, 163, 173, 0.52);
+    font-size: 0.82rem;
+  }
+
+  .ambient-assistant-input {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    width: min(42rem, 100%);
+    margin: 3rem auto 0;
+  }
+
+  .ambient-assistant-input input,
+  .ambient-voice-select select {
+    min-width: 0;
+    border: 0;
+    border-bottom: 1px solid rgba(203, 220, 226, 0.18);
+    border-radius: 0;
+    background: transparent;
+    padding: 0.85rem 0;
+    color: var(--color-text);
+    outline: none;
+  }
+
+  .ambient-assistant-input button {
+    border: 0;
+    background: transparent;
+    color: var(--color-cyan);
+    font-size: 0.78rem;
+    font-weight: 760;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .ambient-assistant-tools {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-top: 1.6rem;
+  }
+
+  .ambient-voice-select {
+    display: grid;
+    width: min(28rem, 100%);
+    margin: 1.6rem auto 0;
+    color: var(--color-cyan);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .ambient-assistant-status {
+    margin-top: 1.3rem;
+    color: rgba(148, 163, 173, 0.62);
+    font-size: 0.86rem;
+    text-align: center;
+  }
+
+  .ambient-media-scene {
+    display: grid;
+    grid-template-columns: 20rem minmax(0, 1fr);
+    gap: 4rem;
+    align-items: center;
+    margin-top: 5rem;
+  }
+
+  .ambient-media-scene-empty {
+    grid-template-columns: minmax(0, 46rem);
+  }
+
+  .ambient-artwork {
+    display: grid;
+    aspect-ratio: 1;
+    place-items: center;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .ambient-artwork img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ambient-artwork div {
+    max-width: 13rem;
+    color: rgba(148, 163, 173, 0.7);
+    text-align: center;
+  }
+
+  .ambient-media-copy h2 {
+    margin-top: 1rem;
+    color: var(--color-text);
+    font-size: 4.2rem;
+    font-weight: 620;
+    line-height: 1.02;
+  }
+
+  .ambient-media-copy > p:not(:first-child) {
+    margin-top: 1rem;
+    color: rgba(148, 163, 173, 0.78);
+    font-size: 1.35rem;
+  }
+
+  .ambient-playback {
+    max-width: 34rem;
+    margin-top: 2rem;
+    color: rgba(148, 163, 173, 0.72);
+  }
+
+  .ambient-progress {
+    height: 1px;
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: rgba(203, 220, 226, 0.16);
+  }
+
+  .ambient-progress span {
+    display: block;
+    height: 100%;
+    background: var(--color-cyan);
+  }
+
+  .ambient-progress-time {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.7rem;
+    color: rgba(148, 163, 173, 0.58);
+    font-size: 0.8rem;
+  }
+
+  .ambient-media-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    margin-top: 2.4rem;
+  }
+}
+
+@keyframes presence-breathe {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  35%,
+  65% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(285%);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .ambient-home,
+  .mirror-home {
+    display: grid;
+    min-height: calc(100vh - 3rem);
+    align-content: center;
+    gap: 2.4rem;
+  }
+
+  .ambient-home-clock,
+  .ambient-home-weather,
+  .ambient-presence,
+  .ambient-word-nav,
+  .ambient-home-status,
+  .mirror-clock,
+  .mirror-weather,
+  .mirror-presence-zone,
+  .mirror-focus-rail,
+  .mirror-context-peek {
+    position: static;
+    width: auto;
+    max-width: none;
+    transform: none;
+    text-align: left;
+  }
+
+  .ambient-word-nav,
+  .mirror-focus-rail {
+    justify-content: flex-start;
+  }
+
+  .ambient-focus-header h1 {
+    font-size: 3.2rem;
+  }
+
+  .ambient-temperature {
+    font-size: 6rem;
+  }
+
+  .ambient-briefing-list div,
+  .ambient-event,
+  .ambient-media-scene {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .ambient-media-scene {
+    margin-top: 3rem;
+  }
+
+  .ambient-artwork {
+    width: min(18rem, 76vw);
+  }
+
+  .ambient-transcript p:last-child {
+    font-size: 2.2rem;
   }
 }

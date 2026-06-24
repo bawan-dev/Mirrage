@@ -11,7 +11,7 @@ Each session should do one of these:
 - turn a starter file into working code or useful documentation
 - connect two parts of the system
 - document a decision
-- improve the dashboard
+- improve the mirror experience
 - make the project easier to run
 
 If a step needs more than one file, that is fine, but it should still have one clear purpose.
@@ -369,7 +369,7 @@ Goal: make Mirrage feel like a real wall-mounted mirror interface.
 - [x] Add `VITE_MIRROR_MODE=true` as an optional frontend display mode
 - [x] Keep normal development mode unchanged by default
 - [x] Add a minimal ambient home state for mirror use
-- [x] Show top-left time/date, top-right weather, assistant orb, and subtle status
+- [x] Show top-left time/date, top-right weather, assistant presence, and subtle status
 - [x] Keep Weather, Assistant, Media, Calendar, and Context focus views working
 - [x] Add inactivity dimming and automatic return to home
 - [x] Add light burn-in movement for static elements
@@ -403,7 +403,7 @@ Goal: make Mirror Mode feel more like an ambient product experience and less
 like a regular dashboard.
 
 - [x] Refine Mirror Mode toward a calmer premium mirror UI
-- [x] Improve assistant orb states for idle, listening, thinking, speaking, and error
+- [x] Improve assistant presence states for idle, listening, thinking, speaking, and error
 - [x] Make the Mirror Mode Assistant focus view voice-first
 - [x] Keep detailed assistant provider/debug information in normal development mode
 - [x] Add a backend proactive assistant service
@@ -420,6 +420,26 @@ Done when:
 
 Mirror Mode has a quieter product feel, and Mirrage can surface a small local
 daily nudge without sending private context to an AI provider.
+
+## Phase 30A: Ambient Intelligence Redesign
+
+Goal: remove the dashboard feeling from the visible product.
+
+- [x] Redesign Mirror Home around floating time, date, weather, and assistant status
+- [x] Remove card and grid styling from the main React view markup
+- [x] Replace the assistant orb as the main identity with a quieter presence line
+- [x] Rework Assistant focus as a voice-first conversation mode
+- [x] Rework Weather focus as ambient type instead of a weather card
+- [x] Rework Context focus as a Daily Briefing instead of metric cards
+- [x] Rework Calendar disconnected state as simple onboarding text
+- [x] Rework Media disconnected state without a setup panel
+- [x] Keep the focus views reachable by URL and the quiet word navigation
+- [x] Refresh the screenshot set for the new mirror-first UI
+
+Done when:
+
+The first impression is no longer a web dashboard. The screen should feel like a
+smart mirror surface that only shows enough information to be useful.
 
 ## Future: Voice Interaction
 
@@ -481,6 +501,6 @@ daily nudge without sending private context to an AI provider.
 
 ## Current Focus
 
-Phase 27/29 is the current milestone. Current focus is testing the ambient
-Mirror Mode experience, recording updated screenshots, and then refining context
-scoring, memory controls, and privacy settings.
+Phase 30A is the current milestone. Current focus is testing the redesigned
+ambient interface, then refining context scoring, memory controls, and privacy
+settings without adding visual clutter.

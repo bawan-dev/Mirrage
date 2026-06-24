@@ -152,12 +152,11 @@ interface BrowserSpeechRecognitionConstructor {
 }
 
 const focusButtonBase =
-  'group rounded-lg border border-line bg-panel p-5 text-left shadow-mirror transition duration-300 hover:-translate-y-1 hover:border-cyan/70 hover:bg-panel-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan';
+  'ambient-focus-word text-left transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan';
 const labelClass =
   'text-[0.72rem] font-bold uppercase tracking-[0.18em] text-cyan';
-const mutedClass = 'text-sm leading-relaxed text-muted';
 const focusPanelClass =
-  'focus-panel animate-focus-in rounded-xl border border-line bg-panel p-5 shadow-mirror md:p-8';
+  'focus-panel animate-focus-in px-2 py-2 md:px-6 md:py-4';
 
 const burnInOffsets: BurnInOffset[] = [
   { x: 0, y: 0 },
@@ -1451,7 +1450,7 @@ export default function App() {
           : 'w-[min(1180px,100%)] justify-center px-4 py-8 md:px-8'
       }`}
     >
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(109,215,232,0.10),transparent_28%),radial-gradient(circle_at_85%_70%,rgba(122,217,165,0.08),transparent_28%)]" />
+      <div className="ambient-glass-layer" />
 
       <section
         className={`transition-all duration-500 ${
@@ -1613,35 +1612,48 @@ function HomeState({
   weatherSummary,
 }: HomeStateProps) {
   return (
-    <div className="grid min-h-[82vh] content-between gap-10">
-      <header className="flex items-start justify-between gap-6">
+    <div className="ambient-home min-h-[82vh]">
+      <header className="ambient-home-clock">
         <div>
           <p className={labelClass}>Mirrage</p>
-          <h1 className="mt-4 text-[4.5rem] font-semibold leading-none tracking-normal text-text sm:text-[7rem] md:text-[9rem]">
+          <h1 className="mt-4 text-[4.5rem] font-semibold leading-none tracking-normal text-text sm:text-[7rem] md:text-[11rem]">
             {currentTime}
           </h1>
           <p className="mt-4 text-lg text-muted">{currentDate}</p>
         </div>
-
-        <div className="hidden rounded-full border border-line bg-panel px-4 py-2 text-sm text-muted shadow-mirror md:block">
-          {backendLabel}
-        </div>
       </header>
 
-      <section
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5"
-        aria-label="Ambient focus controls"
-      >
+      <section className="ambient-home-weather" aria-label="Weather">
+        <button
+          type="button"
+          className="text-left"
+          onClick={() => onOpen('weather')}
+        >
+          <span className={labelClass}>Weather</span>
+          <strong>{formatTemperature(weather)}</strong>
+          <span>{weatherSummary}</span>
+        </button>
+      </section>
+
+      <section className="ambient-presence" aria-label="Assistant status">
+        <button
+          type="button"
+          onClick={() => onOpen('assistant')}
+          className="ambient-presence-button"
+        >
+          <span>Mirrage</span>
+          <strong>listening when asked</strong>
+        </button>
+        <div className="presence-wave" aria-hidden="true" />
+      </section>
+
+      <nav className="ambient-word-nav" aria-label="Ambient focus controls">
         <button
           type="button"
           className={focusButtonBase}
           onClick={() => onOpen('weather')}
         >
-          <span className={labelClass}>Weather</span>
-          <strong className="mt-8 block text-4xl font-semibold text-amber">
-            {formatTemperature(weather)}
-          </strong>
-          <p className={`mt-3 ${mutedClass}`}>{weatherSummary}</p>
+          Weather
         </button>
 
         <button
@@ -1649,13 +1661,7 @@ function HomeState({
           className={focusButtonBase}
           onClick={() => onOpen('assistant')}
         >
-          <span className={labelClass}>Assistant</span>
-          <strong className="mt-8 block text-4xl font-semibold text-green">
-            Ready
-          </strong>
-          <p className={`mt-3 ${mutedClass}`}>
-            Open a focused assistant view and type or speak a request.
-          </p>
+          Assistant
         </button>
 
         <button
@@ -1663,13 +1669,7 @@ function HomeState({
           className={focusButtonBase}
           onClick={() => onOpen('media')}
         >
-          <span className={labelClass}>Media</span>
-          <strong className="mt-8 block text-4xl font-semibold text-text">
-            Spotify
-          </strong>
-          <p className={`mt-3 ${mutedClass}`}>
-            Connect an account to show playback and mirror controls.
-          </p>
+          Media
         </button>
 
         <button
@@ -1677,11 +1677,7 @@ function HomeState({
           className={focusButtonBase}
           onClick={() => onOpen('calendar')}
         >
-          <span className={labelClass}>Calendar</span>
-          <strong className="mt-8 block text-4xl font-semibold text-cyan">
-            Today
-          </strong>
-          <p className={`mt-3 ${mutedClass}`}>{calendarSummary}</p>
+          Calendar
         </button>
 
         <button
@@ -1689,18 +1685,16 @@ function HomeState({
           className={focusButtonBase}
           onClick={() => onOpen('context')}
         >
-          <span className={labelClass}>Context</span>
-          <strong className="mt-8 block text-4xl font-semibold text-green">
-            Daily
-          </strong>
-          <p className={`mt-3 ${mutedClass}`}>{contextSummary}</p>
+          Context
         </button>
-      </section>
+      </nav>
 
-      <footer className="grid gap-3 text-sm text-muted md:grid-cols-3">
-        <p>{systemLabel}</p>
+      <footer className="ambient-home-status">
+        <p>{backendLabel}</p>
         <p>{voiceLabel}</p>
-        <p>Hardware planning only</p>
+        <p>{calendarSummary}</p>
+        <p>{contextSummary}</p>
+        <p>{systemLabel}</p>
       </footer>
     </div>
   );
@@ -1738,6 +1732,10 @@ function MirrorHomeState({
   weatherSummary,
 }: MirrorHomeStateProps) {
   const transform = `translate(${burnInOffset.x}px, ${burnInOffset.y}px)`;
+  const assistantStatus =
+    assistantOrbState === 'idle'
+      ? voiceLabel
+      : `Mirrage ${formatStatus(assistantOrbState)}`;
 
   return (
     <div
@@ -1761,31 +1759,26 @@ function MirrorHomeState({
         <span>{weatherSummary}</span>
       </button>
 
-      <div className="mirror-orb-zone">
+      <div className="mirror-presence-zone mirror-burn">
         <button
           type="button"
-          className={`assistant-orb assistant-orb-${assistantOrbState} mirror-burn`}
-          style={{ transform }}
+          className={`mirror-presence-button mirror-presence-${assistantOrbState}`}
           onClick={() => onOpen('assistant')}
           aria-label="Open assistant focus"
         >
-          <span>{formatStatus(assistantOrbState)}</span>
+          <span>Mirrage</span>
+          <strong>{assistantStatus}</strong>
         </button>
-      </div>
-
-      <div className="mirror-status mirror-burn" style={{ transform }}>
-        <span
-          className={`mirror-status-dot ${
-            backendLabel.toLowerCase().includes('offline')
-              ? 'mirror-status-dot-warn'
-              : ''
-          }`}
-        />
-        <span>{backendLabel}</span>
-        <span>{voiceLabel}</span>
+        <div className="presence-wave" aria-hidden="true" />
       </div>
 
       <nav className="mirror-focus-rail" aria-label="Mirror focus views">
+        <button type="button" onClick={() => onOpen('assistant')}>
+          Assistant
+        </button>
+        <button type="button" onClick={() => onOpen('weather')}>
+          Weather
+        </button>
         <button type="button" onClick={() => onOpen('context')}>
           Context
         </button>
@@ -1807,6 +1800,7 @@ function MirrorHomeState({
           </span>
         )}
         <span>{calendarSummary}</span>
+        <span>{backendLabel}</span>
       </div>
     </div>
   );
@@ -1850,41 +1844,24 @@ function WeatherFocus({ backendState, onClose, weather }: WeatherFocusProps) {
   return (
     <div className={focusPanelClass}>
       <FocusHeader
-        eyebrow="Weather Focus"
+        eyebrow="Weather"
         onClose={onClose}
         title={weatherOnline ? weather.location : 'Weather unavailable'}
       />
 
-      <div className="mt-12 grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
-        <div>
-          <p className="text-[5rem] font-semibold leading-none text-amber md:text-[8rem]">
-            {formatTemperature(weather)}
-          </p>
-          <p className="mt-5 text-2xl text-text">
-            {weatherOnline
-              ? weather.condition
-              : 'Weather data is not available right now.'}
-          </p>
-        </div>
-
-        <div className="grid content-end gap-4 rounded-lg border border-line bg-page/50 p-5">
-          <div>
-            <p className={labelClass}>Source</p>
-            <p className="mt-2 text-lg text-text">Open-Meteo via backend</p>
-          </div>
-          <div>
-            <p className={labelClass}>Updated</p>
-            <p className="mt-2 text-lg text-text">
-              {formatUpdated(weather?.updated)}
-            </p>
-          </div>
-          <div>
-            <p className={labelClass}>Fallback</p>
-            <p className={`mt-2 ${mutedClass}`}>
-              If the provider fails, the UI stays readable and reports the
-              missing data.
-            </p>
-          </div>
+      <div className="ambient-weather-scene">
+        <p className="ambient-temperature">{formatTemperature(weather)}</p>
+        <p className="ambient-condition">
+          {weatherOnline
+            ? weather.condition
+            : 'Weather data is not available right now.'}
+        </p>
+        <div className="ambient-detail-line">
+          <span>Open-Meteo via backend</span>
+          <span>{formatUpdated(weather?.updated)}</span>
+          <span>
+            {weatherOnline ? 'Forecast source online' : 'Fallback state active'}
+          </span>
         </div>
       </div>
     </div>
@@ -1911,148 +1888,91 @@ function ContextFocus({
   const routines = context?.memory.routines ?? [];
   const preferences = context?.memory.preferences ?? [];
   const todayEvents = context?.calendar.today_events ?? [];
+  const firstSuggestion = suggestions[0];
+  const memorySummary =
+    goals[0]?.value ??
+    routines[0]?.value ??
+    preferences[0]?.value ??
+    'Nothing important to remember.';
 
   return (
     <div className={focusPanelClass}>
       <FocusHeader
-        eyebrow="Daily Context"
+        eyebrow="Daily Briefing"
         onClose={onClose}
-        title={context ? 'Today' : 'Context unavailable'}
+        title={context ? 'Good morning Bawan' : 'Context unavailable'}
       />
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div className="ambient-quiet-actions">
         <button
           type="button"
           onClick={onRefresh}
           disabled={contextState.isLoading}
-          className="rounded-lg border border-cyan/50 bg-cyan/10 px-4 py-3 text-sm font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ambient-text-button"
         >
-          {contextState.isLoading ? 'Refreshing...' : 'Refresh context'}
+          {contextState.isLoading ? 'Refreshing...' : 'Refresh'}
         </button>
-        <p className="text-sm text-muted">
+        <p>
           {context?.message ??
             'Context loads from backend weather, calendar, and local memory.'}
         </p>
       </div>
 
       {contextState.error && (
-        <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
-          {contextState.error}
-        </p>
+        <p className="ambient-warning">{contextState.error}</p>
       )}
 
-      {proactiveSummary && (
-        <div className="ambient-proactive-briefing">
-          <p className={labelClass}>
-            Proactive {formatStatus(proactiveSummary.priority)}
+      <section className="ambient-briefing">
+        <div className="ambient-briefing-lead">
+          <span>{context?.date ?? 'No daily context yet'}</span>
+          <p>
+            {proactiveSummary?.message ??
+              context?.message ??
+              'Start the backend and refresh this view.'}
           </p>
-          <h2>{proactiveSummary.headline}</h2>
-          <p>{proactiveSummary.message}</p>
         </div>
-      )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="rounded-lg border border-line bg-page/40 p-5">
-          <p className={labelClass}>Overview</p>
-          <h2 className="mt-3 text-4xl font-semibold text-text">
-            {context?.date ?? 'No daily context yet'}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted">
-            {context
-              ? `${context.weather.summary} ${context.calendar.message}`
-              : 'Start the backend and refresh this view.'}
-          </p>
+        <dl className="ambient-briefing-list">
+          <div>
+            <dt>Weather</dt>
+            <dd>{context?.weather.summary ?? 'Weather is not loaded.'}</dd>
+          </div>
+          <div>
+            <dt>Schedule</dt>
+            <dd>{context?.calendar.message ?? 'Calendar is not loaded.'}</dd>
+          </div>
+          <div>
+            <dt>Suggested Focus</dt>
+            <dd>
+              {firstSuggestion
+                ? `${firstSuggestion.title}. ${firstSuggestion.reason}`
+                : 'No focus suggestion yet.'}
+            </dd>
+          </div>
+          <div>
+            <dt>Memory</dt>
+            <dd>{memorySummary}</dd>
+          </div>
+        </dl>
 
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            <ContextMetric
-              label="Weather"
-              value={formatStatus(context?.weather.status)}
-            />
-            <ContextMetric
-              label="Calendar"
-              value={`${context?.calendar.today_event_count ?? 0} today`}
-            />
-            <ContextMetric
-              label="Memory"
-              value={formatStatus(context?.memory.status)}
+        {todayEvents.length > 0 && (
+          <div className="ambient-briefing-events">
+            <p className={labelClass}>Today</p>
+            <CalendarEventList events={todayEvents.slice(0, 4)} mode="today" />
+          </div>
+        )}
+
+        {(goals.length > 0 ||
+          routines.length > 0 ||
+          preferences.length > 0) && (
+          <div className="ambient-memory-stream">
+            <MemoryLineList
+              emptyText="Nothing important to remember."
+              items={[...goals, ...routines, ...preferences].slice(0, 5)}
             />
           </div>
-
-          <div className="mt-8">
-            <p className={labelClass}>Suggested focus</p>
-            <div className="mt-4 grid gap-3">
-              {suggestions.map((suggestion) => (
-                <article
-                  className="rounded-lg border border-line bg-panel p-4"
-                  key={`${suggestion.source}-${suggestion.title}`}
-                >
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <h3 className="text-2xl font-semibold text-text">
-                        {suggestion.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-muted">
-                        {suggestion.reason}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-cyan">
-                      {suggestion.priority}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <aside className="grid gap-4">
-          <section className="rounded-lg border border-line bg-page/40 p-5">
-            <p className={labelClass}>Calendar</p>
-            <p className="mt-2 text-sm text-muted">
-              {context?.calendar.message ?? 'Calendar context is not loaded.'}
-            </p>
-            {todayEvents.length > 0 && (
-              <CalendarEventList
-                events={todayEvents.slice(0, 3)}
-                mode="today"
-              />
-            )}
-          </section>
-
-          <section className="rounded-lg border border-line bg-page/40 p-5">
-            <p className={labelClass}>Goals</p>
-            <MemoryLineList
-              emptyText="No local goals saved yet."
-              items={goals}
-            />
-          </section>
-
-          <section className="rounded-lg border border-line bg-page/40 p-5">
-            <p className={labelClass}>Routines</p>
-            <MemoryLineList
-              emptyText="No routines saved yet."
-              items={routines}
-            />
-          </section>
-
-          <section className="rounded-lg border border-line bg-page/40 p-5">
-            <p className={labelClass}>Preferences</p>
-            <MemoryLineList
-              emptyText="No preferences saved yet."
-              items={preferences.slice(0, 3)}
-            />
-          </section>
-        </aside>
-      </div>
-    </div>
-  );
-}
-
-function ContextMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-line bg-panel p-4">
-      <p className={labelClass}>{label}</p>
-      <p className="mt-2 text-lg font-semibold text-text">{value}</p>
+        )}
+      </section>
     </div>
   );
 }
@@ -2069,12 +1989,9 @@ function MemoryLineList({
   }
 
   return (
-    <div className="mt-4 grid gap-3">
+    <div className="ambient-line-list">
       {items.map((item) => (
-        <div
-          className="rounded-lg border border-line bg-panel p-4"
-          key={item.id}
-        >
+        <div className="ambient-line-item" key={item.id}>
           <p className="font-semibold text-text">
             {item.key.replace(/^goal: /, '')}
           </p>
@@ -2111,93 +2028,70 @@ function CalendarFocus({
   const todayEvents = today?.events ?? [];
   const upcomingEvents = upcoming?.events ?? [];
   const title = isAuthenticated
-    ? 'Daily schedule'
+    ? 'Today'
     : isConfigured
       ? 'Connect Calendar'
       : 'Calendar setup';
 
   return (
     <div className={focusPanelClass}>
-      <FocusHeader eyebrow="Calendar Focus" onClose={onClose} title={title} />
+      <FocusHeader eyebrow="Calendar" onClose={onClose} title={title} />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="rounded-lg border border-line bg-page/40 p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className={labelClass}>Today</p>
-              <p className="mt-2 text-lg text-muted">
-                {today?.date ?? 'Schedule not loaded'}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onRefresh}
-              disabled={calendarState.isLoading}
-              className="rounded-lg border border-line bg-panel-strong px-4 py-2 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {calendarState.isLoading ? 'Refreshing' : 'Refresh'}
-            </button>
+      <div className="ambient-quiet-actions">
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={calendarState.isLoading}
+          className="ambient-text-button"
+        >
+          {calendarState.isLoading ? 'Refreshing' : 'Refresh'}
+        </button>
+        <p>{calendarStatus?.message ?? 'Checking Google Calendar.'}</p>
+      </div>
+
+      {calendarState.error && (
+        <p className="ambient-warning">{calendarState.error}</p>
+      )}
+
+      {!isAuthenticated ? (
+        <section className="ambient-onboarding">
+          <p className={labelClass}>Calendar</p>
+          <h2>
+            {isConfigured
+              ? 'Bring today into the glass.'
+              : 'Add Calendar credentials to begin.'}
+          </h2>
+          <p>
+            {isConfigured
+              ? 'Connect Google Calendar and Mirrage will show your day as a quiet timeline, not a settings panel.'
+              : 'The backend is ready for a read-only Google Calendar connection when credentials are available.'}
+          </p>
+          {isConfigured && (
+            <a href={loginUrl} className="ambient-text-button">
+              Connect Google Calendar
+            </a>
+          )}
+        </section>
+      ) : (
+        <section className="ambient-calendar-scene">
+          <div className="ambient-calendar-summary">
+            <span>{today?.date ?? 'Schedule not loaded'}</span>
+            <p>
+              {todayEvents.length > 0
+                ? `${todayEvents.length} event${todayEvents.length === 1 ? '' : 's'} today`
+                : 'No events today'}
+            </p>
           </div>
 
           {todayEvents.length > 0 ? (
             <CalendarEventList events={todayEvents} mode="today" />
           ) : (
-            <div className="mt-8 rounded-lg border border-line bg-panel p-5">
-              <p className="text-2xl font-semibold text-text">
-                {isAuthenticated ? 'No events today' : 'Calendar not connected'}
-              </p>
-              <p className={`mt-3 ${mutedClass}`}>
-                {isAuthenticated
-                  ? 'Your daily schedule is clear.'
-                  : (today?.message ??
-                    'Connect Google Calendar to show your day here.')}
-              </p>
-            </div>
+            <p className="ambient-empty-line">Your daily schedule is clear.</p>
           )}
-        </section>
 
-        <aside className="grid gap-5">
-          <div className="rounded-lg border border-line bg-page/40 p-5">
-            <p className={labelClass}>Connection</p>
-            <p className="mt-3 text-lg text-text">
-              {calendarStatus?.message ?? 'Checking Google Calendar.'}
-            </p>
-            <p className="mt-2 text-sm text-muted">
-              Calendar: {calendarStatus?.calendar_id ?? 'primary'}
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              {isConfigured && !isAuthenticated && (
-                <a
-                  href={loginUrl}
-                  className="rounded-lg border border-green/50 bg-green/10 px-4 py-3 text-sm font-semibold text-green transition hover:bg-green/15"
-                >
-                  Connect Google Calendar
-                </a>
-              )}
-              <button
-                type="button"
-                onClick={onRefresh}
-                disabled={calendarState.isLoading}
-                className="rounded-lg border border-line bg-panel-strong px-4 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Check status
-              </button>
-            </div>
-
-            {calendarState.error && (
-              <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
-                {calendarState.error}
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-lg border border-line bg-page/40 p-5">
+          <div className="ambient-upcoming">
             <p className={labelClass}>Upcoming</p>
-            <p className="mt-2 text-sm text-muted">
-              {upcoming?.message ?? 'Next events appear after connection.'}
-            </p>
-
+            <p>{upcoming?.message ?? 'Next events appear after connection.'}</p>
             {upcomingEvents.length > 0 && (
               <CalendarEventList
                 events={upcomingEvents.slice(0, 5)}
@@ -2205,8 +2099,8 @@ function CalendarFocus({
               />
             )}
           </div>
-        </aside>
-      </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -2219,38 +2113,24 @@ function CalendarEventList({
   mode: 'today' | 'upcoming';
 }) {
   return (
-    <div className="mt-6 grid gap-3">
+    <div className="ambient-timeline">
       {events.map((event) => (
-        <article
-          className="rounded-lg border border-line bg-panel p-4"
-          key={`${event.id}-${event.start}`}
-        >
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div>
-              <p className={labelClass}>
-                {mode === 'today'
-                  ? formatCalendarEventTime(event)
-                  : formatCalendarEventDateTime(event)}
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold text-text">
-                {event.title}
-              </h2>
-              {event.location && (
-                <p className="mt-2 text-sm text-muted">{event.location}</p>
-              )}
-            </div>
-
-            {event.html_link && (
-              <a
-                href={event.html_link}
-                target="_blank"
-                rel="noreferrer"
-                className="shrink-0 rounded-lg border border-line bg-page/70 px-3 py-2 text-sm font-semibold text-muted transition hover:border-cyan/70 hover:text-cyan"
-              >
-                Open
-              </a>
-            )}
+        <article className="ambient-event" key={`${event.id}-${event.start}`}>
+          <time>
+            {mode === 'today'
+              ? formatCalendarEventTime(event)
+              : formatCalendarEventDateTime(event)}
+          </time>
+          <div>
+            <h2>{event.title}</h2>
+            {event.location && <p>{event.location}</p>}
           </div>
+
+          {event.html_link && (
+            <a href={event.html_link} target="_blank" rel="noreferrer">
+              Open
+            </a>
+          )}
         </article>
       ))}
     </div>
@@ -2331,257 +2211,115 @@ function AssistantFocus({
     .reverse()
     .find((message) => message.role === 'assistant');
 
-  if (isMirrorMode) {
-    return (
-      <div className={`${focusPanelClass} ambient-assistant-focus`}>
-        <FocusHeader
-          eyebrow="Assistant"
-          onClose={onClose}
-          title="Talk to Mirrage"
-        />
-
-        <div className="ambient-assistant-stage">
-          <button
-            type="button"
-            className={`assistant-orb assistant-orb-${assistantOrbState} ambient-assistant-orb`}
-            onClick={voiceListening ? onStopVoice : onStartVoice}
-            disabled={!voiceSupported || assistantBusy}
-            aria-label={voiceButtonLabel}
-          >
-            <span>{formatStatus(assistantOrbState)}</span>
-          </button>
-
-          <div className="ambient-transcript">
-            <p className={labelClass}>Transcript</p>
-            <p>
-              {voiceTranscript ||
-                voiceInterimTranscript ||
-                latestUserMessage?.text ||
-                'Press the orb or type below.'}
-            </p>
-          </div>
-
-          <div className="ambient-reply">
-            <p className={labelClass}>Mirrage</p>
-            <p>{latestAssistantMessage?.text ?? 'Standing by.'}</p>
-            {latestAssistantMessage?.meta && (
-              <span>{latestAssistantMessage.meta}</span>
-            )}
-          </div>
-        </div>
-
-        <form onSubmit={onSubmit} className="ambient-assistant-input">
-          <input
-            type="text"
-            value={draft}
-            onChange={(event) => onDraftChange(event.target.value)}
-            placeholder="Type quietly to Mirrage"
-            aria-label="Message the assistant"
-          />
-          <button type="submit" disabled={assistantBusy}>
-            {assistantBusy ? 'Sending' : 'Send'}
-          </button>
-        </form>
-
-        <div className="ambient-assistant-tools">
-          <button
-            type="button"
-            onClick={voiceListening ? onStopVoice : onStartVoice}
-            disabled={!voiceSupported || assistantBusy}
-          >
-            {voiceButtonLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => onTtsMutedChange(!ttsMuted)}
-            disabled={!ttsSupported}
-          >
-            {ttsMuted ? 'Unmute' : 'Mute'}
-          </button>
-          <button
-            type="button"
-            onClick={onStopSpeech}
-            disabled={!ttsSupported || !ttsSpeaking}
-          >
-            Stop speech
-          </button>
-        </div>
-
-        <p className="ambient-assistant-status">
-          {voiceError ??
-            assistantError ??
-            (voiceSupported
-              ? microphoneReady
-                ? speechStatus
-                : 'Microphone permission is requested on first use.'
-              : 'Speech recognition is not supported in this browser.')}
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className={focusPanelClass}>
-      <FocusHeader
-        eyebrow="Assistant Focus"
-        onClose={onClose}
-        title="Ask Mirrage"
-      />
+    <div
+      className={`${focusPanelClass} ambient-assistant-focus ${
+        isMirrorMode ? 'ambient-assistant-mirror' : ''
+      }`}
+    >
+      <FocusHeader eyebrow="Assistant" onClose={onClose} title="Conversation" />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="max-h-[52vh] overflow-y-auto rounded-lg border border-line bg-page/40 p-4">
-          <div className="grid gap-4">
-            {assistantMessages.map((message, index) => (
-              <div
-                className={`max-w-[86%] rounded-lg border border-line p-4 ${
-                  message.role === 'user'
-                    ? 'ml-auto bg-cyan/10'
-                    : 'bg-panel-strong'
-                }`}
-                key={`${message.role}-${index}-${message.text}`}
-              >
-                <p className={labelClass}>
-                  {message.role === 'user' ? 'You' : 'Mirrage'}
-                </p>
-                <p className="mt-2 leading-relaxed text-text">{message.text}</p>
-                {message.meta && (
-                  <p className="mt-3 text-xs text-muted">{message.meta}</p>
-                )}
-              </div>
-            ))}
-          </div>
+      <section className="ambient-conversation">
+        <button
+          type="button"
+          className={`ambient-presence-button ambient-presence-${assistantOrbState}`}
+          onClick={voiceListening ? onStopVoice : onStartVoice}
+          disabled={!voiceSupported || assistantBusy}
+          aria-label={voiceButtonLabel}
+        >
+          <span>Mirrage</span>
+          <strong>{formatStatus(assistantOrbState)}</strong>
+        </button>
+        <div className="presence-wave" aria-hidden="true" />
+
+        <div className="ambient-transcript">
+          <p className={labelClass}>Transcript</p>
+          <p>
+            {voiceTranscript ||
+              voiceInterimTranscript ||
+              latestUserMessage?.text ||
+              'Say something when you are ready.'}
+          </p>
         </div>
 
-        <aside className="rounded-lg border border-line bg-page/40 p-5">
-          <p className={labelClass}>Provider</p>
-          <p className="mt-2 text-lg text-text">
-            {assistantProvider ?? 'Waiting for first request'}
-          </p>
-          <p className={`mt-4 ${mutedClass}`}>
-            Push-to-talk uses browser speech recognition, then sends the
-            transcript through the existing assistant endpoint.
-          </p>
-
-          <div className="mt-5 rounded-lg border border-line bg-panel p-4">
-            <p className={labelClass}>Voice input</p>
-            <p className="mt-2 text-sm text-muted">
-              {voiceSupported
-                ? microphoneReady
-                  ? 'Microphone permission granted for this browser session.'
-                  : 'Browser support detected. Permission is requested on first use.'
-                : 'Speech recognition is not supported in this browser.'}
-            </p>
-            <button
-              type="button"
-              onClick={voiceListening ? onStopVoice : onStartVoice}
-              disabled={!voiceSupported || assistantBusy}
-              className="mt-4 w-full rounded-lg border border-cyan/50 bg-cyan/10 px-4 py-3 font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {voiceButtonLabel}
-            </button>
-          </div>
-
-          {(voiceTranscript || voiceInterimTranscript) && (
-            <div className="mt-4 rounded-lg border border-line bg-page/60 p-4">
-              <p className={labelClass}>Transcript</p>
-              <p className="mt-2 leading-relaxed text-text">
-                {voiceTranscript || voiceInterimTranscript}
-              </p>
-              {voiceInterimTranscript && (
-                <p className="mt-2 text-sm text-muted">
-                  Listening: {voiceInterimTranscript}
-                </p>
-              )}
-            </div>
+        <div className="ambient-reply">
+          <p className={labelClass}>Mirrage</p>
+          <p>{latestAssistantMessage?.text ?? 'Standing by.'}</p>
+          {latestAssistantMessage?.meta && (
+            <span>{latestAssistantMessage.meta}</span>
           )}
+        </div>
+      </section>
 
-          {voiceError && (
-            <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
-              {voiceError}
-            </p>
-          )}
-
-          <div className="mt-5 rounded-lg border border-line bg-panel p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className={labelClass}>Voice output</p>
-                <p className="mt-2 text-sm text-muted">{speechStatus}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onTtsMutedChange(!ttsMuted)}
-                disabled={!ttsSupported}
-                className="shrink-0 rounded-lg border border-line bg-page/70 px-3 py-2 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {ttsMuted ? 'Unmute' : 'Mute'}
-              </button>
-            </div>
-
-            <label className="mt-4 block text-xs font-bold uppercase tracking-[0.18em] text-cyan">
-              Voice
-              <select
-                value={ttsVoiceURI}
-                onChange={(event) => onTtsVoiceChange(event.target.value)}
-                disabled={!ttsSupported || ttsVoices.length === 0}
-                className="mt-2 w-full rounded-lg border border-line bg-page/70 px-3 py-3 text-sm normal-case tracking-normal text-text outline-none transition focus:border-cyan disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">System default</option>
-                {ttsVoices.map((voice) => (
-                  <option value={voice.voiceURI} key={voice.voiceURI}>
-                    {voice.name} ({voice.lang})
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={onTestSpeech}
-                disabled={!ttsSupported || ttsMuted}
-                className="rounded-lg border border-cyan/50 bg-cyan/10 px-4 py-3 text-sm font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Test voice
-              </button>
-              <button
-                type="button"
-                onClick={onStopSpeech}
-                disabled={!ttsSupported || !ttsSpeaking}
-                className="rounded-lg border border-line bg-page/70 px-4 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Stop speech
-              </button>
-            </div>
-          </div>
-
-          {assistantError && (
-            <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
-              {assistantError}
-            </p>
-          )}
-        </aside>
-      </div>
-
-      <form
-        onSubmit={onSubmit}
-        className="mt-6 flex flex-col gap-3 md:flex-row"
-      >
+      <form onSubmit={onSubmit} className="ambient-assistant-input">
         <input
           type="text"
           value={draft}
           onChange={(event) => onDraftChange(event.target.value)}
-          placeholder="Type a request for Mirrage"
+          placeholder="Type quietly to Mirrage"
           aria-label="Message the assistant"
-          className="min-w-0 flex-1 rounded-lg border border-line bg-page/70 px-4 py-3 text-text outline-none transition placeholder:text-muted focus:border-cyan"
         />
-        <button
-          type="submit"
-          disabled={assistantBusy}
-          className="rounded-lg border border-cyan/50 bg-cyan/10 px-6 py-3 font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {assistantBusy ? 'Sending...' : 'Send'}
+        <button type="submit" disabled={assistantBusy}>
+          {assistantBusy ? 'Sending' : 'Send'}
         </button>
       </form>
+
+      <div className="ambient-assistant-tools">
+        <button
+          type="button"
+          onClick={voiceListening ? onStopVoice : onStartVoice}
+          disabled={!voiceSupported || assistantBusy}
+        >
+          {voiceButtonLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => onTtsMutedChange(!ttsMuted)}
+          disabled={!ttsSupported}
+        >
+          {ttsMuted ? 'Unmute' : 'Mute'}
+        </button>
+        <button
+          type="button"
+          onClick={onStopSpeech}
+          disabled={!ttsSupported || !ttsSpeaking}
+        >
+          Stop speech
+        </button>
+        <button
+          type="button"
+          onClick={onTestSpeech}
+          disabled={!ttsSupported || ttsMuted}
+        >
+          Test voice
+        </button>
+      </div>
+
+      <label className="ambient-voice-select">
+        Voice
+        <select
+          value={ttsVoiceURI}
+          onChange={(event) => onTtsVoiceChange(event.target.value)}
+          disabled={!ttsSupported || ttsVoices.length === 0}
+        >
+          <option value="">System default</option>
+          {ttsVoices.map((voice) => (
+            <option value={voice.voiceURI} key={voice.voiceURI}>
+              {voice.name} ({voice.lang})
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <p className="ambient-assistant-status">
+        {voiceError ??
+          assistantError ??
+          (voiceSupported
+            ? microphoneReady
+              ? `${speechStatus} Provider: ${assistantProvider ?? 'waiting'}.`
+              : 'Microphone permission is requested on first use.'
+            : 'Speech recognition is not supported in this browser.')}
+      </p>
     </div>
   );
 }
@@ -2629,39 +2367,33 @@ function MediaFocus({
 
   return (
     <div className={focusPanelClass}>
-      <FocusHeader eyebrow="Media Focus" onClose={onClose} title="Spotify" />
+      <FocusHeader eyebrow="Media" onClose={onClose} title="Now playing" />
 
-      <div className="mt-10 grid items-center gap-8 md:grid-cols-[320px_1fr]">
-        <div className="grid aspect-square place-items-center overflow-hidden rounded-xl border border-line bg-[linear-gradient(135deg,rgba(109,215,232,0.24),rgba(122,217,165,0.10),rgba(240,195,106,0.16))] shadow-mirror">
-          {spotifyPlayback?.artwork_url ? (
+      <div
+        className={`ambient-media-scene ${spotifyPlayback?.artwork_url ? '' : 'ambient-media-scene-empty'}`}
+      >
+        {spotifyPlayback?.artwork_url && (
+          <div className="ambient-artwork">
             <img
               src={spotifyPlayback.artwork_url}
               alt={spotifyPlayback.album ?? 'Spotify album artwork'}
               className="h-full w-full object-cover"
             />
-          ) : (
-            <div className="px-8 text-center">
-              <p className={labelClass}>Artwork</p>
-              <p className="mt-3 text-sm text-muted">
-                Album art appears after Spotify is connected and playback is
-                active.
-              </p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div>
+        <div className="ambient-media-copy">
           <p className={labelClass}>
             {isAuthenticated ? 'Spotify connected' : 'Spotify integration'}
           </p>
-          <h2 className="mt-4 text-4xl font-semibold text-text md:text-6xl">
+          <h2>
             {hasPlayback
               ? spotifyPlayback.title
               : isConfigured
                 ? 'Connect Spotify'
                 : 'Setup needed'}
           </h2>
-          <p className="mt-4 text-xl text-muted">
+          <p>
             {hasPlayback
               ? spotifyPlayback.artist
               : isConfigured
@@ -2670,21 +2402,18 @@ function MediaFocus({
           </p>
 
           {hasPlayback && (
-            <div className="mt-6 max-w-xl">
-              <p className={mutedClass}>{spotifyPlayback.album}</p>
-              <p className="mt-2 text-sm text-muted">
+            <div className="ambient-playback">
+              <p>{spotifyPlayback.album}</p>
+              <p>
                 {spotifyPlayback.device_name
                   ? `${spotifyPlayback.device_name} (${spotifyPlayback.device_type ?? 'device'})`
                   : 'No active device reported'}
               </p>
-              <div className="mt-5">
-                <div className="h-2 overflow-hidden rounded-full bg-line">
-                  <div
-                    className="h-full rounded-full bg-cyan transition-all"
-                    style={{ width: `${progressPercent}%` }}
-                  />
+              <div>
+                <div className="ambient-progress">
+                  <span style={{ width: `${progressPercent}%` }} />
                 </div>
-                <div className="mt-2 flex justify-between text-xs text-muted">
+                <div className="ambient-progress-time">
                   <span>{formatDuration(spotifyPlayback.progress_ms)}</span>
                   <span>{formatDuration(spotifyPlayback.duration_ms)}</span>
                 </div>
@@ -2693,7 +2422,7 @@ function MediaFocus({
           )}
 
           {!hasPlayback && (
-            <p className={`mt-8 max-w-xl ${mutedClass}`}>
+            <p className="ambient-empty-line">
               {isAuthenticated
                 ? (spotifyPlayback?.message ??
                   'Start Spotify on one of your devices, then refresh this view.')
@@ -2701,12 +2430,11 @@ function MediaFocus({
             </p>
           )}
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="ambient-media-controls">
             <button
               type="button"
               onClick={() => onSpotifyAction('previous')}
               disabled={controlsDisabled}
-              className="rounded-full border border-line bg-panel-strong px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
             >
               Previous
             </button>
@@ -2714,7 +2442,6 @@ function MediaFocus({
               type="button"
               onClick={() => onSpotifyAction(playPauseAction)}
               disabled={controlsDisabled}
-              className="rounded-full border border-cyan/50 bg-cyan/10 px-6 py-3 text-sm font-semibold text-cyan transition hover:bg-cyan/15 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {spotifyState.isLoading ? 'Working...' : playPauseLabel}
             </button>
@@ -2722,7 +2449,6 @@ function MediaFocus({
               type="button"
               onClick={() => onSpotifyAction('next')}
               disabled={controlsDisabled}
-              className="rounded-full border border-line bg-panel-strong px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
             </button>
@@ -2730,46 +2456,33 @@ function MediaFocus({
               type="button"
               onClick={onRefresh}
               disabled={spotifyState.isLoading}
-              className="rounded-full border border-line bg-page/70 px-5 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan disabled:cursor-not-allowed disabled:opacity-50"
             >
               Refresh
             </button>
           </div>
 
-          <div className="mt-8 rounded-lg border border-line bg-page/50 p-5">
-            <p className={labelClass}>Connection</p>
-            <p className="mt-2 text-sm text-muted">
-              {spotifyStatus?.message ?? 'Checking Spotify connection.'}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {isConfigured && !isAuthenticated && (
-                <a
-                  href={loginUrl}
-                  className="rounded-lg border border-green/50 bg-green/10 px-4 py-3 text-sm font-semibold text-green transition hover:bg-green/15"
-                >
-                  Connect Spotify
-                </a>
-              )}
-              {spotifyPlayback?.spotify_url && (
-                <a
-                  href={spotifyPlayback.spotify_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-lg border border-line bg-panel-strong px-4 py-3 text-sm font-semibold text-text transition hover:border-cyan/70 hover:text-cyan"
-                >
-                  Open in Spotify
-                </a>
-              )}
-            </div>
+          <div className="ambient-quiet-actions">
+            <p>{spotifyStatus?.message ?? 'Checking Spotify connection.'}</p>
+            {isConfigured && !isAuthenticated && (
+              <a href={loginUrl} className="ambient-text-button">
+                Connect Spotify
+              </a>
+            )}
+            {spotifyPlayback?.spotify_url && (
+              <a
+                href={spotifyPlayback.spotify_url}
+                target="_blank"
+                rel="noreferrer"
+                className="ambient-text-button"
+              >
+                Open in Spotify
+              </a>
+            )}
             {spotifyState.actionMessage && (
-              <p className="mt-4 rounded-md border border-green/40 bg-green/10 p-3 text-sm text-green">
-                {spotifyState.actionMessage}
-              </p>
+              <p className="ambient-success">{spotifyState.actionMessage}</p>
             )}
             {spotifyState.error && (
-              <p className="mt-4 rounded-md border border-amber/40 bg-amber/10 p-3 text-sm text-amber">
-                {spotifyState.error}
-              </p>
+              <p className="ambient-warning">{spotifyState.error}</p>
             )}
           </div>
         </div>
@@ -2786,18 +2499,12 @@ interface FocusHeaderProps {
 
 function FocusHeader({ eyebrow, onClose, title }: FocusHeaderProps) {
   return (
-    <header className="flex items-start justify-between gap-4">
+    <header className="ambient-focus-header">
       <div>
         <p className={labelClass}>{eyebrow}</p>
-        <h1 className="mt-3 text-4xl font-semibold leading-tight text-text md:text-6xl">
-          {title}
-        </h1>
+        <h1>{title}</h1>
       </div>
-      <button
-        type="button"
-        onClick={onClose}
-        className="rounded-full border border-line bg-page/70 px-4 py-2 text-sm font-semibold text-muted transition hover:border-cyan/70 hover:text-cyan"
-      >
+      <button type="button" onClick={onClose} className="ambient-close">
         Close
       </button>
     </header>
