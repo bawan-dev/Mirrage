@@ -8,6 +8,15 @@ from pydantic import BaseModel, Field
 
 MemoryKind = Literal["preference", "fact", "goal", "routine"]
 MemoryStatus = Literal["active", "archived", "done"]
+PresenceState = Literal[
+    "sleeping",
+    "idle",
+    "wake_detected",
+    "listening",
+    "processing",
+    "speaking",
+    "returning_to_idle",
+]
 
 
 class AssistantMessageRequest(BaseModel):
@@ -20,6 +29,61 @@ class AssistantMessageResponse(BaseModel):
     model: str | None
     memory_action: str | None = None
     context_action: str | None = None
+
+
+class PresenceSettings(BaseModel):
+    wake_word_enabled: bool
+    wake_phrase: str
+    wake_word_engine: str
+    sensitivity: float
+    microphone_device: str | None
+    inactivity_timeout_seconds: int
+    automatic_sleep: bool
+    privacy_mode: str
+    message: str
+
+
+class PresenceSettingsUpdate(BaseModel):
+    wake_word_enabled: bool | None = None
+    wake_phrase: str | None = Field(default=None, min_length=2, max_length=80)
+    wake_word_engine: str | None = Field(default=None, min_length=2, max_length=80)
+    sensitivity: float | None = Field(default=None, ge=0.0, le=1.0)
+    microphone_device: str | None = Field(default=None, max_length=160)
+    inactivity_timeout_seconds: int | None = Field(default=None, ge=5, le=3600)
+    automatic_sleep: bool | None = None
+
+
+class PresenceSnapshot(BaseModel):
+    state: PresenceState
+    previous_state: PresenceState | None
+    event: str
+    sequence: int
+    wake_phrase: str
+    wake_word_enabled: bool
+    wake_word_engine: str
+    transcript: str | None = None
+    interim_transcript: str | None = None
+    assistant_reply: str | None = None
+    source: str
+    message: str
+    updated_at: str
+
+
+class PresenceTransitionRequest(BaseModel):
+    state: PresenceState
+    event: str | None = Field(default=None, max_length=120)
+    transcript: str | None = Field(default=None, max_length=4000)
+    interim_transcript: str | None = Field(default=None, max_length=4000)
+    assistant_reply: str | None = Field(default=None, max_length=4000)
+    source: str = Field(default="frontend", max_length=120)
+    message: str | None = Field(default=None, max_length=4000)
+
+
+class WakeWordDetectionRequest(BaseModel):
+    phrase: str = Field(..., min_length=1, max_length=200)
+    engine: str | None = Field(default=None, max_length=120)
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    source: str = Field(default="wake_word_engine", max_length=120)
 
 
 class MemoryCreateRequest(BaseModel):

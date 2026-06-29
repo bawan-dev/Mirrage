@@ -80,6 +80,37 @@ Expected result:
 - `Close` or `Esc` returns to the ambient home
 - after inactivity, the screen dims and then returns to the home state
 
+## Wake word and presence checks
+
+Check the current lifecycle snapshot:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/presence/status
+```
+
+Expected result:
+
+- `state` is present
+- `wake_phrase` is `Hey Mirrage` unless changed in `.env`
+- `wake_word_engine` is `adapter` by default
+
+Simulate a local wake engine detection:
+
+```powershell
+$body = @{ phrase = "Hey Mirrage"; engine = "manual-test"; confidence = 0.9 } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/wake-word/detect" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected result:
+
+- backend returns `state: wake_detected`
+- the frontend receives the presence event
+- Conversation Mode opens and starts browser speech recognition if the browser
+  supports it
+
+The manual wake call does not prove a real local wake model is installed. It
+only proves the adapter, presence manager, SSE stream, and frontend handoff work.
+
 Tune the timeouts in `frontend/.env`:
 
 ```text

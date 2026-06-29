@@ -1,54 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="620" viewBox="0 0 1000 620" role="img" aria-labelledby="title desc">
-  <title id="title">Mirrage architecture</title>
-  <desc id="desc">A simple diagram showing the mirror dashboard calling the FastAPI backend, which owns AI, context, proactive, memory, integrations, voice, and hardware boundaries.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="700" viewBox="0 0 1100 700" role="img" aria-labelledby="title desc">
+  <title id="title">Mirrage architecture with wake word and presence pipeline</title>
+  <desc id="desc">A diagram showing the mirror frontend, FastAPI backend, wake word adapter, presence event stream, voice pipeline, assistant service, context, memory, and integrations.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#6ee7ff" />
     </marker>
     <style>
-      .bg { fill: #06090d; }
-      .panel { fill: #0d1117; stroke: #27313d; stroke-width: 2; rx: 18; }
-      .core { fill: #101923; stroke: #6ee7ff; stroke-width: 2; rx: 18; }
-      .label { fill: #f5f7fb; font: 700 26px Arial, sans-serif; }
-      .small { fill: #9eb7ca; font: 500 16px Arial, sans-serif; }
+      .bg { fill: #030507; }
+      .panel { fill: #0b1015; stroke: #22313d; stroke-width: 2; rx: 16; }
+      .core { fill: #101923; stroke: #6ee7ff; stroke-width: 2; rx: 16; }
+      .presence { fill: #0d1719; stroke: #7cf7c4; stroke-width: 2; rx: 16; }
+      .label { fill: #f5f7fb; font: 700 24px Arial, sans-serif; }
+      .small { fill: #9eb7ca; font: 500 15px Arial, sans-serif; }
       .tag { fill: #6ee7ff; font: 700 14px Arial, sans-serif; letter-spacing: 1px; }
       .line { stroke: #6ee7ff; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .green-line { stroke: #7cf7c4; stroke-width: 3; fill: none; marker-end: url(#arrow); }
       .muted-line { stroke: #344554; stroke-width: 2; fill: none; }
     </style>
   </defs>
 
-  <rect class="bg" width="1000" height="620" />
+  <rect class="bg" width="1100" height="700" />
 
-  <text x="70" y="70" class="tag">MIRRAGE</text>
-  <text x="70" y="108" class="label">Current System Shape</text>
-  <text x="70" y="136" class="small">Frontend stays focused on the mirror UI. The backend owns the service boundaries.</text>
+  <text x="70" y="64" class="tag">MIRRAGE</text>
+  <text x="70" y="102" class="label">System Shape</text>
+  <text x="70" y="130" class="small">The backend owns service state. The mirror subscribes to presence events.</text>
 
-  <rect x="310" y="180" width="380" height="105" class="panel" />
-  <text x="500" y="222" text-anchor="middle" class="label">Mirror Dashboard</text>
-  <text x="500" y="252" text-anchor="middle" class="small">React + Vite</text>
+  <rect x="390" y="170" width="320" height="86" class="panel" />
+  <text x="550" y="204" text-anchor="middle" class="label">Mirror Frontend</text>
+  <text x="550" y="232" text-anchor="middle" class="small">React, Mirror Mode, Conversation Mode</text>
 
-  <path d="M 500 285 L 500 350" class="line" />
+  <rect x="390" y="320" width="320" height="90" class="core" />
+  <text x="550" y="356" text-anchor="middle" class="label">FastAPI Backend</text>
+  <text x="550" y="384" text-anchor="middle" class="small">routes, settings, service boundaries</text>
 
-  <rect x="310" y="350" width="380" height="105" class="core" />
-  <text x="500" y="392" text-anchor="middle" class="label">FastAPI Backend</text>
-  <text x="500" y="422" text-anchor="middle" class="small">assistant, context, proactive, memory routes</text>
+  <path d="M 550 256 L 550 320" class="line" />
+  <path d="M 710 214 L 900 214 L 900 320" class="green-line" />
+  <text x="910" y="244" class="small">SSE presence events</text>
 
-  <path d="M 310 405 L 185 405" class="line" />
-  <path d="M 500 455 L 500 520" class="line" />
-  <path d="M 690 405 L 815 405" class="line" />
+  <rect x="70" y="170" width="250" height="86" class="presence" />
+  <text x="195" y="204" text-anchor="middle" class="label">Local Wake Engine</text>
+  <text x="195" y="232" text-anchor="middle" class="small">OpenWakeWord / Porcupine / adapter</text>
 
-  <rect x="60" y="360" width="220" height="90" class="panel" />
-  <text x="170" y="397" text-anchor="middle" class="label">AI Layer</text>
-  <text x="170" y="425" text-anchor="middle" class="small">stub, Ollama, OpenAI</text>
+  <path d="M 320 213 L 390 213" class="green-line" />
+  <text x="330" y="195" class="small">wake detected</text>
 
-  <rect x="390" y="520" width="220" height="80" class="panel" />
-  <text x="500" y="553" text-anchor="middle" class="label">Memory</text>
-  <text x="500" y="580" text-anchor="middle" class="small">local SQLite</text>
+  <rect x="780" y="320" width="250" height="90" class="presence" />
+  <text x="905" y="354" text-anchor="middle" class="label">Presence Engine</text>
+  <text x="905" y="382" text-anchor="middle" class="small">state manager + event stream</text>
 
-  <rect x="720" y="360" width="220" height="90" class="panel" />
-  <text x="830" y="397" text-anchor="middle" class="label">Integrations</text>
-  <text x="830" y="425" text-anchor="middle" class="small">calendar + Spotify</text>
+  <path d="M 710 365 L 780 365" class="green-line" />
 
-  <path d="M 170 360 L 170 305 L 500 305 L 500 350" class="muted-line" />
-  <path d="M 830 360 L 830 305 L 500 305" class="muted-line" />
+  <rect x="70" y="320" width="250" height="90" class="presence" />
+  <text x="195" y="354" text-anchor="middle" class="label">Voice Pipeline</text>
+  <text x="195" y="382" text-anchor="middle" class="small">listening, processing, speaking</text>
+
+  <path d="M 320 365 L 390 365" class="line" />
+
+  <rect x="70" y="500" width="220" height="82" class="panel" />
+  <text x="180" y="532" text-anchor="middle" class="label">AI Layer</text>
+  <text x="180" y="558" text-anchor="middle" class="small">stub, Ollama, OpenAI-compatible</text>
+
+  <rect x="330" y="500" width="220" height="82" class="panel" />
+  <text x="440" y="532" text-anchor="middle" class="label">Context</text>
+  <text x="440" y="558" text-anchor="middle" class="small">weather, calendar, memory</text>
+
+  <rect x="590" y="500" width="220" height="82" class="panel" />
+  <text x="700" y="532" text-anchor="middle" class="label">Memory</text>
+  <text x="700" y="558" text-anchor="middle" class="small">local SQLite</text>
+
+  <rect x="850" y="500" width="220" height="82" class="panel" />
+  <text x="960" y="532" text-anchor="middle" class="label">Integrations</text>
+  <text x="960" y="558" text-anchor="middle" class="small">Calendar, Spotify, weather</text>
+
+  <path d="M 550 410 L 180 500" class="muted-line" />
+  <path d="M 550 410 L 440 500" class="muted-line" />
+  <path d="M 550 410 L 700 500" class="muted-line" />
+  <path d="M 550 410 L 960 500" class="muted-line" />
 </svg>

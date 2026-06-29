@@ -77,17 +77,98 @@ Returns the current voice layer state.
 
 ```json
 {
-  "status": "planned",
+  "status": "ready",
   "listening": false,
-  "wake_word": "not_configured",
-  "speech_to_text": "not_configured",
-  "text_to_speech": "not_configured"
+  "wake_word": "enabled",
+  "wake_phrase": "Hey Mirrage",
+  "wake_word_engine": "adapter",
+  "wake_word_mode": "local_adapter",
+  "sensitivity": 0.55,
+  "microphone_device": null,
+  "presence_state": "idle",
+  "speech_to_text": "browser_after_wake",
+  "text_to_speech": "browser_synthesis"
 }
 ```
 
 ### Notes
 
-The first version should not try to access the microphone. It only needs to show where voice support will connect later.
+The backend owns voice presence state. The browser still handles speech
+recognition and speech synthesis until a local speech engine is added.
+
+## `GET /api/presence/status`
+
+Returns the current assistant lifecycle snapshot.
+
+### Example Response
+
+```json
+{
+  "state": "idle",
+  "previous_state": null,
+  "event": "startup",
+  "sequence": 0,
+  "wake_phrase": "Hey Mirrage",
+  "wake_word_enabled": true,
+  "wake_word_engine": "adapter",
+  "transcript": null,
+  "interim_transcript": null,
+  "assistant_reply": null,
+  "source": "presence_service",
+  "message": "Assistant presence is idle.",
+  "updated_at": "2026-06-29T10:00:00+00:00"
+}
+```
+
+## `GET /api/presence/events`
+
+Streams presence snapshots with Server-Sent Events.
+
+Frontend uses this endpoint to subscribe to `sleeping`, `idle`,
+`wake_detected`, `listening`, `processing`, `speaking`, and
+`returning_to_idle` without polling.
+
+## `GET /api/presence/settings`
+
+Returns wake and presence configuration.
+
+## `PATCH /api/presence/settings`
+
+Updates in-process wake and presence settings.
+
+### Example Request
+
+```json
+{
+  "wake_phrase": "Hey Mirrage",
+  "sensitivity": 0.65,
+  "automatic_sleep": true
+}
+```
+
+## `POST /api/presence/transition`
+
+Allows the frontend voice pipeline to report lifecycle stages such as
+`listening`, `speaking`, and `returning_to_idle`.
+
+## `POST /api/wake-word/detect`
+
+Wake-word adapter endpoint for a local engine.
+
+### Example Request
+
+```json
+{
+  "phrase": "Hey Mirrage",
+  "engine": "openwakeword",
+  "confidence": 0.9
+}
+```
+
+### Notes
+
+Raw wake-word audio should stay inside the local wake engine. Mirrage receives
+only the detection event.
 
 ## `GET /api/info/weather`
 

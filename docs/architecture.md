@@ -402,22 +402,42 @@ assistant path through `POST /api/assistant/message`.
 
 This is documented in [command-routing.md](command-routing.md).
 
-## Voice Boundary
+## Wake Word And Presence Boundary
 
-Voice is still layered. The backend exposes voice status, while the current
-browser handles push-to-talk speech recognition and speech synthesis.
+Voice is split into a backend-owned lifecycle and browser-owned speech capture.
 
-Current voice state can include:
+The backend now owns:
 
-- whether the system is listening
-- whether wake word detection is configured
-- whether speech-to-text is configured
-- whether text-to-speech is configured
+- global assistant lifecycle state
+- presence settings
+- wake-word detection adapter endpoint
+- Server-Sent Events for frontend subscriptions
+- voice pipeline stage transitions
 
-Wake word detection, backend speech-to-text, and backend text-to-speech should
-come later after browser voice behavior is stable.
+The frontend now listens to presence events instead of polling for assistant
+state. When the backend emits `wake_detected`, the frontend opens Conversation
+Mode and starts the existing browser speech-recognition path.
 
-The current voice plan is tracked in [voice.md](voice.md).
+Current production-shaped flow:
+
+```text
+local wake engine
+  -> POST /api/wake-word/detect
+  -> AssistantStateManager
+  -> GET /api/presence/events stream
+  -> frontend Conversation Mode
+  -> browser speech recognition
+  -> POST /api/assistant/message
+  -> browser speech synthesis
+  -> returning_to_idle
+```
+
+The repo does not include a trained `Hey Mirrage` wake-word model asset yet. A
+local engine such as OpenWakeWord or Porcupine still needs to be installed and
+tested on the target machine.
+
+The current voice plan is tracked in [voice.md](voice.md) and
+[wake-word-presence.md](wake-word-presence.md).
 
 ## Hardware Boundary
 
@@ -438,7 +458,7 @@ To keep the project clean, the first stages should avoid:
 
 - direct frontend calls to AI providers
 - hardware code before hardware decisions are documented
-- backend voice pipeline work before browser voice behavior is stable
+- external wake-word or speech providers before the local privacy boundary is clear
 - large abstractions before the project needs them
 - treating planned features as finished features
 

@@ -441,9 +441,33 @@ Done when:
 The first impression is no longer a web dashboard. The screen should feel like a
 smart mirror surface that only shows enough information to be useful.
 
+## Phase 31: Wake Word And Presence Engine
+
+Goal: make Mirrage stateful and voice-first without relying on button presses as
+the main interaction model.
+
+- [x] Add backend `AssistantStateManager`
+- [x] Add presence settings for wake phrase, engine, sensitivity, microphone, inactivity, and sleep
+- [x] Add `GET /api/presence/status`
+- [x] Add Server-Sent Events at `GET /api/presence/events`
+- [x] Add local wake-word adapter endpoint at `POST /api/wake-word/detect`
+- [x] Add voice pipeline transitions for wake, listening, processing, speaking, returning, idle, and sleeping
+- [x] Keep wake-word detection provider-independent and separate from AI providers
+- [x] Subscribe frontend to backend presence events instead of polling
+- [x] Open Conversation Mode automatically when `wake_detected` is emitted
+- [x] Add optional experimental browser wake listener behind an explicit env flag
+- [x] Document privacy model, settings, supported engine options, troubleshooting, and manual tests
+- [ ] Install and test a real local `Hey Mirrage` wake-word model on target hardware
+
+Done when:
+
+The app has a real backend-owned presence lifecycle and a clean adapter for local
+wake engines. A real local wake model still needs to be selected, installed, and
+tested before claiming hands-free wake word works in production.
+
 ## Future: Voice Interaction
 
-- [ ] Wake phrase
+- [ ] Local trained wake model
 - [ ] Backend or local speech-to-text option
 - [ ] Assistant intent handling
 - [ ] Backend or local text-to-speech option
@@ -501,6 +525,6 @@ smart mirror surface that only shows enough information to be useful.
 
 ## Current Focus
 
-Phase 30A is the current milestone. Current focus is testing the redesigned
-ambient interface, then refining context scoring, memory controls, and privacy
-settings without adding visual clutter.
+Phase 31 is the current milestone. Current focus is testing the presence event
+stream, wake-word adapter, browser handoff, and then choosing a real local wake
+engine/model for the target machine.

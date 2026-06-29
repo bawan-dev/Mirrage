@@ -14,6 +14,9 @@ import {
   getCalendarUpcoming,
   getDailyContext,
   getHealthStatus,
+  getPresenceEventsUrl,
+  getPresenceSettings,
+  getPresenceStatus,
   getProactiveSummary,
   getSpotifyLoginUrl,
   getSpotifyPlayback,
@@ -23,13 +26,15 @@ import {
   getWeather,
   runSpotifyAction,
   sendAssistantMessage,
+  sendPresenceTransition,
+  sendWakeWordDetection,
 } from './api';
 import {
   routeAssistantCommand,
   type AssistantCommandRoute,
   type AssistantUiAction,
 } from './intentRouting';
-import { mirrorModeConfig } from './config';
+import { mirrorModeConfig, wakeWordConfig } from './config';
 import type {
   AssistantReply,
   CalendarEvent,
@@ -37,6 +42,10 @@ import type {
   CalendarStatus,
   DailyContext,
   HealthStatus,
+  PresenceSettings,
+  PresenceSnapshot,
+  PresenceState,
+  PresenceTransition,
   ProactiveSummary,
   SpotifyPlayback,
   SpotifyStatus,
@@ -92,8 +101,11 @@ type AssistantOrbState =
   | 'error'
   | 'idle'
   | 'listening'
+  | 'returning'
+  | 'sleeping'
   | 'speaking'
-  | 'thinking';
+  | 'thinking'
+  | 'wake';
 
 type MirrorInactivityLevel = 'active' | 'dimmed' | 'sleep';
 
@@ -185,6 +197,61 @@ function formatStatus(value?: string): string {
   return value
     .replaceAll('_', ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeWakePhrase(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function transcriptIncludesWakePhrase(transcript: string, wakePhrase: string) {
+  const normalizedTranscript = normalizeWakePhrase(transcript);
+  const normalizedWakePhrase = normalizeWakePhrase(wakePhrase);
+
+  return Boolean(
+    normalizedWakePhrase && normalizedTranscript.includes(normalizedWakePhrase),
+  );
+}
+
+function mapPresenceStateToAssistantState(
+  state: PresenceState | undefined,
+  fallback: AssistantOrbState,
+): AssistantOrbState {
+  switch (state) {
+    case 'sleeping':
+      return 'sleeping';
+    case 'wake_detected':
+      return 'wake';
+    case 'listening':
+      return 'listening';
+    case 'processing':
+      return 'thinking';
+    case 'speaking':
+      return 'speaking';
+    case 'returning_to_idle':
+      return 'returning';
+    case 'idle':
+      return 'idle';
+    default:
+      return fallback;
+  }
+}
+
+function getPresenceLabel(
+  snapshot: PresenceSnapshot | null,
+  fallback: string,
+): string {
+  if (!snapshot) {
+    return fallback;
+  }
+
+  if (snapshot.state === 'idle' && snapshot.wake_word_enabled) {
+    return `Say ${snapshot.wake_phrase}`;
+  }
+
+  return snapshot.message || formatStatus(snapshot.state);
 }
 
 function formatTemperature(weather: WeatherInfo | null): string {
@@ -330,6 +397,8 @@ export default function App() {
     getInitialFocusView(),
   );
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const wakeRecognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const handledWakeSequenceRef = useRef<number | null>(null);
   const inactivityDimTimerRef = useRef<number | null>(null);
   const inactivitySleepTimerRef = useRef<number | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
@@ -342,6 +411,15 @@ export default function App() {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus | null>(null);
+  const [presenceSnapshot, setPresenceSnapshot] =
+    useState<PresenceSnapshot | null>(null);
+  const [presenceSettings, setPresenceSettings] =
+    useState<PresenceSettings | null>(null);
+  const [presenceConnected, setPresenceConnected] = useState(false);
+  const [presenceError, setPresenceError] = useState<string | null>(null);
+  const [pendingWakeSequence, setPendingWakeSequence] = useState<number | null>(
+    null,
+  );
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
   const [calendarStatus, setCalendarStatus] = useState<CalendarStatus | null>(
     null,
@@ -439,6 +517,11 @@ export default function App() {
     inactivitySleepTimerRef.current = window.setTimeout(() => {
       setActiveView('home');
       setMirrorInactivityLevel('sleep');
+      void reportPresenceTransition({
+        state: 'sleeping',
+        event: 'mirror_inactivity_sleep',
+        message: 'Mirror is sleeping after inactivity.',
+      });
     }, mirrorModeConfig.sleepTimeoutMs);
   }, [clearMirrorInactivityTimers, isMirrorMode]);
 
@@ -513,8 +596,95 @@ export default function App() {
 
     return () => {
       recognitionRef.current?.abort();
+      wakeRecognitionRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    const SpeechRecognition = getSpeechRecognitionConstructor();
+    if (
+      !wakeWordConfig.browserListenerEnabled ||
+      !SpeechRecognition ||
+      !presenceSettings?.wake_word_enabled
+    ) {
+      wakeRecognitionRef.current?.abort();
+      wakeRecognitionRef.current = null;
+      return;
+    }
+
+    let shouldRestart = true;
+    const wakePhrase = presenceSettings.wake_phrase;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-GB';
+
+    recognition.onresult = (event) => {
+      for (
+        let index = event.resultIndex;
+        index < event.results.length;
+        index += 1
+      ) {
+        const result = event.results[index];
+        const transcript = result?.[0]?.transcript.trim();
+
+        if (!result?.isFinal || !transcript) {
+          continue;
+        }
+
+        if (transcriptIncludesWakePhrase(transcript, wakePhrase)) {
+          void sendWakeWordDetection(
+            wakePhrase,
+            'experimental_browser_listener',
+          )
+            .then((snapshot) => {
+              setPresenceSnapshot(snapshot);
+              setPendingWakeSequence(snapshot.sequence);
+            })
+            .catch(() => {
+              setPresenceError(
+                'Wake phrase was heard, but the backend rejected it.',
+              );
+            });
+        }
+      }
+    };
+
+    recognition.onerror = (event) => {
+      setPresenceError(
+        `Wake listener error: ${getVoiceErrorMessage(event.error)}`,
+      );
+    };
+
+    recognition.onend = () => {
+      wakeRecognitionRef.current = null;
+
+      if (shouldRestart) {
+        window.setTimeout(() => {
+          try {
+            recognition.start();
+            wakeRecognitionRef.current = recognition;
+          } catch {
+            setPresenceError('Wake listener could not restart.');
+          }
+        }, 700);
+      }
+    };
+
+    try {
+      recognition.start();
+      wakeRecognitionRef.current = recognition;
+      setPresenceError(null);
+    } catch {
+      setPresenceError('Wake listener could not start.');
+    }
+
+    return () => {
+      shouldRestart = false;
+      recognition.abort();
+      wakeRecognitionRef.current = null;
+    };
+  }, [presenceSettings?.wake_phrase, presenceSettings?.wake_word_enabled]);
 
   useEffect(() => {
     if (
@@ -594,6 +764,61 @@ export default function App() {
 
     return () => {
       isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadPresence() {
+      try {
+        const [snapshot, settings] = await Promise.all([
+          getPresenceStatus(),
+          getPresenceSettings(),
+        ]);
+
+        if (!isActive) {
+          return;
+        }
+
+        setPresenceSnapshot(snapshot);
+        setPresenceSettings(settings);
+        setPresenceError(null);
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setPresenceError('Presence service unavailable');
+      }
+    }
+
+    loadPresence();
+
+    const events = new EventSource(getPresenceEventsUrl());
+
+    events.addEventListener('presence', (event) => {
+      const snapshot = JSON.parse(
+        (event as MessageEvent<string>).data,
+      ) as PresenceSnapshot;
+
+      setPresenceSnapshot(snapshot);
+      setPresenceConnected(true);
+      setPresenceError(null);
+
+      if (snapshot.state === 'wake_detected') {
+        setPendingWakeSequence(snapshot.sequence);
+      }
+    });
+
+    events.onerror = () => {
+      setPresenceConnected(false);
+      setPresenceError('Presence event stream disconnected');
+    };
+
+    return () => {
+      isActive = false;
+      events.close();
     };
   }, []);
 
@@ -861,17 +1086,7 @@ export default function App() {
     proactiveSummary,
   ]);
 
-  const voiceLabel = voiceListening
-    ? 'Listening now'
-    : voiceSupported
-      ? 'Voice ready'
-      : voiceStatus?.listening
-        ? 'Listening'
-        : 'Voice planned';
-  const systemLabel = backendState.error
-    ? 'System offline'
-    : formatStatus(systemStatus?.status);
-  const assistantOrbState: AssistantOrbState = voiceListening
+  const localAssistantState: AssistantOrbState = voiceListening
     ? 'listening'
     : assistantBusy
       ? 'thinking'
@@ -880,6 +1095,25 @@ export default function App() {
         : assistantError || voiceError || backendState.error
           ? 'error'
           : 'idle';
+  const assistantOrbState = mapPresenceStateToAssistantState(
+    presenceSnapshot?.state,
+    localAssistantState,
+  );
+  const voiceLabel = presenceSnapshot
+    ? getPresenceLabel(presenceSnapshot, 'Voice ready')
+    : voiceListening
+      ? 'Listening now'
+      : voiceSupported
+        ? 'Voice ready'
+        : voiceStatus?.listening
+          ? 'Listening'
+          : 'Voice planned';
+  const presenceDetail = presenceSnapshot
+    ? `${formatStatus(presenceSnapshot.state)} / ${presenceConnected ? 'event stream online' : 'snapshot only'}`
+    : (presenceError ?? 'Presence service connecting');
+  const systemLabel = backendState.error
+    ? 'System offline'
+    : formatStatus(systemStatus?.status);
   const burnInOffset = burnInOffsets[burnInIndex] ?? burnInOffsets[0];
   const mirrorStartupChecks = useMemo<MirrorStartupCheck[]>(
     () => [
@@ -966,6 +1200,19 @@ export default function App() {
     }
   }
 
+  async function reportPresenceTransition(transition: PresenceTransition) {
+    try {
+      const snapshot = await sendPresenceTransition({
+        source: 'frontend',
+        ...transition,
+      });
+      setPresenceSnapshot(snapshot);
+      setPresenceError(null);
+    } catch {
+      setPresenceError('Presence service unavailable');
+    }
+  }
+
   async function handleAssistantCommand(
     message: string,
     source: 'typed' | 'voice',
@@ -982,6 +1229,12 @@ export default function App() {
         meta: source === 'voice' ? 'Voice transcript' : undefined,
       },
     ]);
+    void reportPresenceTransition({
+      state: 'processing',
+      event: 'intent_processing_started',
+      transcript: message,
+      message: 'Processing local intent command.',
+    });
 
     if (command.intent === 'daily_context') {
       setAssistantBusy(true);
@@ -1006,6 +1259,13 @@ export default function App() {
             meta: `Context / ${formatStatus(result.context_action ?? command.intent)}`,
           },
         ]);
+        void reportPresenceTransition({
+          state: 'speaking',
+          event: 'assistant_response_ready',
+          transcript: message,
+          assistant_reply: result.reply,
+          message: 'Assistant response is ready to speak.',
+        });
         speakText(result.reply);
       } catch {
         const fallback =
@@ -1056,6 +1316,13 @@ export default function App() {
             meta: `UI action / ${formatStatus(command.intent)}`,
           },
         ]);
+        void reportPresenceTransition({
+          state: 'speaking',
+          event: 'assistant_response_ready',
+          transcript: message,
+          assistant_reply: response,
+          message: 'Assistant response is ready to speak.',
+        });
         speakText(response);
       } catch {
         const fallback =
@@ -1088,6 +1355,13 @@ export default function App() {
         meta: `UI action / ${formatStatus(command.intent)}`,
       },
     ]);
+    void reportPresenceTransition({
+      state: 'speaking',
+      event: 'assistant_response_ready',
+      transcript: message,
+      assistant_reply: command.response,
+      message: 'Assistant response is ready to speak.',
+    });
     speakText(command.response);
   }
 
@@ -1150,11 +1424,29 @@ export default function App() {
     speechRequestRef.current += 1;
     window.speechSynthesis?.cancel();
     setTtsSpeaking(false);
+    settlePresenceAfterSpeech();
   }
 
-  function speakText(text: string) {
+  function settlePresenceAfterSpeech() {
+    void reportPresenceTransition({
+      state: 'returning_to_idle',
+      event: 'speech_synthesis_finished',
+      message: 'Conversation is ending.',
+    });
+
+    window.setTimeout(() => {
+      void reportPresenceTransition({
+        state: 'idle',
+        event: 'conversation_idle',
+        message: 'Assistant presence is idle.',
+      });
+    }, 900);
+  }
+
+  function speakText(text: string): boolean {
     if (!ttsSupportedRef.current || ttsMutedRef.current || !text.trim()) {
-      return;
+      settlePresenceAfterSpeech();
+      return false;
     }
 
     const synthesis = window.speechSynthesis;
@@ -1179,22 +1471,31 @@ export default function App() {
     utterance.onstart = () => {
       if (speechRequestRef.current === requestId) {
         setTtsSpeaking(true);
+        void reportPresenceTransition({
+          state: 'speaking',
+          event: 'speech_synthesis_started',
+          assistant_reply: text,
+          message: 'Assistant response is being spoken.',
+        });
       }
     };
 
     utterance.onend = () => {
       if (speechRequestRef.current === requestId) {
         setTtsSpeaking(false);
+        settlePresenceAfterSpeech();
       }
     };
 
     utterance.onerror = () => {
       if (speechRequestRef.current === requestId) {
         setTtsSpeaking(false);
+        settlePresenceAfterSpeech();
       }
     };
 
     synthesis.speak(utterance);
+    return true;
   }
 
   function handleTtsMutedChange(nextValue: boolean) {
@@ -1284,6 +1585,11 @@ export default function App() {
       recognition.onerror = (event) => {
         setVoiceError(getVoiceErrorMessage(event.error));
         setVoiceListening(false);
+        void reportPresenceTransition({
+          state: 'returning_to_idle',
+          event: 'speech_recognition_error',
+          message: getVoiceErrorMessage(event.error),
+        });
       };
 
       recognition.onend = () => {
@@ -1292,24 +1598,45 @@ export default function App() {
         setVoiceInterimTranscript('');
 
         if (capturedTranscript) {
+          void reportPresenceTransition({
+            state: 'processing',
+            event: 'speech_recognition_finished',
+            transcript: capturedTranscript,
+            message: 'Speech transcript captured.',
+          });
           void sendAssistantRequest(capturedTranscript, 'voice');
           return;
         }
 
         setVoiceError((currentError) => currentError ?? 'No speech was heard.');
+        void reportPresenceTransition({
+          state: 'returning_to_idle',
+          event: 'speech_recognition_empty',
+          message: 'No speech was heard.',
+        });
       };
 
       recognitionRef.current = recognition;
       setVoiceListening(true);
+      void reportPresenceTransition({
+        state: 'listening',
+        event: 'speech_recognition_started',
+        message: 'Listening for the user request.',
+      });
       recognition.start();
     } catch (error) {
       setVoiceListening(false);
       recognitionRef.current = null;
-      setVoiceError(
+      const message =
         error instanceof Error
           ? error.message
-          : 'Microphone access could not be started.',
-      );
+          : 'Microphone access could not be started.';
+      setVoiceError(message);
+      void reportPresenceTransition({
+        state: 'returning_to_idle',
+        event: 'microphone_start_failed',
+        message,
+      });
     }
   }
 
@@ -1317,6 +1644,26 @@ export default function App() {
     registerMirrorActivity();
     recognitionRef.current?.stop();
   }
+
+  useEffect(() => {
+    if (
+      pendingWakeSequence === null ||
+      handledWakeSequenceRef.current === pendingWakeSequence ||
+      !voiceSupported ||
+      assistantBusy ||
+      voiceListening
+    ) {
+      return;
+    }
+
+    handledWakeSequenceRef.current = pendingWakeSequence;
+    setActiveView('assistant');
+    registerMirrorActivity();
+    void startVoiceCapture();
+    // startVoiceCapture intentionally stays outside this dependency list so a
+    // wake event is handled once per backend sequence, not once per render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assistantBusy, pendingWakeSequence, voiceListening, voiceSupported]);
 
   function openFocus(view: Exclude<FocusView, 'home'>) {
     registerMirrorActivity();
@@ -1470,6 +1817,7 @@ export default function App() {
             currentTime={currentTime}
             inactivityLevel={mirrorInactivityLevel}
             onOpen={openFocus}
+            presenceDetail={presenceDetail}
             proactiveNudge={proactiveNudge}
             proactiveSummary={proactiveSummary}
             voiceLabel={voiceLabel}
@@ -1483,7 +1831,9 @@ export default function App() {
             contextSummary={contextSummary}
             currentDate={currentDate}
             currentTime={currentTime}
+            assistantOrbState={assistantOrbState}
             onOpen={openFocus}
+            presenceDetail={presenceDetail}
             systemLabel={systemLabel}
             voiceLabel={voiceLabel}
             weather={weather}
@@ -1532,6 +1882,9 @@ export default function App() {
             ttsSupported={ttsSupported}
             ttsVoiceURI={ttsVoiceURI}
             ttsVoices={ttsVoices}
+            presenceDetail={presenceDetail}
+            presenceError={presenceError}
+            presenceSettings={presenceSettings}
             voiceError={voiceError}
             voiceInterimTranscript={voiceInterimTranscript}
             voiceListening={voiceListening}
@@ -1587,12 +1940,14 @@ export default function App() {
 }
 
 interface HomeStateProps {
+  assistantOrbState: AssistantOrbState;
   backendLabel: string;
   calendarSummary: string;
   contextSummary: string;
   currentDate: string;
   currentTime: string;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
+  presenceDetail: string;
   systemLabel: string;
   voiceLabel: string;
   weather: WeatherInfo | null;
@@ -1600,12 +1955,14 @@ interface HomeStateProps {
 }
 
 function HomeState({
+  assistantOrbState,
   backendLabel,
   calendarSummary,
   contextSummary,
   currentDate,
   currentTime,
   onOpen,
+  presenceDetail,
   systemLabel,
   voiceLabel,
   weather,
@@ -1639,10 +1996,10 @@ function HomeState({
         <button
           type="button"
           onClick={() => onOpen('assistant')}
-          className="ambient-presence-button"
+          className={`ambient-presence-button ambient-presence-${assistantOrbState}`}
         >
           <span>Mirrage</span>
-          <strong>listening when asked</strong>
+          <strong>{voiceLabel}</strong>
         </button>
         <div className="presence-wave" aria-hidden="true" />
       </section>
@@ -1692,6 +2049,7 @@ function HomeState({
       <footer className="ambient-home-status">
         <p>{backendLabel}</p>
         <p>{voiceLabel}</p>
+        <p>{presenceDetail}</p>
         <p>{calendarSummary}</p>
         <p>{contextSummary}</p>
         <p>{systemLabel}</p>
@@ -1709,6 +2067,7 @@ interface MirrorHomeStateProps {
   currentTime: string;
   inactivityLevel: MirrorInactivityLevel;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
+  presenceDetail: string;
   proactiveNudge: string;
   proactiveSummary: ProactiveSummary | null;
   voiceLabel: string;
@@ -1725,6 +2084,7 @@ function MirrorHomeState({
   currentTime,
   inactivityLevel,
   onOpen,
+  presenceDetail,
   proactiveNudge,
   proactiveSummary,
   voiceLabel,
@@ -1800,6 +2160,7 @@ function MirrorHomeState({
           </span>
         )}
         <span>{calendarSummary}</span>
+        <span>{presenceDetail}</span>
         <span>{backendLabel}</span>
       </div>
     </div>
@@ -2155,6 +2516,9 @@ interface AssistantFocusProps {
   onTestSpeech: () => void;
   onTtsMutedChange: (value: boolean) => void;
   onTtsVoiceChange: (value: string) => void;
+  presenceDetail: string;
+  presenceError: string | null;
+  presenceSettings: PresenceSettings | null;
   ttsMuted: boolean;
   ttsSpeaking: boolean;
   ttsSupported: boolean;
@@ -2185,6 +2549,9 @@ function AssistantFocus({
   onTestSpeech,
   onTtsMutedChange,
   onTtsVoiceChange,
+  presenceDetail,
+  presenceError,
+  presenceSettings,
   ttsMuted,
   ttsSpeaking,
   ttsSupported,
@@ -2311,8 +2678,28 @@ function AssistantFocus({
         </select>
       </label>
 
+      <section
+        className="ambient-presence-settings"
+        aria-label="Presence settings"
+      >
+        <p className={labelClass}>Presence</p>
+        <p>{presenceDetail}</p>
+        <p>
+          Wake phrase:{' '}
+          <strong>{presenceSettings?.wake_phrase ?? 'Hey Mirrage'}</strong>
+        </p>
+        <p>
+          Engine:{' '}
+          <strong>{presenceSettings?.wake_word_engine ?? 'adapter'}</strong>
+          {wakeWordConfig.browserListenerEnabled
+            ? ' with experimental browser listener enabled'
+            : ' with local adapter expected'}
+        </p>
+      </section>
+
       <p className="ambient-assistant-status">
-        {voiceError ??
+        {presenceError ??
+          voiceError ??
           assistantError ??
           (voiceSupported
             ? microphoneReady

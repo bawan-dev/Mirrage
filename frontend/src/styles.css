@@ -497,8 +497,10 @@ select {
   }
 
   .mirror-home-sleep .mirror-context-peek,
-  .mirror-home-sleep .mirror-focus-rail {
-    opacity: 0.12;
+  .mirror-home-sleep .mirror-focus-rail,
+  .mirror-home-sleep .mirror-presence-zone {
+    pointer-events: none;
+    opacity: 0;
   }
 
   .mirror-dim-overlay {
@@ -847,6 +849,38 @@ select {
     text-transform: none;
   }
 
+  .ambient-presence-wake strong,
+  .mirror-presence-wake strong {
+    color: var(--color-cyan);
+  }
+
+  .ambient-presence-listening strong,
+  .mirror-presence-listening strong {
+    color: #8cf7c4;
+  }
+
+  .ambient-presence-thinking strong,
+  .mirror-presence-thinking strong {
+    color: #ffd479;
+  }
+
+  .ambient-presence-speaking strong,
+  .mirror-presence-speaking strong {
+    color: #f8fbff;
+  }
+
+  .ambient-presence-returning strong,
+  .mirror-presence-returning strong,
+  .ambient-presence-sleeping strong,
+  .mirror-presence-sleeping strong {
+    color: rgba(148, 163, 173, 0.72);
+  }
+
+  .ambient-presence-error strong,
+  .mirror-presence-error strong {
+    color: #ff8a8a;
+  }
+
   .presence-wave {
     position: relative;
     height: 1px;
@@ -867,6 +901,21 @@ select {
       transparent
     );
     animation: presence-breathe 4.5s ease-in-out infinite;
+  }
+
+  .ambient-presence-listening + .presence-wave::before,
+  .mirror-presence-listening + .presence-wave::before {
+    animation-duration: 1.6s;
+  }
+
+  .ambient-presence-thinking + .presence-wave::before,
+  .mirror-presence-thinking + .presence-wave::before {
+    animation-duration: 2.2s;
+  }
+
+  .ambient-presence-speaking + .presence-wave::before,
+  .mirror-presence-speaking + .presence-wave::before {
+    animation-duration: 1.1s;
   }
 
   .ambient-word-nav,
@@ -1238,6 +1287,20 @@ select {
     font-weight: 800;
     letter-spacing: 0.18em;
     text-transform: uppercase;
+  }
+
+  .ambient-presence-settings {
+    max-width: 36rem;
+    margin: 2rem auto 0;
+    color: rgba(148, 163, 173, 0.68);
+    font-size: 0.86rem;
+    line-height: 1.8;
+    text-align: center;
+  }
+
+  .ambient-presence-settings strong {
+    color: rgba(248, 251, 255, 0.88);
+    font-weight: 560;
   }
 
   .ambient-assistant-status {

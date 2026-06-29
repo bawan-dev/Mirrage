@@ -144,6 +144,56 @@ The browser needs permission before push-to-talk can listen.
 If Windows blocks microphone access globally, enable microphone permission in
 Windows privacy settings and restart the browser.
 
+## Saying "Hey Mirrage" does nothing
+
+The repo has the wake-word adapter and presence lifecycle, but it does not ship a
+trained local wake-word model asset yet.
+
+First test the adapter manually:
+
+```powershell
+$body = @{ phrase = "Hey Mirrage"; engine = "manual-test"; confidence = 0.9 } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/wake-word/detect" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected result:
+
+- backend returns `state: wake_detected`
+- the frontend moves into Conversation Mode
+
+If that works, the Mirrage backend/frontend path is working. The missing piece is
+a local wake engine such as OpenWakeWord or Porcupine calling the adapter
+endpoint after hearing the phrase.
+
+## Presence stream is disconnected
+
+The frontend subscribes to:
+
+```text
+http://127.0.0.1:8000/api/presence/events
+```
+
+If the UI says the presence stream is disconnected:
+
+- confirm the backend is running
+- open `http://127.0.0.1:8000/api/presence/status`
+- check `VITE_API_BASE_URL`
+- restart the frontend after changing env values
+
+The app can still fall back to the latest snapshot, but live state transitions
+need the event stream.
+
+## Browser wake listener does not start
+
+The browser wake listener is experimental and disabled by default:
+
+```text
+VITE_EXPERIMENTAL_BROWSER_WAKE_WORD=false
+```
+
+Only turn it on for local testing. Browser speech recognition may use browser or
+operating-system services, so it is not the privacy-first production wake path.
+
 ## Voice hears nothing
 
 - Confirm the correct microphone is selected in the browser or Windows.

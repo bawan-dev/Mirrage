@@ -7,6 +7,6 @@ def get_system_status() -> dict[str, str]:
         "frontend": "running",
         "backend": "online",
         "ai": "planned",
-        "voice": "planned",
+        "voice": "ready",
         "hardware": "planned",
     }

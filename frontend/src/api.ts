@@ -4,6 +4,9 @@ import type {
   CalendarStatus,
   DailyContext,
   HealthStatus,
+  PresenceSettings,
+  PresenceSnapshot,
+  PresenceTransition,
   ProactiveSummary,
   SpotifyActionResult,
   SpotifyPlayback,
@@ -46,6 +49,34 @@ export function getSystemStatus(): Promise<SystemStatus> {
 
 export function getVoiceStatus(): Promise<VoiceStatus> {
   return fetchJson<VoiceStatus>('/api/voice/status');
+}
+
+export function getPresenceStatus(): Promise<PresenceSnapshot> {
+  return fetchJson<PresenceSnapshot>('/api/presence/status');
+}
+
+export function getPresenceSettings(): Promise<PresenceSettings> {
+  return fetchJson<PresenceSettings>('/api/presence/settings');
+}
+
+export function getPresenceEventsUrl(): string {
+  return `${API_BASE_URL}/api/presence/events`;
+}
+
+export function sendPresenceTransition(
+  transition: PresenceTransition,
+): Promise<PresenceSnapshot> {
+  return postJson<PresenceSnapshot>('/api/presence/transition', transition);
+}
+
+export function sendWakeWordDetection(
+  phrase: string,
+  source = 'frontend_wake_listener',
+): Promise<PresenceSnapshot> {
+  return postJson<PresenceSnapshot>('/api/wake-word/detect', {
+    phrase,
+    source,
+  });
 }
 
 export function getHealthStatus(): Promise<HealthStatus> {

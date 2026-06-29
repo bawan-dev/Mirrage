@@ -1,7 +1,7 @@
 """API route definitions."""
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 
 from backend.app.schemas import (
     AssistantMessageRequest,
@@ -16,10 +16,15 @@ from backend.app.schemas import (
     MemoryStatus,
     MemorySummaryResponse,
     MemoryUpdateRequest,
+    PresenceSettings,
+    PresenceSettingsUpdate,
+    PresenceSnapshot,
+    PresenceTransitionRequest,
     ProactiveSummaryResponse,
     SpotifyActionResponse,
     SpotifyPlaybackResponse,
     SpotifyStatusResponse,
+    WakeWordDetectionRequest,
     WeatherResponse,
 )
 from backend.app.services.assistant import create_assistant_reply
@@ -40,6 +45,7 @@ from backend.app.services.memory import (
     summarize_memories,
     update_memory,
 )
+from backend.app.services.presence import assistant_state_manager
 from backend.app.services.proactive import get_proactive_summary
 from backend.app.services.spotify import (
     SpotifyAuthError,
@@ -52,6 +58,8 @@ from backend.app.services.spotify import (
 )
 from backend.app.services.system import get_system_status
 from backend.app.services.voice import get_voice_status
+from backend.app.services.voice_pipeline import voice_pipeline
+from backend.app.services.wake_word import wake_word_service
 from backend.app.services.weather import get_weather
 from backend.app.settings import settings
 
@@ -80,8 +88,59 @@ def read_system_status() -> dict[str, str]:
 
 
 @router.get("/api/voice/status")
-def read_voice_status() -> dict[str, str | bool]:
+def read_voice_status() -> dict[str, str | bool | float | None]:
     return get_voice_status()
+
+
+@router.get("/api/presence/status")
+def read_presence_status() -> PresenceSnapshot:
+    return assistant_state_manager.snapshot()
+
+
+@router.get("/api/presence/events")
+async def read_presence_events() -> StreamingResponse:
+    return StreamingResponse(
+        assistant_state_manager.events(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.get("/api/presence/settings")
+def read_presence_settings() -> PresenceSettings:
+    return assistant_state_manager.settings()
+
+
+@router.patch("/api/presence/settings")
+def update_presence_settings(update: PresenceSettingsUpdate) -> PresenceSettings:
+    return assistant_state_manager.update_settings(update)
+
+
+@router.post("/api/presence/transition")
+def create_presence_transition(
+    transition: PresenceTransitionRequest,
+) -> PresenceSnapshot:
+    return assistant_state_manager.transition(
+        transition.state,
+        event=transition.event or "manual_transition",
+        source=transition.source,
+        message=transition.message or f"Assistant state changed to {transition.state}.",
+        transcript=transition.transcript,
+        interim_transcript=transition.interim_transcript,
+        assistant_reply=transition.assistant_reply,
+    )
+
+
+@router.post("/api/wake-word/detect")
+def detect_wake_word(request: WakeWordDetectionRequest) -> PresenceSnapshot:
+    matched, message = wake_word_service.handle_detection(request)
+    if not matched:
+        raise HTTPException(status_code=400, detail=message)
+    return assistant_state_manager.snapshot()
 
 
 @router.get("/api/info/weather")
@@ -93,7 +152,10 @@ def read_weather() -> WeatherResponse:
 def create_assistant_message(
     message: AssistantMessageRequest,
 ) -> AssistantMessageResponse:
-    return create_assistant_reply(message)
+    voice_pipeline.processing(message.message)
+    response = create_assistant_reply(message)
+    voice_pipeline.speaking(response.reply, transcript=message.message)
+    return response
 
 
 @router.get("/api/context/daily")

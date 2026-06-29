@@ -1,137 +1,124 @@
-# Voice
+# Voice And Presence
 
-Voice support is being added in layers. The current foundation is browser-based:
-the assistant focus view can listen with push-to-talk, show the transcript, send
-that transcript to the existing assistant endpoint, and speak the assistant reply
-back through browser speech synthesis.
+Voice is now split into two layers:
+
+- the backend-owned presence engine
+- browser-based speech recognition and speech synthesis
+
+The presence engine tracks the assistant lifecycle even when the browser is the
+piece handling microphone capture.
 
 ## Current State
 
-Voice does not use a wake word yet.
-
 What exists now:
 
-- `GET /api/voice/status` returns the current voice status
-- the dashboard reads that endpoint
-- the assistant focus view has a push-to-talk control
-- the browser asks for microphone permission on first use
-- browser speech recognition turns speech into text
-- the transcript is shown before it is sent
-- the transcript is sent to `POST /api/assistant/message`
-- the assistant response appears in the assistant focus view
-- assistant responses can be spoken aloud with browser speech synthesis
-- speech output can be muted
-- the browser voice can be changed from the assistant settings panel
+- `GET /api/voice/status` reports voice and wake-word readiness
+- `GET /api/presence/status` returns the current assistant lifecycle state
+- `GET /api/presence/events` streams lifecycle changes with Server-Sent Events
+- `PATCH /api/presence/settings` updates wake/presence configuration in memory
+- `POST /api/wake-word/detect` accepts detection events from a local wake engine
+- the frontend subscribes to presence events instead of polling
+- wake detection moves the UI into Conversation Mode
+- listening, processing, speaking, returning, idle, and sleeping states are shown
+- push-to-talk still works as a fallback
 
-This is still a browser-based foundation. There is no wake word, no always-on
-listening, and no backend/local speech engine yet.
+## Important Limitation
 
-## Status Fields
+Mirrage does not ship a trained wake-word model file yet.
 
-Current response shape:
+The backend is ready for a local engine such as OpenWakeWord or Porcupine to call
+`POST /api/wake-word/detect` after it hears the configured phrase. Until a local
+engine/model is installed, wake detection can be tested by calling that endpoint
+manually.
 
-```json
-{
-  "status": "planned",
-  "listening": false,
-  "wake_word": "not_configured",
-  "speech_to_text": "not_configured",
-  "text_to_speech": "not_configured"
-}
-```
-
-Field meanings:
-
-| Field | Meaning |
-| --- | --- |
-| `status` | Overall voice layer state |
-| `listening` | Whether the system is actively listening |
-| `wake_word` | Wake word setup state |
-| `speech_to_text` | Speech-to-text setup state |
-| `text_to_speech` | Text-to-speech setup state |
-
-## Current Voice Flow
-
-The current push-to-talk flow is:
+There is also an optional browser wake listener behind:
 
 ```text
-Assistant focus view
-  -> Push to talk
-  -> browser microphone permission
-  -> browser speech recognition
-  -> transcript shown in the UI
-  -> assistant message endpoint
-  -> assistant response
-  -> response shown in the assistant focus view
-  -> browser speech synthesis
-  -> spoken assistant reply
+VITE_EXPERIMENTAL_BROWSER_WAKE_WORD=true
 ```
 
-The assistant endpoint did not need to change. Voice sends text into the same
-route as typed messages, and browser speech synthesis reads the returned reply.
+Leave it off by default. Browser speech recognition may use browser or operating
+system services, so it is not the privacy-first production path.
 
-## Voice Architecture
-
-Current architecture:
+## Presence States
 
 ```text
-Browser microphone
-  -> Web Speech API
-  -> React assistant focus view
-  -> POST /api/assistant/message
-  -> FastAPI backend
-  -> AI provider layer
-  -> assistant reply
-  -> Browser SpeechSynthesis API
-  -> device speaker
+sleeping
+idle
+wake_detected
+listening
+processing
+speaking
+returning_to_idle
 ```
 
-The backend still exposes voice status separately through `GET /api/voice/status`.
-That endpoint describes the planned voice service state. Browser voice input and
-output live in the frontend for now because they depend on browser microphone,
-speaker, and speech API support.
+The frontend treats the backend presence snapshot as the primary state source.
+Local browser voice state is only a fallback if the backend is unavailable.
 
-## Browser Support
+## Wake Word Flow
 
-The first version uses browser speech APIs. Speech recognition works best in
-Chromium-based browsers such as Chrome and Edge. Speech synthesis is more widely
-available, but voice lists vary by browser and operating system.
+Production path:
 
-If a browser does not support speech recognition, the assistant focus view keeps typed input available and shows a clear unsupported message.
+```text
+local wake engine
+  -> hears "Hey Mirrage"
+  -> POST /api/wake-word/detect
+  -> backend emits wake_detected
+  -> frontend receives SSE event
+  -> browser starts speech recognition
+  -> transcript goes to assistant route
+  -> assistant response is spoken
+  -> backend returns to idle
+```
 
-If a browser does not expose speech synthesis, assistant replies still appear as
-text. The mute and voice controls are disabled when speech output is not
-available.
+Wake audio should stay inside the local wake engine. Mirrage receives only the
+detection event.
 
-## Options To Research Later
+## Configuration
 
-These are possible options, not final decisions:
+Backend:
 
-| Area | Possible Direction |
+```text
+MIRRAGE_WAKE_WORD_ENABLED=true
+MIRRAGE_WAKE_PHRASE="Hey Mirrage"
+MIRRAGE_WAKE_WORD_ENGINE=adapter
+MIRRAGE_WAKE_WORD_SENSITIVITY=0.55
+MIRRAGE_VOICE_MICROPHONE_DEVICE=
+MIRRAGE_PRESENCE_INACTIVITY_TIMEOUT_SECONDS=25
+MIRRAGE_PRESENCE_AUTOMATIC_SLEEP=true
+```
+
+Frontend:
+
+```text
+VITE_EXPERIMENTAL_BROWSER_WAKE_WORD=false
+```
+
+## Manual Test
+
+Start backend and frontend, then run:
+
+```powershell
+$body = @{ phrase = "Hey Mirrage"; engine = "manual-test"; confidence = 0.9 } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/wake-word/detect" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected result:
+
+- backend returns `state: wake_detected`
+- frontend receives the presence event
+- Assistant focus opens
+- browser asks for microphone permission if needed
+- transcript is sent through the existing assistant endpoint
+
+## Supported Wake Engines
+
+Planned local engines:
+
+| Engine | Notes |
 | --- | --- |
-| Wake word | Local wake word detection |
-| Speech-to-text | Local Whisper-style transcription or browser speech APIs |
-| Text-to-speech | Browser speech output now, local/backend TTS later if needed |
-| Device input | USB microphone or microphone array |
-| Device output | Small speaker, monitor audio, or external speaker |
+| OpenWakeWord | Local, open source, good candidate for Linux mini PC/Raspberry Pi testing |
+| Porcupine | Local engine, strong performance, usually needs generated keyword assets |
+| Custom adapter | Any local process can call `/api/wake-word/detect` after local detection |
 
-The first real choice should be based on the target device. A desktop browser, Raspberry Pi, and mini PC may need different audio setups.
-
-## Not Built Yet
-
-The project does not currently include:
-
-- wake word detection
-- always-on listening
-- backend speech-to-text
-- local Whisper-style transcription
-- backend or local text-to-speech
-- hardware speaker routing
-
-Those pieces should come after browser voice input and output are stable.
-
-## Next Step
-
-The next useful voice step is to test browser compatibility and decide whether
-speech-to-text or text-to-speech should stay browser-based or move into local
-backend services.
+No external audio streaming should happen before wake detection.

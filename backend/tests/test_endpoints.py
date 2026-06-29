@@ -17,14 +17,16 @@ def test_system_status_reports_all_layers(client: TestClient) -> None:
         assert layer in body
 
 
-def test_voice_status_is_planned(client: TestClient) -> None:
+def test_voice_status_reports_presence_engine(client: TestClient) -> None:
     response = client.get("/api/voice/status")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "planned"
+    assert body["status"] == "ready"
     assert body["listening"] is False
-    assert body["wake_word"] == "not_configured"
+    assert body["wake_word"] == "enabled"
+    assert body["wake_phrase"] == "Hey Mirrage"
+    assert body["presence_state"] == "idle"
 
 
 def test_assistant_message_returns_stub_reply(client: TestClient) -> None:

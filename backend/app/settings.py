@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     # Local privacy-first memory store.
     memory_database_path: str = "data/mirrage-memory.sqlite3"
 
+    # Voice presence and wake word configuration.
+    wake_word_enabled: bool = True
+    wake_phrase: str = "Hey Mirrage"
+    wake_word_engine: str = "adapter"
+    wake_word_sensitivity: float = 0.55
+    voice_microphone_device: str | None = None
+    presence_inactivity_timeout_seconds: int = 25
+    presence_automatic_sleep: bool = True
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="MIRRAGE_",

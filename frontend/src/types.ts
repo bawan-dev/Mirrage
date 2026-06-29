@@ -19,8 +19,61 @@ export interface VoiceStatus {
   status: string;
   listening: boolean;
   wake_word: string;
+  wake_phrase?: string;
+  wake_word_engine?: string;
+  wake_word_mode?: string;
+  sensitivity?: number;
+  microphone_device?: string | null;
+  presence_state?: PresenceState;
   speech_to_text: string;
   text_to_speech: string;
+}
+
+export type PresenceState =
+  | 'sleeping'
+  | 'idle'
+  | 'wake_detected'
+  | 'listening'
+  | 'processing'
+  | 'speaking'
+  | 'returning_to_idle';
+
+export interface PresenceSnapshot {
+  state: PresenceState;
+  previous_state: PresenceState | null;
+  event: string;
+  sequence: number;
+  wake_phrase: string;
+  wake_word_enabled: boolean;
+  wake_word_engine: string;
+  transcript: string | null;
+  interim_transcript: string | null;
+  assistant_reply: string | null;
+  source: string;
+  message: string;
+  updated_at: string;
+}
+
+export interface PresenceSettings {
+  wake_word_enabled: boolean;
+  wake_phrase: string;
+  wake_word_engine: string;
+  sensitivity: number;
+  microphone_device: string | null;
+  inactivity_timeout_seconds: number;
+  automatic_sleep: boolean;
+  privacy_mode: string;
+  message: string;
+}
+
+export interface PresenceTransition {
+  state: PresenceState;
+  event?: string;
+  transcript?: string;
+  interim_transcript?: string;
+  assistant_reply?: string;
+  source?: string;
+  message?: string;
 }
 
 export interface AssistantReply {
