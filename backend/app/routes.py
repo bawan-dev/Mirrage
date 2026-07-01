@@ -3,7 +3,11 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse, StreamingResponse
 
+from ai.router import provider_router
+from ai.runtime import assistant_runtime
 from backend.app.schemas import (
+    AIProvidersResponse,
+    AIRuntimeStatusResponse,
     AssistantMessageRequest,
     AssistantMessageResponse,
     CalendarScheduleResponse,
@@ -92,6 +96,16 @@ def read_voice_status() -> dict[str, str | bool | float | None]:
     return get_voice_status()
 
 
+@router.get("/api/ai/runtime/status")
+def read_ai_runtime_status() -> AIRuntimeStatusResponse:
+    return AIRuntimeStatusResponse(**assistant_runtime.runtime_status())
+
+
+@router.get("/api/ai/providers")
+def read_ai_providers() -> AIProvidersResponse:
+    return AIProvidersResponse(providers=provider_router.provider_status())
+
+
 @router.get("/api/presence/status")
 def read_presence_status() -> PresenceSnapshot:
     return assistant_state_manager.snapshot()
@@ -156,6 +170,20 @@ def create_assistant_message(
     response = create_assistant_reply(message)
     voice_pipeline.speaking(response.reply, transcript=message.message)
     return response
+
+
+@router.post("/api/assistant/stream")
+def stream_assistant_message(message: AssistantMessageRequest) -> StreamingResponse:
+    voice_pipeline.processing(message.message)
+    return StreamingResponse(
+        assistant_runtime.stream_assistant_request(message.message),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/api/context/daily")

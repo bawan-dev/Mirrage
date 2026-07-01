@@ -239,8 +239,9 @@ Expected response:
 
 ### Notes
 
-This routes the message through the AI service layer. With the default `stub`
-provider it returns a fixed response; with a real provider it returns a model reply.
+This routes unknown messages through the AI runtime. With the default `stub`
+provider it returns a fixed response; with a real provider it returns a model
+reply.
 
 Local memory commands are handled before the AI provider is called. For example,
 `remember my favorite drink is coffee` stores a local memory and returns
@@ -263,6 +264,91 @@ The active provider is selected with `MIRRAGE_AI_PROVIDER`:
 The response shape is identical for every provider, so the dashboard never changes.
 If a provider fails, the endpoint still returns `200` with a short fallback reply so
 the dashboard stays usable.
+
+Unknown messages now pass through the AI runtime. The runtime builds a small
+privacy-aware context, chooses a provider, selects a task model when configured,
+and falls back if the selected provider fails. Direct memory, context, and
+proactive commands still run through deterministic local handlers before the
+runtime.
+
+## AI Runtime
+
+### `GET /api/ai/runtime/status`
+
+Returns safe runtime settings. It does not expose API keys.
+
+Example response:
+
+```json
+{
+  "runtime_mode": "standard",
+  "configured_provider": "stub",
+  "fallback_provider": "stub",
+  "local_first": false,
+  "local_only": false,
+  "streaming_enabled": true,
+  "privacy_mode": "limited_cloud_context",
+  "available_providers": ["ollama", "openai", "stub"],
+  "default_task_model": null,
+  "summary_model": null,
+  "planning_model": null
+}
+```
+
+Manual test:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/ai/runtime/status
+```
+
+### `GET /api/ai/providers`
+
+Returns provider capabilities without secrets.
+
+Example response:
+
+```json
+{
+  "providers": [
+    {
+      "name": "stub",
+      "kind": "local",
+      "configured": true,
+      "supports_streaming": false,
+      "default_model": null
+    }
+  ]
+}
+```
+
+Manual test:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/ai/providers
+```
+
+### `POST /api/assistant/stream`
+
+Returns assistant output as Server-Sent Events. Providers do not expose true
+token streaming yet, so the route currently emits one response chunk while
+keeping the streaming API shape ready.
+
+Manual test:
+
+```powershell
+$body = @{ message = "hello" } | ConvertTo-Json
+Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/assistant/stream" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected response text includes:
+
+```text
+event: status
+event: chunk
+event: done
+```
+
+More detail: [ai-runtime.md](ai-runtime.md).
 
 ## Context
 

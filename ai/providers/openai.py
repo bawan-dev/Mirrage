@@ -17,12 +17,16 @@ DEFAULT_MODEL = "gpt-4o-mini"
 class OpenAIProvider(AssistantProvider):
     name = "openai"
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        system_prompt: str | None = None,
+    ) -> None:
         self.base_url = (ai_settings.base_url or DEFAULT_BASE_URL).rstrip("/")
-        self.model = ai_settings.model or DEFAULT_MODEL
+        self.model = model or ai_settings.model or DEFAULT_MODEL
         self.api_key = ai_settings.api_key
         self.timeout = ai_settings.timeout
-        self.system_prompt = ai_settings.system_prompt
+        self.system_prompt = system_prompt or ai_settings.system_prompt
 
     def reply(self, message: str) -> AssistantResult:
         headers = {}

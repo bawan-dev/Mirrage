@@ -259,6 +259,62 @@ Mirror Mode check:
 - confirm the home screen shows the lower-right proactive nudge
 - open Context and confirm the proactive briefing appears in the Daily Briefing view
 
+## AI runtime checks
+
+Check the runtime status:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/ai/runtime/status
+```
+
+Expected result:
+
+- `configured_provider` is present
+- `available_providers` includes `stub`, `ollama`, and `openai`
+- no API keys or secrets are returned
+
+Check provider capability state:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/ai/providers
+```
+
+Expected result:
+
+- each provider has `name`, `kind`, `configured`, `supports_streaming`, and
+  `default_model`
+- `openai` shows configured only when an API key or base URL is set
+
+Check the streaming-shaped endpoint:
+
+```powershell
+$body = @{ message = "hello" } | ConvertTo-Json
+Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/assistant/stream" -Method Post -ContentType "application/json" -Body $body
+```
+
+Expected response text includes:
+
+```text
+event: status
+event: chunk
+event: done
+```
+
+This is not true token streaming yet. It is a stable Server-Sent Events shape
+that currently sends one assistant response chunk.
+
+To test local-first routing with Ollama:
+
+```text
+MIRRAGE_AI_PROVIDER=ollama
+MIRRAGE_AI_MODEL=llama3.2
+MIRRAGE_AI_LOCAL_FIRST=true
+MIRRAGE_AI_FALLBACK_PROVIDER=stub
+```
+
+Restart the backend after changing `.env`. If Ollama is not running, the
+assistant should fall back instead of crashing.
+
 ## Memory checks
 
 Memory is local. The default database file is:
@@ -387,6 +443,10 @@ Copy-Item .env.example .env
 | `MIRRAGE_API_PORT` | `8000` | Backend port |
 | `MIRRAGE_FRONTEND_PORT` | `5173` | Frontend dev server port |
 | `MIRRAGE_AI_PROVIDER` | `stub` | Which AI provider the assistant uses |
+| `MIRRAGE_AI_LOCAL_FIRST` | `false` | Prefer local providers for runtime requests |
+| `MIRRAGE_AI_LOCAL_ONLY` | `false` | Prevent cloud provider selection |
+| `MIRRAGE_AI_FALLBACK_PROVIDER` | `stub` | Provider used when the selected provider fails |
+| `MIRRAGE_AI_STREAMING_ENABLED` | `true` | Enables the current SSE response shape |
 | `MIRRAGE_ALLOWED_ORIGINS` | localhost:5173 | CORS origins the backend accepts |
 | `MIRRAGE_MEMORY_DATABASE_PATH` | `data/mirrage-memory.sqlite3` | Local SQLite memory path |
 | `VITE_MIRROR_MODE` | `false` | Enables the wall-display Mirror Mode frontend |

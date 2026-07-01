@@ -87,7 +87,7 @@ Goal: create a clean assistant boundary without adding a real model too early.
 - [x] Define a simple assistant request and response shape
 - [x] Add an initial AI provider stub
 - [x] Add provider selection config
-- [x] Route assistant messages through the AI service layer
+- [x] Route assistant messages through the initial AI boundary
 - [x] Document where Ollama or OpenAI support will fit later
 
 Done when:
@@ -465,6 +465,31 @@ The app has a real backend-owned presence lifecycle and a clean adapter for loca
 wake engines. A real local wake model still needs to be selected, installed, and
 tested before claiming hands-free wake word works in production.
 
+## Phase 32: AI Runtime And Local Intelligence
+
+Goal: upgrade the assistant layer from one provider call into a runtime that can
+support local-first intelligence safely.
+
+- [x] Add an AI runtime entry point for model-backed assistant requests
+- [x] Add a context builder for weather, Calendar, memory, and proactive state
+- [x] Keep memory, context, proactive, presence, wake, and UI routing handlers deterministic
+- [x] Add local vs cloud prompt boundaries so raw memory is not sent to cloud prompts
+- [x] Add provider routing for `stub`, `ollama`, and `openai`
+- [x] Add `MIRRAGE_AI_LOCAL_FIRST`, `MIRRAGE_AI_LOCAL_ONLY`, fallback provider, and task model settings
+- [x] Add runtime and provider status endpoints
+- [x] Add streaming-shaped assistant endpoint with Server-Sent Events
+- [x] Add backend tests for routing, fallback, privacy prompts, deterministic handlers, and streaming shape
+- [x] Document the runtime architecture, privacy model, config, and manual checks
+- [ ] Run a real Ollama model against the runtime on the target machine
+- [ ] Add true token streaming for providers that support it
+
+Done when:
+
+Mirrage can route unknown assistant messages through a backend-owned runtime,
+prefer local providers for private work, fall back cleanly, and keep personal
+memory out of cloud prompts unless a future feature explicitly changes that
+boundary.
+
 ## Future: Voice Interaction
 
 - [ ] Local trained wake model
@@ -504,6 +529,15 @@ tested before claiming hands-free wake word works in production.
 - [ ] Add explicit opt-in AI-enhanced briefings
 - [ ] Add UI controls for what context sources are included
 
+## Future: AI Runtime Refinement
+
+- [ ] Test local Ollama models against real daily-context prompts
+- [ ] Add true provider token streaming
+- [ ] Add model profiles for small chat, summary, planning, and agent tasks
+- [ ] Add opt-in AI-enhanced context and proactive summaries
+- [ ] Add encrypted provider credential storage
+- [ ] Define future agent tool permissions before adding autonomous actions
+
 ## Future: Smart Home Integration
 
 - [ ] Pick the first home control target
@@ -525,6 +559,6 @@ tested before claiming hands-free wake word works in production.
 
 ## Current Focus
 
-Phase 31 is the current milestone. Current focus is testing the presence event
-stream, wake-word adapter, browser handoff, and then choosing a real local wake
-engine/model for the target machine.
+Phase 32 is the current milestone. Current focus is testing the AI runtime with a
+real local Ollama model, then continuing local wake-engine and microphone
+hardware testing.

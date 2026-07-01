@@ -1,7 +1,6 @@
 """Assistant service boundary."""
 
-from ai.providers.base import AIProviderError
-from ai.service import assistant_ai_service
+from ai.runtime import assistant_runtime
 from backend.app.schemas import AssistantMessageRequest, AssistantMessageResponse
 from backend.app.services.context import handle_context_message
 from backend.app.services.memory import handle_memory_message
@@ -23,14 +22,7 @@ def create_assistant_reply(
     if memory_response is not None:
         return memory_response
 
-    try:
-        result = assistant_ai_service.reply(message.message)
-    except AIProviderError:
-        return AssistantMessageResponse(
-            reply="The assistant is unavailable right now. Please try again.",
-            provider=assistant_ai_service.provider.name,
-            model=None,
-        )
+    result = assistant_runtime.run_assistant_request(message.message)
 
     return AssistantMessageResponse(
         reply=result.reply,

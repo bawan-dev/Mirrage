@@ -17,7 +17,10 @@ Mirror Dashboard
   v
 Backend API
   |
-  +-- AI Service Layer
+  +-- AI Runtime
+  |     +-- Context Builder
+  |     +-- Provider Router
+  |     +-- Local / Cloud Providers
   |
   +-- Local Memory Store
   |
@@ -34,7 +37,9 @@ Backend API
   +-- Hardware Status Layer
 ```
 
-The frontend should ask for data. The backend should decide where that data comes from. The AI, context, memory, voice, and hardware layers should stay behind backend boundaries so they can be replaced or upgraded later.
+The frontend should ask for data. The backend should decide where that data comes
+from. The AI runtime, context, memory, voice, and hardware layers should stay
+behind backend boundaries so they can be replaced or upgraded later.
 
 There is one current frontend-local exception: simple command routing. Mirrage
 can recognize a small set of screen-navigation commands before calling the
@@ -108,13 +113,16 @@ The backend is the main coordination layer.
 
 ### `ai/`
 
-The AI layer will hold provider routing and model-related code.
+The AI layer holds runtime, provider routing, and model-related code.
 
 Its job:
 
 - define a common interface for assistant responses
-- start with a simple provider stub
-- later support providers like Ollama, OpenAI-compatible APIs, or local models
+- build a small context bundle for normal model requests
+- classify request types for conversation, summary, planning, memory, context, and future agent tasks
+- select a provider and task-specific model
+- route to `stub`, Ollama, OpenAI-compatible APIs, or future local models
+- fall back safely when a provider is unavailable
 - keep provider details away from the frontend
 
 This lets Mirrage switch model providers without rewriting the dashboard.
@@ -249,10 +257,10 @@ service boundary.
 
 ## AI Boundary
 
-The AI layer should expose one simple idea to the backend:
+The AI runtime exposes one simple idea to the backend:
 
 ```text
-input message -> assistant response
+input message -> context builder -> provider router -> assistant response
 ```
 
 The backend should not care if the response comes from:
@@ -269,6 +277,26 @@ Provider selection is controlled by `MIRRAGE_AI_PROVIDER`. Supported providers a
 (hosted, OpenAI-compatible). All sit behind the same backend route, and a provider
 failure degrades to a short fallback reply rather than an error page. See
 [../ai/README.md](../ai/README.md) for details.
+
+The runtime now adds a privacy-aware context builder:
+
+```text
+assistant request
+  -> memory/context/proactive deterministic handlers first
+  -> AI runtime for unknown model-backed requests
+  -> local prompt or reduced cloud prompt
+  -> selected provider
+  -> fallback provider when needed
+```
+
+Local prompts can include selected memory details. Cloud prompts withhold raw
+memory values and only pass reduced context. Private task types, such as memory,
+planning, and future agent work, prefer local providers. `MIRRAGE_AI_LOCAL_ONLY`
+prevents cloud provider selection.
+
+Runtime status and provider capability endpoints are documented in
+[api.md](api.md), and the runtime design is documented in
+[ai-runtime.md](ai-runtime.md).
 
 ## Memory Boundary
 

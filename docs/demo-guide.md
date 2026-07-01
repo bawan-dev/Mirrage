@@ -53,7 +53,7 @@ screen falls back cleanly instead of breaking the mirror interface.
 Say:
 
 ```text
-The assistant has a provider boundary. It can run with the stub provider, Ollama,
+The assistant has a provider boundary and runtime. It can run with the stub provider, Ollama,
 or an OpenAI-compatible provider. Voice is push-to-talk in the browser for now,
 and responses can be spoken with browser text-to-speech.
 ```

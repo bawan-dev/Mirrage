@@ -33,10 +33,10 @@ process, and review the implementation as it evolves.
 What works now:
 
 - React + TypeScript + Tailwind mirror interface
-- FastAPI backend with health, system, voice, weather, assistant, memory, Spotify, and Calendar routes
+- FastAPI backend with health, system, voice, weather, assistant, memory, Spotify, Calendar, presence, and AI runtime routes
 - mirror interface connected to backend status data
 - weather endpoint using Open-Meteo with a fallback state
-- AI provider boundary with `stub`, `ollama`, and `openai` provider options
+- AI runtime with provider routing, task-aware model selection, privacy-aware context prompts, fallback behavior, and `stub`, `ollama`, and `openai` provider options
 - browser push-to-talk voice input in the assistant focus view
 - speech transcripts sent through the existing assistant endpoint
 - browser text-to-speech for assistant replies
@@ -50,6 +50,7 @@ What works now:
 - assistant memory commands for storing, recalling, and updating local memories
 - provider-independent daily context aggregation from weather, calendar, and memory
 - provider-independent proactive summary for calm daily nudges
+- streaming-shaped assistant endpoint using Server-Sent Events for future token streaming
 - Daily Briefing view for daily overview, goals, routines, and suggested focus
 - optional Mirror Mode for kiosk-style wall display use, now styled as an ambient glass surface instead of a dashboard
 - Docker Compose for running frontend and backend together
@@ -65,6 +66,8 @@ What is still planned:
 - Calendar token persistence and richer schedule actions
 - memory editing UI and stronger privacy controls
 - AI-enhanced context summaries behind explicit privacy controls
+- true provider token streaming
+- richer local model profiles for small, summary, planning, and future agent tasks
 - smart home control
 - physical mirror installation
 - production deployment
@@ -78,7 +81,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Mirror UI | Working local React app |
 | Mirror Mode | Working behind `VITE_MIRROR_MODE=true` |
 | Backend API | Working FastAPI service |
-| Assistant | Provider boundary works; default provider is still `stub` |
+| Assistant | Runtime, provider routing, fallback, and deterministic handlers work; default provider is still `stub` |
 | Voice | Browser push-to-talk, browser speech synthesis, and backend presence events |
 | Wake word | Adapter and lifecycle ready; local engine/model still required |
 | Weather | Live backend weather endpoint with fallback |
@@ -116,7 +119,10 @@ Mirror Dashboard
       v
 FastAPI Backend
       |
-      +-- AI Service Layer
+      +-- AI Runtime
+      |     +-- Context Builder
+      |     +-- Provider Router
+      |     +-- Local / Cloud Providers
       |
       +-- Local Memory Store
       |
@@ -135,11 +141,12 @@ FastAPI Backend
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, and external data. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, and external data. The AI runtime builds a small privacy-aware context, chooses a provider, and falls back safely if the selected provider is unavailable. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
 
 More detail:
 
 - [Architecture](docs/architecture.md)
+- [AI runtime](docs/ai-runtime.md)
 - [API notes](docs/api.md)
 - [Calendar setup](docs/calendar.md)
 - [Command routing](docs/command-routing.md)
@@ -167,7 +174,7 @@ Hardware notes:
 | --- | --- |
 | Frontend | React, TypeScript, Tailwind CSS, Vite |
 | Backend | Python, FastAPI |
-| AI | Provider boundary for stub, Ollama, and OpenAI-compatible APIs |
+| AI | Runtime with provider routing, local/cloud privacy prompts, stub, Ollama, and OpenAI-compatible APIs |
 | Weather | Backend Open-Meteo integration with fallback behavior |
 | Music | Spotify OAuth and Web API through backend endpoints |
 | Calendar | Google Calendar OAuth and read-only events through backend endpoints |
@@ -282,6 +289,9 @@ Current manual checks:
 - confirm `Mute`, `Test voice`, and the browser voice selector work in the assistant focus view
 - open `http://127.0.0.1:8000/api/proactive/summary` and confirm it returns `headline`, `message`, `priority`, `suggestions`, and `should_interrupt`
 - open `http://127.0.0.1:8000/api/presence/status` and confirm `state` and `wake_phrase` are present
+- open `http://127.0.0.1:8000/api/ai/runtime/status` and confirm runtime settings load without secrets
+- open `http://127.0.0.1:8000/api/ai/providers` and confirm `stub`, `ollama`, and `openai` are listed
+- post a message to `http://127.0.0.1:8000/api/assistant/stream` and confirm `status`, `chunk`, and `done` events are returned
 - post `{ "phrase": "Hey Mirrage" }` to `/api/wake-word/detect` and confirm the state moves to `wake_detected`
 - in Mirror Mode, confirm the lower-right nudge shows a calm daily summary or fallback
 - type `What is the weather?` in the assistant view and confirm Weather focus opens
@@ -334,7 +344,7 @@ Completed foundation work:
 
 - frontend mirror interface
 - backend API
-- AI provider boundary
+- AI provider boundary and runtime
 - live weather endpoint and ambient weather view
 - Ambient Interaction Layer with focus views
 - push-to-talk voice foundation
@@ -348,17 +358,19 @@ Completed foundation work:
 - mirror mode
 - proactive ambient intelligence layer
 - ambient intelligence redesign with sparse typography, fewer containers, and refreshed screenshots
+- AI runtime with privacy-aware context building, provider routing, fallback, and stream shape
 - Docker development setup
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- Local wake-word engine/model integration and microphone hardware testing
+- Local AI runtime testing with Ollama, then local wake-word engine/model integration and microphone hardware testing
 
 Future milestones:
 
 - Wake Word Engine Integration
+- AI Runtime Refinement
 - Spotify Refinement
 - Calendar Refinement
 - Memory Refinement

@@ -86,6 +86,32 @@ class WakeWordDetectionRequest(BaseModel):
     source: str = Field(default="wake_word_engine", max_length=120)
 
 
+class AIRuntimeStatusResponse(BaseModel):
+    runtime_mode: str
+    configured_provider: str
+    fallback_provider: str
+    local_first: bool
+    local_only: bool
+    streaming_enabled: bool
+    privacy_mode: str
+    available_providers: list[str]
+    default_task_model: str | None
+    summary_model: str | None
+    planning_model: str | None
+
+
+class AIProviderInfoResponse(BaseModel):
+    name: str
+    kind: str
+    configured: bool
+    supports_streaming: bool
+    default_model: str | None
+
+
+class AIProvidersResponse(BaseModel):
+    providers: list[AIProviderInfoResponse]
+
+
 class MemoryCreateRequest(BaseModel):
     kind: MemoryKind
     key: str = Field(..., min_length=1, max_length=120)

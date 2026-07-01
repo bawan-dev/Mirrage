@@ -24,7 +24,7 @@ hardware.
 | Mirror frontend | Working local React app |
 | Mirror Mode | Working behind `VITE_MIRROR_MODE=true` |
 | Backend API | Working FastAPI service |
-| Assistant routing | Working provider boundary and local command routing |
+| Assistant routing | Working provider runtime and local command routing |
 | Voice | Browser push-to-talk and browser speech output |
 | Weather | Backend Open-Meteo integration with fallback |
 | Calendar | Google Calendar OAuth and read-only event views |

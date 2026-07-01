@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from ai.providers.base import AIProviderError
+from ai.models import RuntimeResult
 from backend.app.services import assistant as assistant_service
 
 
@@ -52,13 +52,25 @@ def test_assistant_message_requires_message_field(client: TestClient) -> None:
     assert response.status_code == 422
 
 
-def test_assistant_message_handles_provider_failure(
+def test_assistant_message_handles_runtime_unavailable(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def fail(_message: str) -> None:
-        raise AIProviderError("provider down")
+    def unavailable(_message: str) -> RuntimeResult:
+        return RuntimeResult(
+            reply="The AI runtime is unavailable right now.",
+            provider="runtime",
+            model=None,
+            task_type="conversation",
+            runtime_mode="test",
+            used_fallback=True,
+            context_sources=[],
+        )
 
-    monkeypatch.setattr(assistant_service.assistant_ai_service, "reply", fail)
+    monkeypatch.setattr(
+        assistant_service.assistant_runtime,
+        "run_assistant_request",
+        unavailable,
+    )
 
     response = client.post("/api/assistant/message", json={"message": "hi"})
 

@@ -72,10 +72,64 @@ docker compose up --build
 
 This is expected when `MIRRAGE_AI_PROVIDER=stub`, or when a configured model
 provider is unavailable. The reply is proof the assistant route is still working
-through the backend and AI service layer.
+through the backend and AI runtime.
 
 Use `MIRRAGE_AI_PROVIDER=ollama` for a local Ollama model or
 `MIRRAGE_AI_PROVIDER=openai` for an OpenAI-compatible API provider.
+
+Check the runtime state:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/ai/runtime/status
+Invoke-RestMethod http://127.0.0.1:8000/api/ai/providers
+```
+
+If `MIRRAGE_AI_LOCAL_ONLY=true`, cloud providers will not be selected. If Ollama
+is selected but not running, Mirrage should fall back to the configured fallback
+provider instead of crashing.
+
+## OpenAI provider is not configured
+
+`MIRRAGE_AI_PROVIDER=openai` needs an API key or compatible base URL.
+
+Add the values to `.env`, then restart the backend:
+
+```text
+MIRRAGE_AI_PROVIDER=openai
+MIRRAGE_AI_MODEL=gpt-4o-mini
+MIRRAGE_AI_API_KEY=your-key
+```
+
+The provider status endpoint should show `configured: true` for `openai` after
+the backend restarts.
+
+## Ollama provider falls back to stub
+
+This usually means Ollama is not reachable from the backend.
+
+- Confirm Ollama is running.
+- Confirm the model exists: `ollama list`.
+- Pull the model if needed: `ollama pull llama3.2`.
+- If Ollama runs on a non-default URL, set `MIRRAGE_AI_BASE_URL`.
+- Restart the backend after changing `.env`.
+
+Expected fallback behavior is still a `200` assistant response, usually from the
+`stub` provider.
+
+## Assistant stream returns one chunk
+
+That is expected right now.
+
+`POST /api/assistant/stream` uses Server-Sent Events, but providers do not expose
+true token streaming in this phase. The endpoint currently returns:
+
+```text
+event: status
+event: chunk
+event: done
+```
+
+True provider token streaming is planned runtime refinement work.
 
 ## Assistant memory commands do not store anything
 
