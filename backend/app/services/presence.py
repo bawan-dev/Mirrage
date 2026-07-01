@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import threading
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
@@ -16,6 +17,8 @@ from backend.app.schemas import (
     PresenceState,
 )
 from backend.app.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -136,6 +139,17 @@ class AssistantStateManager:
             )
             snapshot = self._snapshot.model_copy(deep=True)
             subscribers = list(self._subscribers)
+
+        logger.info(
+            "Assistant presence state changed.",
+            extra={
+                "event": event,
+                "subsystem": "presence",
+                "state": state,
+                "previous_state": previous_state,
+                "source": source,
+            },
+        )
 
         stale_subscribers: list[_PresenceSubscriber] = []
         for subscriber in subscribers:

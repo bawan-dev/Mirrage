@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Iterator
 
 from ai.config import ai_settings
@@ -10,6 +11,8 @@ from ai.context_builder import build_runtime_context
 from ai.models import RuntimeResult, RuntimeTaskType
 from ai.providers.base import AIProviderError
 from ai.router import PROVIDER_DEFINITIONS, provider_router
+
+logger = logging.getLogger(__name__)
 
 
 class AIRuntime:
@@ -24,6 +27,16 @@ class AIRuntime:
         selection = provider_router.select_provider(context)
         prompt = context.local_prompt if selection.is_local else context.cloud_prompt
         provider = provider_router.build_provider(selection.provider, selection.model)
+        logger.info(
+            "AI runtime selected provider.",
+            extra={
+                "event": "ai_provider_selected",
+                "subsystem": "ai_runtime",
+                "provider": selection.provider,
+                "task_type": context.task_type,
+                "local": selection.is_local,
+            },
+        )
 
         try:
             result = provider.reply(prompt)
@@ -38,6 +51,16 @@ class AIRuntime:
             )
         except AIProviderError:
             fallback = selection.fallback_provider
+            logger.warning(
+                "AI provider failed; attempting fallback.",
+                extra={
+                    "event": "ai_provider_fallback",
+                    "subsystem": "ai_runtime",
+                    "provider": selection.provider,
+                    "fallback_provider": fallback,
+                    "task_type": context.task_type,
+                },
+            )
             if not fallback or fallback == selection.provider:
                 return self._unavailable_result(context.task_type, context.sources)
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import secrets
 import time
 from dataclasses import dataclass
@@ -28,6 +29,7 @@ _AUTH_URL = "https://accounts.spotify.com/authorize"
 _TOKEN_URL = "https://accounts.spotify.com/api/token"
 _API_BASE_URL = "https://api.spotify.com/v1"
 _REQUEST_TIMEOUT = 10.0
+logger = logging.getLogger(__name__)
 
 
 class SpotifyServiceError(RuntimeError):
@@ -138,6 +140,10 @@ def complete_authorization(code: str, state: str) -> None:
     )
 
     if response.status_code != 200:
+        logger.warning(
+            "Spotify token exchange failed.",
+            extra={"event": "integration_auth_failed", "subsystem": "spotify"},
+        )
         raise SpotifyServiceError(_spotify_error(response))
 
     _store_token(response.json())
@@ -160,6 +166,10 @@ def _refresh_token() -> None:
     )
 
     if response.status_code != 200:
+        logger.warning(
+            "Spotify token refresh failed.",
+            extra={"event": "integration_auth_failed", "subsystem": "spotify"},
+        )
         raise SpotifyServiceError(_spotify_error(response))
 
     _store_token(response.json())
@@ -208,6 +218,10 @@ def _spotify_request(
         )
 
     if response.status_code not in expected_statuses:
+        logger.warning(
+            "Spotify API request failed.",
+            extra={"event": "integration_request_failed", "subsystem": "spotify"},
+        )
         raise SpotifyServiceError(_spotify_error(response))
 
     return response

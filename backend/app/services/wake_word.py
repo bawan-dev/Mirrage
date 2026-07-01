@@ -7,10 +7,13 @@ adapter endpoint when it detects the configured phrase.
 
 from __future__ import annotations
 
+import logging
 import re
 
 from backend.app.schemas import WakeWordDetectionRequest
 from backend.app.services.presence import assistant_state_manager
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_phrase(value: str) -> str:
@@ -43,11 +46,31 @@ class WakeWordService:
     def handle_detection(self, request: WakeWordDetectionRequest) -> tuple[bool, str]:
         presence_settings = assistant_state_manager.settings()
         if not presence_settings.wake_word_enabled:
+            logger.warning(
+                "Wake detection ignored because wake word is disabled.",
+                extra={"event": "wake_ignored", "subsystem": "wake_word"},
+            )
             return False, "Wake word detection is disabled."
 
         if not self.is_match(request.phrase):
+            logger.warning(
+                "Wake detection did not match configured phrase.",
+                extra={
+                    "event": "wake_mismatch",
+                    "subsystem": "wake_word",
+                    "engine": request.engine,
+                },
+            )
             return False, "Wake phrase did not match the configured phrase."
 
+        logger.info(
+            "Wake phrase detected.",
+            extra={
+                "event": "wake_word_detected",
+                "subsystem": "wake_word",
+                "engine": request.engine,
+            },
+        )
         assistant_state_manager.transition(
             "wake_detected",
             event="wake_word_detected",

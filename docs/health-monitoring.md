@@ -1,0 +1,66 @@
+# Health Monitoring
+
+Health endpoints are designed for Docker, systemd checks, and manual diagnosis.
+
+## Endpoints
+
+| Endpoint | Purpose |
+| --- | --- |
+| `/health` | Legacy quick backend health |
+| `/api/health` | Production quick backend health |
+| `/api/health/full` | Full subsystem health |
+| `/api/system/status` | Existing mirror status summary |
+
+## Quick Health
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+Expected:
+
+```json
+{"service":"mirrage-api","status":"online"}
+```
+
+## Full Health
+
+```bash
+curl http://127.0.0.1:8000/api/health/full
+```
+
+The response includes checks for:
+
+- backend
+- environment
+- memory
+- AI runtime
+- providers
+- presence
+- weather
+- Calendar
+- Spotify
+
+Full health may be `degraded` when optional integrations are not configured. That
+does not mean the backend is down.
+
+## Docker Health Checks
+
+`docker-compose.prod.yml` uses:
+
+- backend `/api/health`
+- frontend `/health`
+
+Optional integration degradation should not kill the containers. A Spotify issue
+should not stop memory, and a weather failure should not stop voice.
+
+## External Monitoring
+
+A simple local monitor can check:
+
+```bash
+curl --fail http://127.0.0.1:8000/api/health
+curl --fail http://127.0.0.1:5173/health
+```
+
+Use `/api/health/full` for diagnosis, not as a hard uptime check.

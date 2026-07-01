@@ -1,5 +1,6 @@
 """Weather service: live current conditions from Open-Meteo (no API key)."""
 
+import logging
 import time
 
 import httpx
@@ -41,6 +42,7 @@ _WEATHER_CODES = {
 
 _cache_value: WeatherResponse | None = None
 _cache_expires = 0.0
+logger = logging.getLogger(__name__)
 
 
 def _describe(code: int | None) -> str:
@@ -78,6 +80,10 @@ def get_weather() -> WeatherResponse:
             updated=current.get("time"),
         )
     except (httpx.HTTPError, KeyError, ValueError):
+        logger.warning(
+            "Weather provider unavailable.",
+            extra={"event": "integration_unavailable", "subsystem": "weather"},
+        )
         # Serve the last good value if we have one; otherwise report unavailable.
         if _cache_value is not None:
             return _cache_value

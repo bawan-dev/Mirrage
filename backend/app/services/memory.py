@@ -56,6 +56,30 @@ def initialize_memory_store() -> None:
         )
 
 
+def memory_health() -> dict[str, str | int]:
+    """Return operational database health without exposing memory contents."""
+
+    initialize_memory_store()
+
+    with _connect() as connection:
+        quick_check = connection.execute("PRAGMA quick_check").fetchone()[0]
+        record_count = connection.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
+
+    status = "ok" if quick_check == "ok" else "error"
+    message = (
+        "Memory database is healthy."
+        if status == "ok"
+        else "Memory database integrity check failed."
+    )
+
+    return {
+        "status": status,
+        "message": message,
+        "database_path": str(_database_path()),
+        "record_count": int(record_count),
+    }
+
+
 def list_memories(
     kind: MemoryKind | None = None,
     query: str | None = None,

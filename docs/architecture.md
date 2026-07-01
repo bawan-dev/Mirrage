@@ -34,12 +34,17 @@ Backend API
   |
   +-- Voice Service
   |
+  +-- Health, Logging, Backup, Startup Validation
+  |
   +-- Hardware Status Layer
 ```
 
 The frontend should ask for data. The backend should decide where that data comes
 from. The AI runtime, context, memory, voice, and hardware layers should stay
 behind backend boundaries so they can be replaced or upgraded later.
+
+Production deployment is a separate operational layer. systemd and Docker keep
+the services running, while the backend continues to own application behavior.
 
 There is one current frontend-local exception: simple command routing. Mirrage
 can recognize a small set of screen-navigation commands before calling the
@@ -91,6 +96,48 @@ data. Mirror Mode only changes how that state is presented.
 
 The current dimming behavior is a visual overlay. It does not control monitor
 brightness or operating system power settings.
+
+## Production Deployment Boundary
+
+Production deployment is intentionally separate from product features.
+
+```text
+systemd
+  -> docker compose -f docker-compose.prod.yml
+  -> backend container
+  -> frontend container
+  -> persistent data, backups, logs
+```
+
+The production layer owns:
+
+- startup on boot
+- container restart policy
+- service health checks
+- persistent SQLite memory volume
+- local backup volume
+- backend log volume
+- safe update and rollback workflow
+
+The backend still owns service behavior. Docker and systemd only keep the
+existing services running.
+
+## Startup And Environment Boundary
+
+The backend validates key settings during startup:
+
+- log level
+- memory database path
+- backup directory
+- weather coordinates
+- wake-word sensitivity
+- presence timeout
+- AI provider names
+- production CORS wildcard usage
+
+Hard errors stop startup. Warnings are logged without stopping the service. This
+keeps broken production configuration visible early instead of failing later in
+the mirror UI.
 
 ### `backend/`
 
@@ -243,6 +290,8 @@ Core endpoints:
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Check that the backend is running |
+| `GET` | `/api/health` | Production quick backend health |
+| `GET` | `/api/health/full` | Full subsystem health for operations |
 | `GET` | `/api/system/status` | Return basic system status |
 | `GET` | `/api/voice/status` | Return voice service status |
 | `POST` | `/api/assistant/message` | Send a message to the assistant layer |
@@ -479,6 +528,29 @@ Early hardware state can include:
 - mirror build status
 
 The physical build should be documented before code depends on it.
+
+## Operations Boundary
+
+Operations features should not require the frontend to know about deployment.
+
+```text
+operator or Docker health check
+  -> /api/health or /api/health/full
+  -> backend health service
+  -> subsystem checks
+```
+
+The full health check reports backend, environment, memory, AI runtime,
+providers, presence, weather, Calendar, and Spotify. It does not expose secrets,
+OAuth tokens, transcripts, assistant replies, or memory values.
+
+Logging is structured JSON by default. Logs include safe operational fields such
+as subsystem, event, state, provider, model, and integration name. Logs should
+never include API keys, OAuth tokens, raw memory values, transcripts, or replies.
+
+Backups are local-only. The backup utility uses SQLite's backup API for the
+memory database and writes files under `backups/`. Cloud sync is future work and
+should require explicit privacy design.
 
 ## What We Are Avoiding For Now
 

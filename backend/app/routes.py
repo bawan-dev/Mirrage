@@ -13,6 +13,7 @@ from backend.app.schemas import (
     CalendarScheduleResponse,
     CalendarStatusResponse,
     DailyContext,
+    HealthResponse,
     MemoryCreateRequest,
     MemoryKind,
     MemoryRecordResponse,
@@ -42,6 +43,7 @@ from backend.app.services.calendar import (
     get_upcoming_events,
 )
 from backend.app.services.context import get_daily_context
+from backend.app.services.health import basic_health, full_health
 from backend.app.services.memory import (
     MemoryNotFoundError,
     create_memory,
@@ -80,10 +82,17 @@ def read_root() -> dict[str, str]:
 
 @router.get("/health")
 def read_health() -> dict[str, str]:
-    return {
-        "service": "mirrage-api",
-        "status": "online",
-    }
+    return basic_health()
+
+
+@router.get("/api/health")
+def read_api_health() -> dict[str, str]:
+    return basic_health()
+
+
+@router.get("/api/health/full")
+def read_full_health() -> HealthResponse:
+    return full_health()
 
 
 @router.get("/api/system/status")

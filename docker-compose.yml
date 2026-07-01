@@ -31,10 +31,15 @@ services:
       MIRRAGE_GOOGLE_CALENDAR_ID: ${MIRRAGE_GOOGLE_CALENDAR_ID:-primary}
       MIRRAGE_GOOGLE_CALENDAR_TIME_ZONE: ${MIRRAGE_GOOGLE_CALENDAR_TIME_ZONE:-Europe/London}
       MIRRAGE_MEMORY_DATABASE_PATH: ${MIRRAGE_MEMORY_DATABASE_PATH:-data/mirrage-memory.sqlite3}
+      MIRRAGE_BACKUP_DIRECTORY: ${MIRRAGE_BACKUP_DIRECTORY:-backups}
+      MIRRAGE_LOG_LEVEL: ${MIRRAGE_LOG_LEVEL:-INFO}
+      MIRRAGE_LOG_JSON: ${MIRRAGE_LOG_JSON:-true}
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+      - ./backups:/app/backups
+      - ./logs:/app/logs
 
   frontend:
     build:

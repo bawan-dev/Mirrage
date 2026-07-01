@@ -4,7 +4,7 @@
 
 Mirrage is a privacy-first ambient AI assistant for the home, starting with a smart mirror interface.
 
-The project is being built as a serious full-stack system: a mirror-first frontend, a FastAPI backend, provider-based AI routing, live information endpoints, Docker development setup, CI, and hardware planning for a future physical build.
+The project is being built as a serious full-stack system: a mirror-first frontend, a FastAPI backend, provider-based AI routing, live information endpoints, Docker deployment, CI, and hardware planning for a future physical build.
 
 ## Product Direction
 
@@ -54,6 +54,11 @@ What works now:
 - Daily Briefing view for daily overview, goals, routines, and suggested focus
 - optional Mirror Mode for kiosk-style wall display use, now styled as an ambient glass surface instead of a dashboard
 - Docker Compose for running frontend and backend together
+- production Docker Compose with restart policies, health checks, persistent data, backups, and logs
+- backend structured JSON logging
+- startup environment validation
+- full health monitoring endpoint for subsystem checks
+- local SQLite backup and restore utilities
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
 
@@ -70,7 +75,6 @@ What is still planned:
 - richer local model profiles for small, summary, planning, and future agent tasks
 - smart home control
 - physical mirror installation
-- production deployment
 
 The default assistant provider is still `stub`. Real model replies require configuring Ollama or an OpenAI-compatible API provider.
 
@@ -88,6 +92,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Calendar | Google Calendar OAuth and read-only schedule views |
 | Spotify | OAuth, current playback, artwork, and basic controls |
 | Memory | Local SQLite preferences, facts, goals, and routines |
+| Operations | Production Compose, health checks, logs, startup validation, local backups |
 | Proactive assistant | Local rule-based daily nudge from context sources |
 | Hardware | Planning docs only |
 | Smart home / vision | Not built yet |
@@ -138,24 +143,33 @@ FastAPI Backend
       |
       +-- Voice Pipeline
       |
+      +-- Health, Logging, Backups
+      |
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, and external data. The AI runtime builds a small privacy-aware context, chooses a provider, and falls back safely if the selected provider is unavailable. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, external data, health checks, structured logs, and local backup utilities. The AI runtime builds a small privacy-aware context, chooses a provider, and falls back safely if the selected provider is unavailable. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
 
 More detail:
 
 - [Architecture](docs/architecture.md)
 - [AI runtime](docs/ai-runtime.md)
 - [API notes](docs/api.md)
+- [Backups](docs/backups.md)
 - [Calendar setup](docs/calendar.md)
 - [Command routing](docs/command-routing.md)
 - [Context system](docs/context.md)
+- [Deployment](docs/deployment.md)
+- [Environment](docs/environment.md)
+- [Health monitoring](docs/health-monitoring.md)
+- [Logging](docs/logging.md)
 - [Memory layer](docs/memory.md)
 - [Mirror Mode](docs/mirror-mode.md)
+- [Operations](docs/operations.md)
 - [Proactive assistant](docs/proactive-assistant.md)
 - [Roadmap](docs/roadmap.md)
 - [Spotify setup](docs/spotify.md)
+- [Updates](docs/updates.md)
 - [Voice and presence](docs/voice.md)
 - [Wake word and presence](docs/wake-word-presence.md)
 - [Run notes](docs/run-notes.md)
@@ -185,7 +199,8 @@ Hardware notes:
 | Memory | Local SQLite storage for preferences, facts, goals, and routines |
 | Proactive | Deterministic backend summary for non-intrusive daily nudges |
 | Mirror Mode | Frontend kiosk mode behind `VITE_MIRROR_MODE=true` |
-| Dev setup | Docker Compose |
+| Deployment | Docker Compose for development and production, systemd examples |
+| Operations | Health endpoints, structured logs, startup validation, local backups |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
 | CI | GitHub Actions |
 
@@ -255,6 +270,22 @@ Ctrl + C
 docker compose down
 ```
 
+### Production Docker
+
+```powershell
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Check:
+
+```text
+http://127.0.0.1:8000/api/health
+http://127.0.0.1:8000/api/health/full
+http://127.0.0.1:5173/health
+```
+
+Production notes: [docs/deployment.md](docs/deployment.md).
+
 ## Testing
 
 Current automated checks:
@@ -281,6 +312,7 @@ Current manual checks:
 - set `VITE_MIRROR_MODE=true`, reload the frontend, and confirm the ambient Mirror Mode home appears
 - confirm Mirror Mode dims after inactivity and returns to home from a focus view after the second timeout
 - open `http://127.0.0.1:8000/health` and confirm the backend is online
+- open `http://127.0.0.1:8000/api/health/full` and confirm subsystem health checks return without secrets
 - check the mirror home shows backend status when the API is running
 - check the weather view either shows live data or a clear fallback
 - open the assistant focus view, press `Push to talk`, allow microphone access, and confirm the transcript appears
@@ -304,11 +336,13 @@ Current manual checks:
 - type `remember my favorite drink is coffee` and confirm the assistant replies with `provider: memory`
 - type `what do you remember about me?` and confirm the response includes `favorite drink: coffee`
 - open `http://127.0.0.1:8000/api/memory/summary` and confirm the memory appears under preferences
+- create a local memory backup and confirm a file appears in `backups/`
 - configure Spotify credentials, connect through the Media view, and confirm playback state loads
 - test Spotify play/pause/next/previous with an active Spotify device
 - configure Google Calendar credentials, connect through the Calendar view, and confirm today's events load
 - send a message to `/api/assistant/message` and confirm the response shape stays stable
-- run `docker compose up --build` when Docker or shared run config changes
+- run `docker compose up --build` when development Docker changes
+- run `docker compose -f docker-compose.prod.yml config` when production Docker changes
 
 Browser voice works best in Chrome or Edge because it uses browser speech recognition and speech synthesis. Wake-word audio should be handled by a local engine; this repo currently includes the backend adapter and presence lifecycle, not a trained wake-word model asset.
 
@@ -320,8 +354,9 @@ Google Calendar uses a read-only events scope. The first token store is also in
 process memory, so reconnect after backend restart.
 
 Memory records are stored locally in `data/mirrage-memory.sqlite3`. That file is
-ignored by Git. Docker Compose mounts `./data` into the backend container so
-local memory can survive container restarts.
+ignored by Git. Production Docker Compose mounts `./data`, `./backups`, and
+`./logs` into the backend container so local memory, backups, and logs can
+survive container restarts.
 
 CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
@@ -332,7 +367,10 @@ mirrage/
   frontend/       mirror interface
   backend/        FastAPI service
   ai/             assistant provider layer
+  deploy/         systemd service examples
   data/           local runtime data placeholder
+  backups/        local backup placeholder
+  logs/           local log placeholder
   docs/           architecture, API, roadmap, run notes
   hardware/       physical build planning
   assets/         screenshots and diagrams
@@ -360,17 +398,19 @@ Completed foundation work:
 - ambient intelligence redesign with sparse typography, fewer containers, and refreshed screenshots
 - AI runtime with privacy-aware context building, provider routing, fallback, and stream shape
 - Docker development setup
+- production Compose, health monitoring, structured logging, local backups, and systemd examples
 - tests and CI
 - first hardware planning notes
 
 Next planned milestone:
 
-- Local AI runtime testing with Ollama, then local wake-word engine/model integration and microphone hardware testing
+- Production install test on target hardware, then local AI runtime testing with Ollama and wake-word microphone testing
 
 Future milestones:
 
 - Wake Word Engine Integration
 - AI Runtime Refinement
+- Production Hardening Refinement
 - Spotify Refinement
 - Calendar Refinement
 - Memory Refinement

@@ -4,11 +4,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    app_env: str = "development"
+    api_port: int = 8000
     allowed_origins: list[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
     frontend_url: str = "http://127.0.0.1:5173"
+    log_level: str = "INFO"
+    log_json: bool = True
+    log_file: str | None = None
 
     # Weather location (defaults to Auckland, NZ).
     weather_latitude: float = -36.8485
@@ -33,6 +38,7 @@ class Settings(BaseSettings):
 
     # Local privacy-first memory store.
     memory_database_path: str = "data/mirrage-memory.sqlite3"
+    backup_directory: str = "backups"
 
     # Voice presence and wake word configuration.
     wake_word_enabled: bool = True

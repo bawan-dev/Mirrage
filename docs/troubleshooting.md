@@ -68,6 +68,21 @@ docker compose down
 docker compose up --build
 ```
 
+For production:
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs backend
+docker compose -f docker-compose.prod.yml logs frontend
+```
+
+Diagnosis before changing anything:
+
+- if containers are not listed, Compose did not start
+- if backend is unhealthy, check `/api/health/full`
+- if frontend is unhealthy, check `http://127.0.0.1:5173/health`
+- if Docker itself is down, fix Docker before changing Mirrage code
+
 ## Assistant replies with a stub or fallback message
 
 This is expected when `MIRRAGE_AI_PROVIDER=stub`, or when a configured model
@@ -167,6 +182,46 @@ Docker, confirm `docker-compose.yml` still mounts `./data:/app/data`.
 
 The SQLite file is private runtime data and is ignored by Git, so it will not
 appear on GitHub.
+
+## Database health check fails
+
+First inspect full health:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/health/full
+```
+
+Look for the `memory` check. If it reports an error:
+
+- stop the backend
+- copy the current `data/mirrage-memory.sqlite3` somewhere safe
+- restore the latest known-good backup from `backups/`
+- restart the backend
+- check `/api/health/full` again
+
+Do not delete the damaged database until a backup or copy exists.
+
+## Frontend container is running but the mirror page is unavailable
+
+Diagnosis:
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs frontend
+curl http://127.0.0.1:5173/health
+```
+
+Common causes:
+
+- production frontend image was not rebuilt after `.env` changes
+- port `5173` is already in use
+- backend health never became healthy, so frontend waited during startup
+
+Rebuild after changing frontend environment values:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build frontend
+```
 
 ## Reset local memory
 

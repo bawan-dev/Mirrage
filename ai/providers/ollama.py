@@ -1,5 +1,7 @@
 """Ollama provider: talks to a local Ollama server (no API key, private)."""
 
+import logging
+
 import httpx
 
 from ai.config import ai_settings
@@ -8,6 +10,7 @@ from ai.providers.base import AIProviderError, AssistantProvider
 
 DEFAULT_BASE_URL = "http://localhost:11434"
 DEFAULT_MODEL = "llama3.2"
+logger = logging.getLogger(__name__)
 
 
 class OllamaProvider(AssistantProvider):
@@ -42,6 +45,15 @@ class OllamaProvider(AssistantProvider):
             response.raise_for_status()
             content = response.json()["message"]["content"]
         except (httpx.HTTPError, KeyError, ValueError) as error:
+            logger.warning(
+                "Ollama provider request failed.",
+                extra={
+                    "event": "provider_request_failed",
+                    "subsystem": "ai_provider",
+                    "provider": self.name,
+                    "model": self.model,
+                },
+            )
             raise AIProviderError(f"Ollama request failed: {error}") from error
 
         return AssistantResult(

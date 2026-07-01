@@ -26,6 +26,24 @@ Then open:
 
 Stop with `Ctrl + C`, then `docker compose down`.
 
+## Production path: Docker Compose plus systemd
+
+For a dedicated mirror device, use the production Compose file:
+
+```powershell
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/health
+Invoke-RestMethod http://127.0.0.1:8000/api/health/full
+```
+
+Startup-on-boot is documented in [deployment](deployment.md). Normal maintenance
+is documented in [operations](operations.md).
+
 ## Local path: run each service
 
 ### 1. Backend (terminal one)

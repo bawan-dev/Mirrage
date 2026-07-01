@@ -490,6 +490,37 @@ prefer local providers for private work, fall back cleanly, and keep personal
 memory out of cloud prompts unless a future feature explicitly changes that
 boundary.
 
+## Phase 33: Production Deployment And Home Installation
+
+Goal: make Mirrage operationally ready to run continuously on dedicated home
+hardware.
+
+- [x] Add production Docker Compose file
+- [x] Add container restart policies
+- [x] Add backend and frontend health checks for production Compose
+- [x] Add persistent Docker volumes for data, backups, and logs
+- [x] Add frontend production Dockerfile with static nginx serving
+- [x] Add systemd service examples for Docker and direct host services
+- [x] Add structured backend JSON logging
+- [x] Add startup environment validation
+- [x] Add quick health endpoint at `/api/health`
+- [x] Add full subsystem health endpoint at `/api/health/full`
+- [x] Add local SQLite backup and restore utilities
+- [x] Add production environment documentation
+- [x] Add deployment, operations, backup, update, logging, and health docs
+- [x] Add backend tests for health, validation, logging, and backup utilities
+- [ ] Test production Compose on target Linux hardware
+- [ ] Configure actual systemd service on the target device
+- [ ] Test power-loss recovery on the target device
+- [ ] Decide final mini PC or Raspberry Pi hardware
+
+Done when:
+
+The repo has a production deployment path with startup-on-boot instructions,
+health monitoring, structured logs, local backups, update/rollback procedures,
+and automatic container recovery. Final home-install validation still needs to
+be run on the dedicated hardware.
+
 ## Future: Voice Interaction
 
 - [ ] Local trained wake model
@@ -557,8 +588,17 @@ boundary.
 - [ ] Plan cable routing
 - [ ] Test daily reliability
 
+## Future: Production Hardening Refinement
+
+- [ ] Run a week-long soak test on target hardware
+- [ ] Add log rotation guidance or host configuration
+- [ ] Add optional automatic backup timer unit
+- [ ] Add encrypted local backup option
+- [ ] Add persistent encrypted OAuth token storage
+- [ ] Add release tags and rollback notes per release
+
 ## Current Focus
 
-Phase 32 is the current milestone. Current focus is testing the AI runtime with a
-real local Ollama model, then continuing local wake-engine and microphone
-hardware testing.
+Phase 33 is the current milestone. Current focus is testing the production
+Compose stack and systemd startup path on the target hardware, then continuing
+local AI and wake-word microphone testing.

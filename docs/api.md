@@ -48,6 +48,60 @@ Checks whether the backend is running.
 
 This endpoint should stay simple. It is for quick checks from the browser, terminal, Docker, or future monitoring.
 
+## `GET /api/health`
+
+Production quick health endpoint. It returns the same simple backend status as
+`/health` and is safe for Docker health checks.
+
+### Example Response
+
+```json
+{
+  "service": "mirrage-api",
+  "status": "online"
+}
+```
+
+## `GET /api/health/full`
+
+Returns subsystem health for operations and troubleshooting.
+
+### Example Response
+
+```json
+{
+  "service": "mirrage-api",
+  "status": "degraded",
+  "generated_at": "2026-07-01T12:00:00+00:00",
+  "checks": [
+    {
+      "name": "backend",
+      "status": "ok",
+      "message": "Backend process is running.",
+      "details": null
+    },
+    {
+      "name": "memory",
+      "status": "ok",
+      "message": "Memory database is healthy.",
+      "details": {
+        "database_path": "data/mirrage-memory.sqlite3",
+        "record_count": 0
+      }
+    }
+  ]
+}
+```
+
+### Notes
+
+Full health includes backend, environment, memory, AI runtime, providers,
+presence, weather, Calendar, and Spotify. Optional integration issues return
+`warning` and make the top-level status `degraded`; they do not mean the backend
+is down.
+
+The response does not expose API keys, OAuth tokens, or memory values.
+
 ## `GET /api/system/status`
 
 Returns the current high-level system state.

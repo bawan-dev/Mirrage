@@ -7,6 +7,9 @@ dist
 **/dist
 build
 **/build
+data
+backups
+logs
 __pycache__
 **/__pycache__
 .venv

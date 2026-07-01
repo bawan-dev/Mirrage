@@ -4,6 +4,8 @@ Works with the OpenAI API and any OpenAI-compatible endpoint (including a local
 Ollama server's ``/v1`` endpoint) by pointing ``MIRRAGE_AI_BASE_URL`` at it.
 """
 
+import logging
+
 import httpx
 
 from ai.config import ai_settings
@@ -12,6 +14,7 @@ from ai.providers.base import AIProviderError, AssistantProvider
 
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_MODEL = "gpt-4o-mini"
+logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(AssistantProvider):
@@ -51,6 +54,15 @@ class OpenAIProvider(AssistantProvider):
             response.raise_for_status()
             content = response.json()["choices"][0]["message"]["content"]
         except (httpx.HTTPError, KeyError, IndexError, ValueError) as error:
+            logger.warning(
+                "OpenAI-compatible provider request failed.",
+                extra={
+                    "event": "provider_request_failed",
+                    "subsystem": "ai_provider",
+                    "provider": self.name,
+                    "model": self.model,
+                },
+            )
             raise AIProviderError(f"OpenAI request failed: {error}") from error
 
         return AssistantResult(

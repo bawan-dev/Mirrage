@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import secrets
 import time
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ _AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 _TOKEN_URL = "https://oauth2.googleapis.com/token"
 _API_BASE_URL = "https://www.googleapis.com/calendar/v3"
 _REQUEST_TIMEOUT = 10.0
+logger = logging.getLogger(__name__)
 
 
 class CalendarServiceError(RuntimeError):
@@ -148,6 +150,10 @@ def complete_calendar_authorization(code: str, state: str) -> None:
     )
 
     if response.status_code != 200:
+        logger.warning(
+            "Google Calendar token exchange failed.",
+            extra={"event": "integration_auth_failed", "subsystem": "calendar"},
+        )
         raise CalendarServiceError(_google_error(response))
 
     _store_token(response.json())
@@ -171,6 +177,10 @@ def _refresh_token() -> None:
     )
 
     if response.status_code != 200:
+        logger.warning(
+            "Google Calendar token refresh failed.",
+            extra={"event": "integration_auth_failed", "subsystem": "calendar"},
+        )
         raise CalendarServiceError(_google_error(response))
 
     _store_token(response.json())
@@ -218,6 +228,10 @@ def _calendar_request(
         )
 
     if response.status_code != 200:
+        logger.warning(
+            "Google Calendar API request failed.",
+            extra={"event": "integration_request_failed", "subsystem": "calendar"},
+        )
         raise CalendarServiceError(_google_error(response))
 
     return response

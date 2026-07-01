@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -84,6 +84,20 @@ class WakeWordDetectionRequest(BaseModel):
     engine: str | None = Field(default=None, max_length=120)
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     source: str = Field(default="wake_word_engine", max_length=120)
+
+
+class HealthComponentResponse(BaseModel):
+    name: str
+    status: str
+    message: str
+    details: dict[str, Any] | None = None
+
+
+class HealthResponse(BaseModel):
+    service: str
+    status: str
+    generated_at: str
+    checks: list[HealthComponentResponse]
 
 
 class AIRuntimeStatusResponse(BaseModel):

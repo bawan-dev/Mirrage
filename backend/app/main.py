@@ -1,15 +1,29 @@
 """FastAPI application entry point."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.app.logging_config import configure_logging
 from backend.app.routes import router
+from backend.app.services.startup import run_startup_validation
 from backend.app.settings import settings
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    configure_logging()
+    run_startup_validation()
+    yield
+
 
 app = FastAPI(
     title="Mirrage API",
     version="0.1.0",
     description="Backend API for the Mirrage smart mirror system.",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
