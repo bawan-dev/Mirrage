@@ -346,7 +346,7 @@ The first command router only handles a small set of local screen commands.
 - Confirm you are sending the message from the Assistant focus view.
 - If the message is not recognized, it will go to the normal assistant endpoint.
 - Keep command wording simple for now: weather, music/media, calendar, context,
-  or assistant.
+  smart home, sensors, or assistant.
 
 ## Mirror Mode does not appear
 
@@ -392,6 +392,62 @@ That can be normal in local development.
 - `Voice` depends on browser speech support and microphone permission.
 - `Weather` can show unavailable if the backend or provider cannot be reached.
 - `Context` can be partial if weather, Calendar, or memory has a fallback state.
+- `Home` can show planned or unavailable if smart home is disabled or Home
+  Assistant is not configured.
+
+## Smart Home says disabled
+
+That is expected until the feature is enabled.
+
+Add these values to `.env`, then restart the backend:
+
+```text
+MIRRAGE_SMART_HOME_ENABLED=true
+MIRRAGE_HOME_ASSISTANT_ENABLED=true
+MIRRAGE_HOME_ASSISTANT_BASE_URL=http://homeassistant.local:8123
+MIRRAGE_HOME_ASSISTANT_TOKEN=your-long-lived-token
+```
+
+Never commit the token.
+
+## Smart Home says unconfigured
+
+Mirrage smart home support is enabled, but Home Assistant details are missing or
+incomplete.
+
+- Confirm `MIRRAGE_HOME_ASSISTANT_BASE_URL` is reachable from the backend.
+- Confirm `MIRRAGE_HOME_ASSISTANT_TOKEN` is set.
+- Restart the backend after editing `.env`.
+- Check `http://127.0.0.1:8000/api/smart-home/status`.
+
+## Smart Home says unavailable
+
+The backend tried Home Assistant and could not complete discovery.
+
+- Confirm Home Assistant is running.
+- Confirm the URL includes the scheme, for example `http://`.
+- Confirm the token is valid.
+- Confirm the backend machine can reach the Home Assistant machine on the local
+  network.
+- If using Docker, confirm the container can reach the same local address.
+
+## Smart Home controls fail
+
+Controls are intentionally limited.
+
+- Lights and switches support on/off.
+- Scenes support activate.
+- Sensors are read-only.
+- Locks, alarms, cameras, covers, garage doors, vacuums, climate, and media
+  players are blocked in this phase.
+
+Check one endpoint directly:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/smart-home/entities
+```
+
+If the entity is not listed there, Mirrage will not control it.
 
 ## Daily context is partial
 

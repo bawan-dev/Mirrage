@@ -94,7 +94,7 @@ Expected result:
 - the ambient home shows a large clock, weather summary, assistant presence, and
   only subtle status text
 - a quiet proactive nudge appears near the bottom-right when context is available
-- Weather, Assistant, Media, Calendar, and Context focus views still open
+- Weather, Assistant, Media, Calendar, Context, and Smart Home focus views still open
 - `Close` or `Esc` returns to the ambient home
 - after inactivity, the screen dims and then returns to the home state
 
@@ -196,10 +196,61 @@ From the Assistant focus view, type each command:
 | `daily briefing` | Context focus view opens and replies with a proactive local briefing |
 | `What should I focus on today?` | Context focus view opens and replies with a proactive focus nudge |
 | `What is my day like?` | Context focus view opens and replies with provider-independent daily context |
+| `show my smart home devices` | Smart Home focus view opens |
+| `show sensors` | Smart Home focus view opens |
 | `Open assistant` | Assistant focus view opens |
 
 The assistant also adds a short action response to the message thread. Commands
 that are not recognized still go to the backend assistant endpoint.
+
+## Smart home checks
+
+Smart home is disabled by default, so it should be safe to test without Home
+Assistant installed.
+
+Check status:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/smart-home/status
+```
+
+Expected result when disabled:
+
+- `enabled` is `false`
+- `connection_status` is `disabled`
+- no token or secret values appear
+
+Check discovery fallback:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/smart-home/entities
+Invoke-RestMethod http://127.0.0.1:8000/api/smart-home/sensors
+```
+
+Expected result when disabled or unconfigured:
+
+- response is JSON, not a crash page
+- `items` is an empty list
+- `message` explains what is missing
+
+If Home Assistant is available:
+
+1. Create a long-lived access token in Home Assistant.
+2. Add the smart-home variables to `.env`.
+3. Restart the backend.
+4. Open the Smart Home focus view.
+5. Press `Refresh`.
+
+Expected result after configuration:
+
+- supported lights, switches, scenes, and sensors appear
+- sensors have no write buttons
+- light and switch controls call the backend endpoints
+- scenes can be activated
+- unsupported domains such as locks and cameras do not appear
+
+Details are in [smart-home](smart-home.md) and
+[Home Assistant setup](home-assistant.md).
 
 ## Daily context checks
 

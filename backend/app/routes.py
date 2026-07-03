@@ -26,6 +26,10 @@ from backend.app.schemas import (
     PresenceSnapshot,
     PresenceTransitionRequest,
     ProactiveSummaryResponse,
+    SmartHomeActionResponse,
+    SmartHomeEntitiesResponse,
+    SmartHomeEntityResponse,
+    SmartHomeStatusResponse,
     SpotifyActionResponse,
     SpotifyPlaybackResponse,
     SpotifyStatusResponse,
@@ -53,6 +57,12 @@ from backend.app.services.memory import (
 )
 from backend.app.services.presence import assistant_state_manager
 from backend.app.services.proactive import get_proactive_summary
+from backend.app.services.smart_home import smart_home_service
+from backend.app.services.smart_home_models import (
+    SmartHomeConfigurationError,
+    SmartHomeProviderError,
+    SmartHomeSafetyError,
+)
 from backend.app.services.spotify import (
     SpotifyAuthError,
     SpotifyServiceError,
@@ -169,6 +179,70 @@ def detect_wake_word(request: WakeWordDetectionRequest) -> PresenceSnapshot:
 @router.get("/api/info/weather")
 def read_weather() -> WeatherResponse:
     return get_weather()
+
+
+@router.get("/api/smart-home/status")
+def read_smart_home_status() -> SmartHomeStatusResponse:
+    return smart_home_service.status()
+
+
+@router.get("/api/smart-home/entities")
+def read_smart_home_entities() -> SmartHomeEntitiesResponse:
+    return smart_home_service.entities_response()
+
+
+@router.get("/api/smart-home/entities/{entity_id}")
+def read_smart_home_entity(entity_id: str) -> SmartHomeEntityResponse:
+    try:
+        return smart_home_service.get_entity(entity_id)
+    except SmartHomeConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except SmartHomeSafetyError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except SmartHomeProviderError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get("/api/smart-home/sensors")
+def read_smart_home_sensors() -> SmartHomeEntitiesResponse:
+    return smart_home_service.sensors_response()
+
+
+@router.post("/api/smart-home/entities/{entity_id}/turn-on")
+def turn_on_smart_home_entity(entity_id: str) -> SmartHomeActionResponse:
+    return _run_smart_home_action(lambda: smart_home_service.turn_on(entity_id))
+
+
+@router.post("/api/smart-home/entities/{entity_id}/turn-off")
+def turn_off_smart_home_entity(entity_id: str) -> SmartHomeActionResponse:
+    return _run_smart_home_action(lambda: smart_home_service.turn_off(entity_id))
+
+
+@router.post("/api/smart-home/scenes/{entity_id}/activate")
+def activate_smart_home_scene(entity_id: str) -> SmartHomeActionResponse:
+    return _run_smart_home_action(lambda: smart_home_service.activate_scene(entity_id))
+
+
+@router.post("/api/smart-home/services/{domain}/{service}")
+def block_arbitrary_smart_home_service(
+    domain: str,
+    service: str,
+) -> SmartHomeActionResponse:
+    raise HTTPException(
+        status_code=403,
+        detail="Arbitrary Home Assistant service calls are blocked.",
+    )
+
+
+def _run_smart_home_action(action) -> SmartHomeActionResponse:
+    try:
+        return action()
+    except SmartHomeConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except SmartHomeSafetyError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except SmartHomeProviderError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.post("/api/assistant/message")

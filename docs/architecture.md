@@ -32,6 +32,8 @@ Backend API
   |
   +-- Spotify Integration
   |
+  +-- Smart Home Layer
+  |
   +-- Voice Service
   |
   +-- Health, Logging, Backup, Startup Validation
@@ -49,8 +51,8 @@ the services running, while the backend continues to own application behavior.
 There is one current frontend-local exception: simple command routing. Mirrage
 can recognize a small set of screen-navigation commands before calling the
 assistant endpoint. Those commands turn into UI actions, such as opening the
-weather, media, calendar, or assistant focus view. Normal assistant messages
-still go to the backend.
+weather, media, calendar, smart home, or assistant focus view. Normal assistant
+messages still go to the backend.
 
 ## Folder Responsibilities
 
@@ -151,10 +153,11 @@ Its job:
 - report voice status
 - handle Google Calendar OAuth and Calendar API calls
 - handle Spotify OAuth and Spotify Web API calls
+- handle Home Assistant discovery and safe smart home actions
 - aggregate daily context from weather, calendar, and memory
 - generate local proactive summaries from the daily context layer
 - store local memory for preferences, facts, goals, and routines
-- provide clean boundaries for AI, context, memory, voice, and hardware features
+- provide clean boundaries for AI, context, memory, smart home, voice, and hardware features
 
 The backend is the main coordination layer.
 
@@ -224,6 +227,39 @@ The backend owns:
 The current token store is in process memory. That is enough for local,
 single-user development, but a persistent encrypted token store should be added
 before production deployment.
+
+## Smart Home Boundary
+
+Smart home integration is backend-owned. The frontend only calls Mirrage
+endpoints and never talks to Home Assistant directly.
+
+```text
+Smart Home focus view
+  -> Mirrage backend smart home route
+  -> SmartHomeService safety boundary
+  -> HomeAssistantClient
+  -> Home Assistant local API
+  -> normalized Mirrage entity response
+  -> Smart Home focus view
+```
+
+The current service supports only these phase-34 categories:
+
+- low risk: `light`, `switch`, `scene`
+- read only: `sensor`, plus Home Assistant `binary_sensor` normalized as sensor
+
+High-risk and future categories such as `lock`, `cover`, `climate`,
+`media_player`, `camera`, `alarm_control_panel`, `vacuum`, and `garage_door`
+are blocked. The frontend cannot call arbitrary Home Assistant services by
+name.
+
+The assistant can be aware of smart home capability and the frontend can open
+the Smart Home focus view, but free-form AI-driven device control is not enabled
+yet. Any future device action should stay deterministic, permissioned, and
+routed through the same service boundary.
+
+More detail is in [smart-home.md](smart-home.md) and
+[home-assistant.md](home-assistant.md).
 
 ### `docs/`
 
@@ -297,6 +333,12 @@ Core endpoints:
 | `POST` | `/api/assistant/message` | Send a message to the assistant layer |
 | `GET` | `/api/context/daily` | Return provider-independent daily context |
 | `GET` | `/api/proactive/summary` | Return a local proactive daily nudge |
+| `GET` | `/api/smart-home/status` | Return smart home provider status |
+| `GET` | `/api/smart-home/entities` | Return normalized safe smart home entities |
+| `GET` | `/api/smart-home/sensors` | Return read-only smart home sensors |
+| `POST` | `/api/smart-home/entities/{entity_id}/turn-on` | Turn on a supported light or switch |
+| `POST` | `/api/smart-home/entities/{entity_id}/turn-off` | Turn off a supported light or switch |
+| `POST` | `/api/smart-home/scenes/{entity_id}/activate` | Activate a supported scene |
 | `GET` | `/api/memory/summary` | Return local memory grouped by type |
 | `POST` | `/api/memory` | Create or update a local memory |
 | `GET` | `/api/integrations/calendar/events/today` | Return today's schedule |
@@ -472,6 +514,8 @@ Examples:
 | `What is on my calendar today?` | Open Calendar focus view and summarize today's events |
 | `daily briefing` | Open Context focus view and request a proactive backend briefing |
 | `Good morning` | Open Context focus view and request a proactive backend briefing |
+| `show my smart home devices` | Open Smart Home focus view |
+| `show sensors` | Open Smart Home focus view |
 | `Open assistant` | Open Assistant focus view |
 
 If the router does not recognize a command, the message follows the normal
@@ -541,8 +585,9 @@ operator or Docker health check
 ```
 
 The full health check reports backend, environment, memory, AI runtime,
-providers, presence, weather, Calendar, and Spotify. It does not expose secrets,
-OAuth tokens, transcripts, assistant replies, or memory values.
+providers, presence, weather, Calendar, Spotify, and smart home. It does not
+expose secrets, OAuth tokens, Home Assistant tokens, transcripts, assistant
+replies, or memory values.
 
 Logging is structured JSON by default. Logs include safe operational fields such
 as subsystem, event, state, provider, model, and integration name. Logs should

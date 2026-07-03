@@ -220,3 +220,41 @@ export interface ProactiveSummary {
   sources: string[];
   should_interrupt: boolean;
 }
+
+export interface SmartHomeStatus {
+  enabled: boolean;
+  configured: boolean;
+  provider: string;
+  connection_status: string;
+  entity_count: number;
+  supported_domains: string[];
+  last_successful_sync: string | null;
+  message: string;
+}
+
+export interface SmartHomeEntity {
+  entity_id: string;
+  name: string;
+  domain: string;
+  device_type: 'light' | 'switch' | 'scene' | 'sensor' | string;
+  state: string;
+  available: boolean;
+  room: string | null;
+  friendly_name: string | null;
+  supported_actions: string[];
+  last_updated: string | null;
+}
+
+export interface SmartHomeEntitiesResponse {
+  status: string;
+  provider: string;
+  items: SmartHomeEntity[];
+  count: number;
+  message: string;
+}
+
+export interface SmartHomeActionResult {
+  status: string;
+  message: string;
+  entity: SmartHomeEntity | null;
+}

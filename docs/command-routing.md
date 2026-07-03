@@ -18,6 +18,8 @@ Supported examples:
 | `daily briefing` | Opens the Context focus view and asks the backend proactive service for a briefing |
 | `What should I focus on today?` | Opens the Context focus view and asks for a proactive focus nudge |
 | `What is my day like?` | Opens the Context focus view and asks the backend context service for a briefing |
+| `show my smart home devices` | Opens the Smart Home focus view |
+| `show sensors` | Opens the Smart Home focus view |
 | `Open assistant` | Opens the Assistant focus view |
 
 If a message is not recognized as a UI command, it still goes to the existing
@@ -58,6 +60,7 @@ Supported targets:
 - `assistant`
 - `calendar`
 - `context`
+- `smart-home`
 
 Most commands return a short local response. Calendar and context have extra
 backend paths:
@@ -74,6 +77,11 @@ Attention-style prompts such as `Good morning`, `daily briefing`, or
 `What needs my attention?` return `provider: proactive`. Both paths are
 deterministic backend logic before model provider routing.
 
+Smart home view commands open the Smart Home focus view. Actual light, switch,
+and scene actions still go through backend smart home endpoints and safety
+checks; the command router does not generate arbitrary Home Assistant service
+calls.
+
 ## Why It Is Local For Now
 
 Keeping this local makes the first version reliable and easy to test. Screen
@@ -82,7 +90,7 @@ navigation commands should not need a model call or internet access.
 Later, the same shape can move behind the backend if Mirrage needs:
 
 - richer intent detection
-- smart home actions
+- risky or multi-step smart home actions
 - broader calendar actions
 - broader context actions
 - command permissions
@@ -93,7 +101,7 @@ Later, the same shape can move behind the backend if Mirrage needs:
 The current router does not handle:
 
 - multi-step commands
-- smart home actions
+- specific device-control commands
 - account actions
 - hardware actions
 - confirmations

@@ -5,6 +5,7 @@ from backend.app.schemas import AssistantMessageRequest, AssistantMessageRespons
 from backend.app.services.context import handle_context_message
 from backend.app.services.memory import handle_memory_message
 from backend.app.services.proactive import handle_proactive_message
+from backend.app.services.smart_home import handle_smart_home_message
 
 
 def create_assistant_reply(
@@ -21,6 +22,10 @@ def create_assistant_reply(
     memory_response = handle_memory_message(message.message)
     if memory_response is not None:
         return memory_response
+
+    smart_home_response = handle_smart_home_message(message.message)
+    if smart_home_response is not None:
+        return smart_home_response
 
     result = assistant_runtime.run_assistant_request(message.message)
 

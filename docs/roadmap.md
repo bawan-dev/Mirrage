@@ -521,6 +521,32 @@ health monitoring, structured logs, local backups, update/rollback procedures,
 and automatic container recovery. Final home-install validation still needs to
 be run on the dedicated hardware.
 
+## Phase 34: Smart Home Foundation
+
+Goal: connect Mirrage to the physical home through a safe Home Assistant
+foundation.
+
+- [x] Add backend-owned smart home service layer
+- [x] Add Home Assistant provider client
+- [x] Add normalized entity models for lights, switches, scenes, and sensors
+- [x] Add safety boundaries for supported, read-only, future, and high-risk domains
+- [x] Add smart home status, discovery, sensor, light/switch, and scene endpoints
+- [x] Block arbitrary Home Assistant service calls from the frontend
+- [x] Add Smart Home focus view with calm setup state and safe controls
+- [x] Add smart home health monitoring
+- [x] Add environment variables and Docker Compose wiring
+- [x] Add backend tests with a faked Home Assistant provider
+- [x] Document smart home architecture, Home Assistant setup, run notes, and troubleshooting
+- [ ] Test against a real Home Assistant instance on the local network
+- [ ] Add confirmation and identity checks before risky future categories
+
+Done when:
+
+Mirrage can be configured with Home Assistant, discover safe entities, control
+lights and switches, activate scenes, read sensors, block high-risk domains, and
+report smart home health without exposing secrets. Real-home validation still
+needs to happen on the target network.
+
 ## Future: Voice Interaction
 
 - [ ] Local trained wake model
@@ -571,9 +597,11 @@ be run on the dedicated hardware.
 
 ## Future: Smart Home Integration
 
-- [ ] Pick the first home control target
-- [ ] Add backend action boundaries
-- [ ] Add confirmation for risky actions
+- [ ] Test against a real Home Assistant instance
+- [ ] Add room grouping and better entity labels
+- [ ] Add confirmation for future risky actions
+- [ ] Add voice commands for specific approved devices
+- [ ] Add persistent permission rules per domain/entity
 
 ## Future: Physical Mirror Build
 
@@ -599,6 +627,6 @@ be run on the dedicated hardware.
 
 ## Current Focus
 
-Phase 33 is the current milestone. Current focus is testing the production
-Compose stack and systemd startup path on the target hardware, then continuing
-local AI and wake-word microphone testing.
+Phase 34 is the current milestone. Current focus is testing the Smart Home
+foundation against a real Home Assistant instance, then continuing production
+hardware validation, local AI testing, and wake-word microphone testing.

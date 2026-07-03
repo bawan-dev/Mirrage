@@ -100,6 +100,37 @@ def validate_environment() -> list[StartupIssue]:
             )
         )
 
+    if settings.smart_home_timeout_seconds <= 0:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_SMART_HOME_TIMEOUT_SECONDS",
+                message="Smart home timeout must be greater than zero.",
+            )
+        )
+
+    if settings.smart_home_enabled and not settings.home_assistant_enabled:
+        issues.append(
+            StartupIssue(
+                level="warning",
+                field="MIRRAGE_HOME_ASSISTANT_ENABLED",
+                message="Smart home is enabled, but Home Assistant is disabled.",
+            )
+        )
+
+    if (
+        settings.smart_home_enabled
+        and settings.home_assistant_enabled
+        and not settings.home_assistant_token
+    ):
+        issues.append(
+            StartupIssue(
+                level="warning",
+                field="MIRRAGE_HOME_ASSISTANT_TOKEN",
+                message="Home Assistant is enabled without an access token.",
+            )
+        )
+
     if ai_settings.provider not in PROVIDER_DEFINITIONS:
         issues.append(
             StartupIssue(

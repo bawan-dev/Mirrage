@@ -36,6 +36,19 @@ Mirrage uses `.env` for local and production configuration. Start from
 | `MIRRAGE_MEMORY_DATABASE_PATH` | Local SQLite memory path |
 | `MIRRAGE_BACKUP_DIRECTORY` | Local backup directory |
 
+## Smart Home
+
+| Variable | Purpose |
+| --- | --- |
+| `MIRRAGE_SMART_HOME_ENABLED` | Enables Mirrage smart home routes and UI state |
+| `MIRRAGE_SMART_HOME_TIMEOUT_SECONDS` | Timeout for smart home provider requests |
+| `MIRRAGE_HOME_ASSISTANT_ENABLED` | Enables the Home Assistant provider |
+| `MIRRAGE_HOME_ASSISTANT_BASE_URL` | Local Home Assistant URL, for example `http://homeassistant.local:8123` |
+| `MIRRAGE_HOME_ASSISTANT_TOKEN` | Home Assistant long-lived access token |
+
+Smart home is off by default. Keep the Home Assistant token in `.env` only; do
+not commit it.
+
 ## AI Runtime
 
 | Variable | Purpose |
@@ -56,6 +69,8 @@ The backend validates key settings during startup:
 - weather coordinates
 - memory database path
 - backup directory
+- smart home timeout
+- Home Assistant provider/token readiness
 - wake-word sensitivity
 - presence timeout
 - AI provider names
@@ -71,6 +86,7 @@ Keep these out of Git:
 - Spotify client secret
 - Google Calendar client secret
 - AI provider API keys
+- Home Assistant long-lived access token
 - OAuth tokens
 - backups
 - logs

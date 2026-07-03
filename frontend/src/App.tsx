@@ -18,12 +18,17 @@ import {
   getPresenceSettings,
   getPresenceStatus,
   getProactiveSummary,
+  getSmartHomeEntities,
+  getSmartHomeSensors,
+  getSmartHomeStatus,
   getSpotifyLoginUrl,
   getSpotifyPlayback,
   getSpotifyStatus,
   getSystemStatus,
   getVoiceStatus,
   getWeather,
+  activateSmartHomeScene,
+  runSmartHomeEntityAction,
   runSpotifyAction,
   sendAssistantMessage,
   sendPresenceTransition,
@@ -47,6 +52,9 @@ import type {
   PresenceState,
   PresenceTransition,
   ProactiveSummary,
+  SmartHomeEntitiesResponse,
+  SmartHomeEntity,
+  SmartHomeStatus,
   SpotifyPlayback,
   SpotifyStatus,
   SystemStatus,
@@ -60,7 +68,8 @@ type FocusView =
   | 'assistant'
   | 'media'
   | 'calendar'
-  | 'context';
+  | 'context'
+  | 'smart-home';
 
 const focusViewValues: FocusView[] = [
   'home',
@@ -69,6 +78,7 @@ const focusViewValues: FocusView[] = [
   'media',
   'calendar',
   'context',
+  'smart-home',
 ];
 
 interface BackendState {
@@ -93,6 +103,12 @@ interface ContextUiState {
 }
 
 interface ProactiveUiState {
+  error: string | null;
+  isLoading: boolean;
+}
+
+interface SmartHomeUiState {
+  actionMessage: string | null;
   error: string | null;
   isLoading: boolean;
 }
@@ -432,6 +448,12 @@ export default function App() {
   const [dailyContext, setDailyContext] = useState<DailyContext | null>(null);
   const [proactiveSummary, setProactiveSummary] =
     useState<ProactiveSummary | null>(null);
+  const [smartHomeStatus, setSmartHomeStatus] =
+    useState<SmartHomeStatus | null>(null);
+  const [smartHomeEntities, setSmartHomeEntities] =
+    useState<SmartHomeEntitiesResponse | null>(null);
+  const [smartHomeSensors, setSmartHomeSensors] =
+    useState<SmartHomeEntitiesResponse | null>(null);
   const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatus | null>(
     null,
   );
@@ -455,6 +477,11 @@ export default function App() {
     isLoading: true,
   });
   const [proactiveState, setProactiveState] = useState<ProactiveUiState>({
+    error: null,
+    isLoading: true,
+  });
+  const [smartHomeState, setSmartHomeState] = useState<SmartHomeUiState>({
+    actionMessage: null,
     error: null,
     isLoading: true,
   });
@@ -974,6 +1001,49 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadSmartHome() {
+      try {
+        const [status, entities, sensors] = await Promise.all([
+          getSmartHomeStatus(),
+          getSmartHomeEntities(),
+          getSmartHomeSensors(),
+        ]);
+
+        if (!isActive) {
+          return;
+        }
+
+        setSmartHomeStatus(status);
+        setSmartHomeEntities(entities);
+        setSmartHomeSensors(sensors);
+        setSmartHomeState({
+          actionMessage: null,
+          error: null,
+          isLoading: false,
+        });
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setSmartHomeState({
+          actionMessage: null,
+          error: 'Smart home API unavailable',
+          isLoading: false,
+        });
+      }
+    }
+
+    loadSmartHome();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const currentTime = useMemo(
     () =>
       new Intl.DateTimeFormat('en-GB', {
@@ -1064,6 +1134,32 @@ export default function App() {
 
     return dailyContext.message;
   }, [contextState.error, contextState.isLoading, dailyContext]);
+
+  const smartHomeSummary = useMemo(() => {
+    if (smartHomeState.isLoading) {
+      return 'Checking smart home';
+    }
+
+    if (smartHomeState.error || !smartHomeStatus) {
+      return 'Smart home unavailable';
+    }
+
+    if (!smartHomeStatus.enabled) {
+      return 'Smart home disabled';
+    }
+
+    if (!smartHomeStatus.configured) {
+      return 'Home Assistant setup needed';
+    }
+
+    if (smartHomeStatus.connection_status !== 'connected') {
+      return formatStatus(smartHomeStatus.connection_status);
+    }
+
+    return `${smartHomeStatus.entity_count} home item${
+      smartHomeStatus.entity_count === 1 ? '' : 's'
+    }`;
+  }, [smartHomeState.error, smartHomeState.isLoading, smartHomeStatus]);
 
   const proactiveNudge = useMemo(() => {
     if (proactiveState.isLoading) {
@@ -1169,6 +1265,15 @@ export default function App() {
             ? 'planned'
             : 'online',
       },
+      {
+        label: 'Home',
+        status: smartHomeSummary,
+        tone: smartHomeState.isLoading
+          ? 'checking'
+          : smartHomeStatus?.connection_status === 'connected'
+            ? 'online'
+            : 'planned',
+      },
     ],
     [
       backendLabel,
@@ -1184,6 +1289,9 @@ export default function App() {
       proactiveNudge,
       proactiveState.error,
       proactiveState.isLoading,
+      smartHomeState.isLoading,
+      smartHomeStatus,
+      smartHomeSummary,
       voiceLabel,
       voiceStatus,
       voiceSupported,
@@ -1759,6 +1867,96 @@ export default function App() {
     }
   }
 
+  async function refreshSmartHome() {
+    registerMirrorActivity();
+
+    setSmartHomeState((current) => ({
+      ...current,
+      error: null,
+      isLoading: true,
+    }));
+
+    try {
+      const [status, entities, sensors] = await Promise.all([
+        getSmartHomeStatus(),
+        getSmartHomeEntities(),
+        getSmartHomeSensors(),
+      ]);
+
+      setSmartHomeStatus(status);
+      setSmartHomeEntities(entities);
+      setSmartHomeSensors(sensors);
+      setSmartHomeState((current) => ({
+        ...current,
+        error: null,
+        isLoading: false,
+      }));
+    } catch {
+      setSmartHomeState((current) => ({
+        ...current,
+        error: 'Smart home API unavailable',
+        isLoading: false,
+      }));
+    }
+  }
+
+  async function handleSmartHomeEntityAction(
+    entity: SmartHomeEntity,
+    action: 'turn-on' | 'turn-off',
+  ) {
+    registerMirrorActivity();
+
+    setSmartHomeState({
+      actionMessage: null,
+      error: null,
+      isLoading: true,
+    });
+
+    try {
+      const result = await runSmartHomeEntityAction(entity.entity_id, action);
+      await refreshSmartHome();
+      setSmartHomeState((current) => ({
+        ...current,
+        actionMessage: result.message,
+        error: null,
+        isLoading: false,
+      }));
+    } catch {
+      setSmartHomeState({
+        actionMessage: null,
+        error: `${entity.name} could not be changed. Check Home Assistant and Mirrage safety rules.`,
+        isLoading: false,
+      });
+    }
+  }
+
+  async function handleSmartHomeSceneActivate(entity: SmartHomeEntity) {
+    registerMirrorActivity();
+
+    setSmartHomeState({
+      actionMessage: null,
+      error: null,
+      isLoading: true,
+    });
+
+    try {
+      const result = await activateSmartHomeScene(entity.entity_id);
+      await refreshSmartHome();
+      setSmartHomeState((current) => ({
+        ...current,
+        actionMessage: result.message,
+        error: null,
+        isLoading: false,
+      }));
+    } catch {
+      setSmartHomeState({
+        actionMessage: null,
+        error: `${entity.name} could not be activated. Check Home Assistant and Mirrage safety rules.`,
+        isLoading: false,
+      });
+    }
+  }
+
   async function handleSpotifyAction(
     action: 'play' | 'pause' | 'next' | 'previous',
   ) {
@@ -1820,6 +2018,7 @@ export default function App() {
             presenceDetail={presenceDetail}
             proactiveNudge={proactiveNudge}
             proactiveSummary={proactiveSummary}
+            smartHomeSummary={smartHomeSummary}
             voiceLabel={voiceLabel}
             weather={weather}
             weatherSummary={weatherSummary}
@@ -1834,6 +2033,7 @@ export default function App() {
             assistantOrbState={assistantOrbState}
             onOpen={openFocus}
             presenceDetail={presenceDetail}
+            smartHomeSummary={smartHomeSummary}
             systemLabel={systemLabel}
             voiceLabel={voiceLabel}
             weather={weather}
@@ -1926,6 +2126,23 @@ export default function App() {
             proactiveSummary={proactiveSummary}
           />
         )}
+
+        {activeView === 'smart-home' && (
+          <SmartHomeFocus
+            entities={smartHomeEntities}
+            onClose={closeFocus}
+            onEntityAction={(entity, action) =>
+              void handleSmartHomeEntityAction(entity, action)
+            }
+            onRefresh={() => void refreshSmartHome()}
+            onSceneActivate={(entity) =>
+              void handleSmartHomeSceneActivate(entity)
+            }
+            sensors={smartHomeSensors}
+            smartHomeState={smartHomeState}
+            status={smartHomeStatus}
+          />
+        )}
       </section>
       {isMirrorMode && (
         <>
@@ -1948,6 +2165,7 @@ interface HomeStateProps {
   currentTime: string;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
   presenceDetail: string;
+  smartHomeSummary: string;
   systemLabel: string;
   voiceLabel: string;
   weather: WeatherInfo | null;
@@ -1963,6 +2181,7 @@ function HomeState({
   currentTime,
   onOpen,
   presenceDetail,
+  smartHomeSummary,
   systemLabel,
   voiceLabel,
   weather,
@@ -2044,6 +2263,14 @@ function HomeState({
         >
           Context
         </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('smart-home')}
+        >
+          Home
+        </button>
       </nav>
 
       <footer className="ambient-home-status">
@@ -2052,6 +2279,7 @@ function HomeState({
         <p>{presenceDetail}</p>
         <p>{calendarSummary}</p>
         <p>{contextSummary}</p>
+        <p>{smartHomeSummary}</p>
         <p>{systemLabel}</p>
       </footer>
     </div>
@@ -2070,6 +2298,7 @@ interface MirrorHomeStateProps {
   presenceDetail: string;
   proactiveNudge: string;
   proactiveSummary: ProactiveSummary | null;
+  smartHomeSummary: string;
   voiceLabel: string;
   weather: WeatherInfo | null;
   weatherSummary: string;
@@ -2087,6 +2316,7 @@ function MirrorHomeState({
   presenceDetail,
   proactiveNudge,
   proactiveSummary,
+  smartHomeSummary,
   voiceLabel,
   weather,
   weatherSummary,
@@ -2148,6 +2378,9 @@ function MirrorHomeState({
         <button type="button" onClick={() => onOpen('media')}>
           Media
         </button>
+        <button type="button" onClick={() => onOpen('smart-home')}>
+          Home
+        </button>
       </nav>
 
       <div className="mirror-context-peek" aria-hidden="true">
@@ -2160,6 +2393,7 @@ function MirrorHomeState({
           </span>
         )}
         <span>{calendarSummary}</span>
+        <span>{smartHomeSummary}</span>
         <span>{presenceDetail}</span>
         <span>{backendLabel}</span>
       </div>
@@ -2875,6 +3109,236 @@ function MediaFocus({
         </div>
       </div>
     </div>
+  );
+}
+
+interface SmartHomeFocusProps {
+  entities: SmartHomeEntitiesResponse | null;
+  onClose: () => void;
+  onEntityAction: (
+    entity: SmartHomeEntity,
+    action: 'turn-on' | 'turn-off',
+  ) => void;
+  onRefresh: () => void;
+  onSceneActivate: (entity: SmartHomeEntity) => void;
+  sensors: SmartHomeEntitiesResponse | null;
+  smartHomeState: SmartHomeUiState;
+  status: SmartHomeStatus | null;
+}
+
+function SmartHomeFocus({
+  entities,
+  onClose,
+  onEntityAction,
+  onRefresh,
+  onSceneActivate,
+  sensors,
+  smartHomeState,
+  status,
+}: SmartHomeFocusProps) {
+  const items = entities?.items ?? [];
+  const controlItems = items.filter((entity) =>
+    ['light', 'switch'].includes(entity.device_type),
+  );
+  const scenes = items.filter((entity) => entity.device_type === 'scene');
+  const sensorItems = sensors?.items ?? [];
+  const isReady = status?.enabled && status.configured;
+  const title =
+    status?.connection_status === 'connected' ? 'Connected Home' : 'Smart Home';
+
+  return (
+    <div className={focusPanelClass}>
+      <FocusHeader eyebrow="Home" onClose={onClose} title={title} />
+
+      <div className="ambient-quiet-actions">
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={smartHomeState.isLoading}
+          className="ambient-text-button"
+        >
+          {smartHomeState.isLoading ? 'Refreshing' : 'Refresh'}
+        </button>
+        <p>
+          {status?.message ??
+            'Mirrage controls Home Assistant only through backend safety rules.'}
+        </p>
+      </div>
+
+      {smartHomeState.error && (
+        <p className="ambient-warning">{smartHomeState.error}</p>
+      )}
+      {smartHomeState.actionMessage && (
+        <p className="ambient-success">{smartHomeState.actionMessage}</p>
+      )}
+
+      {!isReady ? (
+        <section className="ambient-onboarding">
+          <p className={labelClass}>Home Assistant</p>
+          <h2>
+            {status?.enabled
+              ? 'Add a local Home Assistant connection.'
+              : 'Smart home control is off.'}
+          </h2>
+          <p>
+            Set the smart-home environment variables on the backend. Mirrage
+            will discover lights, switches, scenes, and sensors after Home
+            Assistant is enabled.
+          </p>
+        </section>
+      ) : (
+        <section className="ambient-smart-home">
+          <div className="ambient-smart-home-lead">
+            <span>{formatStatus(status.connection_status)}</span>
+            <p>
+              {status.entity_count > 0
+                ? `${status.entity_count} safe home item${
+                    status.entity_count === 1 ? '' : 's'
+                  } available.`
+                : 'No supported home items were discovered yet.'}
+            </p>
+          </div>
+
+          <SmartHomeEntitySection
+            emptyText="No lights or switches discovered."
+            entities={controlItems}
+            isBusy={smartHomeState.isLoading}
+            onEntityAction={onEntityAction}
+            title="Lights and Switches"
+          />
+
+          <SmartHomeSceneSection
+            emptyText="No scenes discovered."
+            isBusy={smartHomeState.isLoading}
+            onSceneActivate={onSceneActivate}
+            scenes={scenes}
+          />
+
+          <SmartHomeSensorSection
+            emptyText="No sensors discovered."
+            sensors={sensorItems}
+          />
+        </section>
+      )}
+    </div>
+  );
+}
+
+function SmartHomeEntitySection({
+  emptyText,
+  entities,
+  isBusy,
+  onEntityAction,
+  title,
+}: {
+  emptyText: string;
+  entities: SmartHomeEntity[];
+  isBusy: boolean;
+  onEntityAction: (
+    entity: SmartHomeEntity,
+    action: 'turn-on' | 'turn-off',
+  ) => void;
+  title: string;
+}) {
+  return (
+    <section className="ambient-smart-home-section">
+      <p className={labelClass}>{title}</p>
+      {entities.length === 0 ? (
+        <p className="ambient-empty-line">{emptyText}</p>
+      ) : (
+        <div className="ambient-home-control-list">
+          {entities.map((entity) => (
+            <article className="ambient-home-control" key={entity.entity_id}>
+              <div>
+                <h2>{entity.name}</h2>
+                <p>
+                  {entity.room ?? formatStatus(entity.device_type)} /{' '}
+                  {formatStatus(entity.state)}
+                </p>
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => onEntityAction(entity, 'turn-on')}
+                  disabled={isBusy || !entity.available}
+                >
+                  On
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onEntityAction(entity, 'turn-off')}
+                  disabled={isBusy || !entity.available}
+                >
+                  Off
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SmartHomeSceneSection({
+  emptyText,
+  isBusy,
+  onSceneActivate,
+  scenes,
+}: {
+  emptyText: string;
+  isBusy: boolean;
+  onSceneActivate: (entity: SmartHomeEntity) => void;
+  scenes: SmartHomeEntity[];
+}) {
+  return (
+    <section className="ambient-smart-home-section">
+      <p className={labelClass}>Scenes</p>
+      {scenes.length === 0 ? (
+        <p className="ambient-empty-line">{emptyText}</p>
+      ) : (
+        <div className="ambient-home-scene-list">
+          {scenes.map((scene) => (
+            <button
+              type="button"
+              key={scene.entity_id}
+              onClick={() => onSceneActivate(scene)}
+              disabled={isBusy || !scene.available}
+            >
+              <span>{scene.name}</span>
+              <small>Activate</small>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SmartHomeSensorSection({
+  emptyText,
+  sensors,
+}: {
+  emptyText: string;
+  sensors: SmartHomeEntity[];
+}) {
+  return (
+    <section className="ambient-smart-home-section">
+      <p className={labelClass}>Sensors</p>
+      {sensors.length === 0 ? (
+        <p className="ambient-empty-line">{emptyText}</p>
+      ) : (
+        <div className="ambient-home-sensors">
+          {sensors.map((sensor) => (
+            <article key={sensor.entity_id}>
+              <span>{sensor.name}</span>
+              <strong>{formatStatus(sensor.state)}</strong>
+              <small>{formatUpdated(sensor.last_updated)}</small>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

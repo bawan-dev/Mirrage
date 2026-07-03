@@ -936,6 +936,8 @@ select {
   .ambient-text-button,
   .ambient-close,
   .ambient-media-controls button,
+  .ambient-home-control button,
+  .ambient-home-scene-list button,
   .ambient-assistant-tools button {
     border: 0;
     background: transparent;
@@ -951,6 +953,8 @@ select {
   .ambient-text-button:hover,
   .ambient-close:hover,
   .ambient-media-controls button:hover,
+  .ambient-home-control button:hover,
+  .ambient-home-scene-list button:hover,
   .ambient-assistant-tools button:hover {
     color: var(--color-cyan);
   }
@@ -958,6 +962,8 @@ select {
   .ambient-focus-word:disabled,
   .ambient-text-button:disabled,
   .ambient-media-controls button:disabled,
+  .ambient-home-control button:disabled,
+  .ambient-home-scene-list button:disabled,
   .ambient-assistant-tools button:disabled {
     cursor: not-allowed;
     opacity: 0.35;
@@ -1360,6 +1366,111 @@ select {
     max-width: 34rem;
     margin-top: 2rem;
     color: rgba(148, 163, 173, 0.72);
+  }
+
+  .ambient-smart-home {
+    display: grid;
+    max-width: 64rem;
+    gap: 3.2rem;
+    margin-top: 4rem;
+  }
+
+  .ambient-smart-home-lead span {
+    color: rgba(148, 163, 173, 0.68);
+    font-size: 0.95rem;
+  }
+
+  .ambient-smart-home-lead p {
+    margin-top: 1rem;
+    color: var(--color-text);
+    font-size: 2.2rem;
+    font-weight: 540;
+    line-height: 1.18;
+  }
+
+  .ambient-smart-home-section {
+    display: grid;
+    gap: 1.4rem;
+  }
+
+  .ambient-home-control-list {
+    display: grid;
+    gap: 1.35rem;
+  }
+
+  .ambient-home-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .ambient-home-control h2 {
+    color: var(--color-text);
+    font-size: 1.8rem;
+    font-weight: 560;
+  }
+
+  .ambient-home-control p {
+    margin-top: 0.45rem;
+    color: rgba(148, 163, 173, 0.72);
+    font-size: 1rem;
+  }
+
+  .ambient-home-control > div:last-child {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .ambient-home-scene-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.3rem 2rem;
+  }
+
+  .ambient-home-scene-list button {
+    display: grid;
+    gap: 0.35rem;
+    text-align: left;
+  }
+
+  .ambient-home-scene-list span {
+    color: var(--color-text);
+    font-size: 1.35rem;
+    font-weight: 560;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .ambient-home-scene-list small {
+    color: rgba(148, 163, 173, 0.64);
+    font-size: 0.76rem;
+    font-weight: 740;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .ambient-home-sensors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 1.6rem 2rem;
+  }
+
+  .ambient-home-sensors article {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .ambient-home-sensors span,
+  .ambient-home-sensors small {
+    color: rgba(148, 163, 173, 0.68);
+    font-size: 0.88rem;
+  }
+
+  .ambient-home-sensors strong {
+    color: var(--color-text);
+    font-size: 1.75rem;
+    font-weight: 560;
   }
 
   .ambient-progress {

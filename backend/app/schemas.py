@@ -100,6 +100,44 @@ class HealthResponse(BaseModel):
     checks: list[HealthComponentResponse]
 
 
+class SmartHomeStatusResponse(BaseModel):
+    enabled: bool
+    configured: bool
+    provider: str
+    connection_status: str
+    entity_count: int
+    supported_domains: list[str]
+    last_successful_sync: str | None
+    message: str
+
+
+class SmartHomeEntityResponse(BaseModel):
+    entity_id: str
+    name: str
+    domain: str
+    device_type: str
+    state: str
+    available: bool
+    room: str | None
+    friendly_name: str | None
+    supported_actions: list[str]
+    last_updated: str | None
+
+
+class SmartHomeEntitiesResponse(BaseModel):
+    status: str
+    provider: str
+    items: list[SmartHomeEntityResponse]
+    count: int
+    message: str
+
+
+class SmartHomeActionResponse(BaseModel):
+    status: str
+    message: str
+    entity: SmartHomeEntityResponse | None = None
+
+
 class AIRuntimeStatusResponse(BaseModel):
     runtime_mode: str
     configured_provider: str

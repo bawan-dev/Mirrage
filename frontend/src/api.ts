@@ -8,6 +8,10 @@ import type {
   PresenceSnapshot,
   PresenceTransition,
   ProactiveSummary,
+  SmartHomeActionResult,
+  SmartHomeEntitiesResponse,
+  SmartHomeEntity,
+  SmartHomeStatus,
   SpotifyActionResult,
   SpotifyPlayback,
   SpotifyStatus,
@@ -93,6 +97,43 @@ export function getDailyContext(): Promise<DailyContext> {
 
 export function getProactiveSummary(): Promise<ProactiveSummary> {
   return fetchJson<ProactiveSummary>('/api/proactive/summary');
+}
+
+export function getSmartHomeStatus(): Promise<SmartHomeStatus> {
+  return fetchJson<SmartHomeStatus>('/api/smart-home/status');
+}
+
+export function getSmartHomeEntities(): Promise<SmartHomeEntitiesResponse> {
+  return fetchJson<SmartHomeEntitiesResponse>('/api/smart-home/entities');
+}
+
+export function getSmartHomeSensors(): Promise<SmartHomeEntitiesResponse> {
+  return fetchJson<SmartHomeEntitiesResponse>('/api/smart-home/sensors');
+}
+
+export function getSmartHomeEntity(entityId: string): Promise<SmartHomeEntity> {
+  return fetchJson<SmartHomeEntity>(
+    `/api/smart-home/entities/${encodeURIComponent(entityId)}`,
+  );
+}
+
+export function runSmartHomeEntityAction(
+  entityId: string,
+  action: 'turn-on' | 'turn-off',
+): Promise<SmartHomeActionResult> {
+  return postJson<SmartHomeActionResult>(
+    `/api/smart-home/entities/${encodeURIComponent(entityId)}/${action}`,
+    {},
+  );
+}
+
+export function activateSmartHomeScene(
+  entityId: string,
+): Promise<SmartHomeActionResult> {
+  return postJson<SmartHomeActionResult>(
+    `/api/smart-home/scenes/${encodeURIComponent(entityId)}/activate`,
+    {},
+  );
 }
 
 export function sendAssistantMessage(message: string): Promise<AssistantReply> {

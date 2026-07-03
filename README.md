@@ -33,7 +33,7 @@ process, and review the implementation as it evolves.
 What works now:
 
 - React + TypeScript + Tailwind mirror interface
-- FastAPI backend with health, system, voice, weather, assistant, memory, Spotify, Calendar, presence, and AI runtime routes
+- FastAPI backend with health, system, voice, weather, assistant, memory, Spotify, Calendar, presence, smart home, and AI runtime routes
 - mirror interface connected to backend status data
 - weather endpoint using Open-Meteo with a fallback state
 - AI runtime with provider routing, task-aware model selection, privacy-aware context prompts, fallback behavior, and `stub`, `ollama`, and `openai` provider options
@@ -59,6 +59,7 @@ What works now:
 - startup environment validation
 - full health monitoring endpoint for subsystem checks
 - local SQLite backup and restore utilities
+- backend-owned smart home foundation for Home Assistant discovery, safe light/switch control, scene activation, and read-only sensors
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - hardware planning notes for the first mirror prototype
 
@@ -73,7 +74,7 @@ What is still planned:
 - AI-enhanced context summaries behind explicit privacy controls
 - true provider token streaming
 - richer local model profiles for small, summary, planning, and future agent tasks
-- smart home control
+- richer smart home permissions, confirmations, and device categories
 - physical mirror installation
 
 The default assistant provider is still `stub`. Real model replies require configuring Ollama or an OpenAI-compatible API provider.
@@ -94,8 +95,9 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Memory | Local SQLite preferences, facts, goals, and routines |
 | Operations | Production Compose, health checks, logs, startup validation, local backups |
 | Proactive assistant | Local rule-based daily nudge from context sources |
+| Smart home | Home Assistant foundation with safe domains; real devices require local configuration |
 | Hardware | Planning docs only |
-| Smart home / vision | Not built yet |
+| Vision | Not built yet |
 
 ## Screenshots And Demo
 
@@ -139,6 +141,8 @@ FastAPI Backend
       |
       +-- Spotify Integration
       |
+      +-- Smart Home Layer
+      |
       +-- Wake Word + Presence Layer
       |
       +-- Voice Pipeline
@@ -148,7 +152,7 @@ FastAPI Backend
       +-- Hardware Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, external data, health checks, structured logs, and local backup utilities. The AI runtime builds a small privacy-aware context, chooses a provider, and falls back safely if the selected provider is unavailable. AI providers, context aggregation, memory storage, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
+The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, smart home safety rules, external data, health checks, structured logs, and local backup utilities. The AI runtime builds a small privacy-aware context, chooses a provider, and falls back safely if the selected provider is unavailable. AI providers, context aggregation, memory storage, smart home control, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
 
 More detail:
 
@@ -168,6 +172,8 @@ More detail:
 - [Operations](docs/operations.md)
 - [Proactive assistant](docs/proactive-assistant.md)
 - [Roadmap](docs/roadmap.md)
+- [Smart home](docs/smart-home.md)
+- [Home Assistant setup](docs/home-assistant.md)
 - [Spotify setup](docs/spotify.md)
 - [Updates](docs/updates.md)
 - [Voice and presence](docs/voice.md)
@@ -198,6 +204,7 @@ Hardware notes:
 | Context | Backend aggregation across weather, Calendar, and local memory |
 | Memory | Local SQLite storage for preferences, facts, goals, and routines |
 | Proactive | Deterministic backend summary for non-intrusive daily nudges |
+| Smart Home | Home Assistant integration through backend safety boundaries |
 | Mirror Mode | Frontend kiosk mode behind `VITE_MIRROR_MODE=true` |
 | Deployment | Docker Compose for development and production, systemd examples |
 | Operations | Health endpoints, structured logs, startup validation, local backups |
@@ -332,7 +339,10 @@ Current manual checks:
 - type `daily briefing` and confirm Context focus opens with a provider-independent proactive briefing
 - type `Good morning` or `What needs my attention?` and confirm the assistant replies with `provider: proactive`
 - open `http://127.0.0.1:8000/api/context/daily` and confirm weather, calendar, memory, and suggested focus fields exist
+- open `http://127.0.0.1:8000/api/smart-home/status` and confirm it returns disabled, unconfigured, unavailable, or connected without exposing tokens
+- if Home Assistant is configured, open the Smart Home focus view and confirm supported lights, switches, scenes, and sensors appear
 - type `Open assistant` and confirm Assistant focus opens
+- type `show my smart home devices` and confirm Smart Home focus opens
 - type `remember my favorite drink is coffee` and confirm the assistant replies with `provider: memory`
 - type `what do you remember about me?` and confirm the response includes `favorite drink: coffee`
 - open `http://127.0.0.1:8000/api/memory/summary` and confirm the memory appears under preferences
@@ -352,6 +362,10 @@ restart.
 
 Google Calendar uses a read-only events scope. The first token store is also in
 process memory, so reconnect after backend restart.
+
+Smart home control is disabled by default. Home Assistant requires a local base
+URL and long-lived access token in `.env`; supported actions are limited to
+lights, switches, scenes, and read-only sensors.
 
 Memory records are stored locally in `data/mirrage-memory.sqlite3`. That file is
 ignored by Git. Production Docker Compose mounts `./data`, `./backups`, and
@@ -397,6 +411,7 @@ Completed foundation work:
 - proactive ambient intelligence layer
 - ambient intelligence redesign with sparse typography, fewer containers, and refreshed screenshots
 - AI runtime with privacy-aware context building, provider routing, fallback, and stream shape
+- smart home foundation with Home Assistant discovery, safe action boundaries, health checks, and a small focus view
 - Docker development setup
 - production Compose, health monitoring, structured logging, local backups, and systemd examples
 - tests and CI
@@ -415,7 +430,7 @@ Future milestones:
 - Calendar Refinement
 - Memory Refinement
 - Context Refinement
-- Smart Home Integration
+- Smart Home Refinement
 - Physical Mirror Build
 - Home Installation
 

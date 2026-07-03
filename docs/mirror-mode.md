@@ -136,6 +136,7 @@ On load, Mirror Mode briefly shows a startup screen with service checks for:
 - weather
 - voice
 - calendar
+- smart home
 - context
 - proactive summary
 
@@ -151,7 +152,8 @@ VITE_MIRROR_STARTUP_SECONDS=3
 ## Current Limitations
 
 - No wake word.
-- No smart home control.
+- Smart home controls are limited to backend-approved lights, switches, scenes,
+  and read-only sensors.
 - No computer vision.
 - No new AI model is added by Mirror Mode.
 - Proactive nudges are rule-based local summaries, not model-generated advice.

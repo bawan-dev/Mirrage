@@ -25,8 +25,8 @@ The first backend version can return static data. Live data can replace it later
 
 The API does not change between normal dashboard mode and Mirror Mode. Mirror
 Mode is enabled in the frontend with `VITE_MIRROR_MODE=true` and still reads the
-same backend routes for health, weather, voice, Calendar, Spotify, memory, and
-daily context.
+same backend routes for health, weather, voice, Calendar, Spotify, smart home,
+memory, and daily context.
 
 Mirror Mode should not require a new backend endpoint unless a future hardware
 brightness or display-control service is added.
@@ -96,11 +96,12 @@ Returns subsystem health for operations and troubleshooting.
 ### Notes
 
 Full health includes backend, environment, memory, AI runtime, providers,
-presence, weather, Calendar, and Spotify. Optional integration issues return
-`warning` and make the top-level status `degraded`; they do not mean the backend
-is down.
+presence, weather, Calendar, Spotify, and smart home. Optional integration
+issues return `warning` and make the top-level status `degraded`; they do not
+mean the backend is down.
 
-The response does not expose API keys, OAuth tokens, or memory values.
+The response does not expose API keys, OAuth tokens, Home Assistant tokens, or
+memory values.
 
 ## `GET /api/system/status`
 
@@ -308,6 +309,11 @@ backend context service.
 Proactive briefing commands are handled locally before the AI provider is
 called. For example, `Good morning`, `Brief me`, and `What needs my attention?`
 return `provider: "proactive"` and use the backend proactive service.
+
+Smart home awareness commands are handled locally before the AI provider is
+called. For example, `show my smart home devices` and `show sensors` return
+`provider: "smart_home"` from the backend. The frontend command router can open
+the Smart Home focus view for the same phrases.
 
 The active provider is selected with `MIRRAGE_AI_PROVIDER`:
 
@@ -544,6 +550,132 @@ Expected response includes:
 ```
 
 More detail: [proactive-assistant.md](proactive-assistant.md).
+
+## Smart Home
+
+Smart home integration is isolated behind backend endpoints. The frontend does
+not call Home Assistant directly.
+
+Supported domains for this phase:
+
+- `light`
+- `switch`
+- `scene`
+- `sensor`
+
+Home Assistant `binary_sensor` entities are normalized as read-only sensors.
+High-risk or future domains such as `lock`, `cover`, `climate`,
+`media_player`, `camera`, `alarm_control_panel`, `vacuum`, and `garage_door`
+are blocked.
+
+### `GET /api/smart-home/status`
+
+Returns whether smart home support is enabled, configured, reachable, and how
+many supported entities were discovered.
+
+Example disabled response:
+
+```json
+{
+  "enabled": false,
+  "configured": false,
+  "provider": "home_assistant",
+  "connection_status": "disabled",
+  "entity_count": 0,
+  "supported_domains": ["light", "switch", "scene", "sensor"],
+  "last_successful_sync": null,
+  "message": "Smart home control is disabled."
+}
+```
+
+### `GET /api/smart-home/entities`
+
+Discovers and returns normalized safe entities.
+
+Example response:
+
+```json
+{
+  "status": "ready",
+  "provider": "home_assistant",
+  "items": [
+    {
+      "entity_id": "light.kitchen",
+      "name": "Kitchen Light",
+      "domain": "light",
+      "device_type": "light",
+      "state": "off",
+      "available": true,
+      "room": "Kitchen",
+      "friendly_name": "Kitchen Light",
+      "supported_actions": ["turn_on", "turn_off"],
+      "last_updated": "2026-07-02T09:00:00+00:00"
+    }
+  ],
+  "count": 1,
+  "message": "1 smart home entities loaded."
+}
+```
+
+### `GET /api/smart-home/entities/{entity_id}`
+
+Returns one normalized entity if it is in a supported domain.
+
+### `GET /api/smart-home/sensors`
+
+Returns read-only sensors. This includes normalized `sensor` and
+`binary_sensor` entities.
+
+### Control Endpoints
+
+| Method | Endpoint | Allowed domains |
+| --- | --- | --- |
+| `POST` | `/api/smart-home/entities/{entity_id}/turn-on` | `light`, `switch` |
+| `POST` | `/api/smart-home/entities/{entity_id}/turn-off` | `light`, `switch` |
+| `POST` | `/api/smart-home/scenes/{entity_id}/activate` | `scene` |
+
+Example:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/smart-home/entities/light.kitchen/turn-on" -Method Post
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "message": "Kitchen Light turn on.",
+  "entity": {
+    "entity_id": "light.kitchen",
+    "name": "Kitchen Light",
+    "domain": "light",
+    "device_type": "light",
+    "state": "on",
+    "available": true,
+    "room": "Kitchen",
+    "friendly_name": "Kitchen Light",
+    "supported_actions": ["turn_on", "turn_off"],
+    "last_updated": "2026-07-02T09:00:00+00:00"
+  }
+}
+```
+
+Sensors are read-only. Unsupported and high-risk domains return a safe error
+instead of reaching Home Assistant.
+
+### Blocked Arbitrary Services
+
+The backend intentionally rejects arbitrary Home Assistant service calls:
+
+```text
+POST /api/smart-home/services/{domain}/{service}
+```
+
+This endpoint exists only as a guardrail and returns `403`.
+
+More detail: [smart-home.md](smart-home.md) and
+[home-assistant.md](home-assistant.md).
 
 ## Memory
 

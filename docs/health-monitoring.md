@@ -40,9 +40,14 @@ The response includes checks for:
 - weather
 - Calendar
 - Spotify
+- smart home
 
 Full health may be `degraded` when optional integrations are not configured. That
 does not mean the backend is down.
+
+The smart home check reports whether Mirrage smart home support is enabled,
+whether Home Assistant is configured, whether discovery can run, and how many
+safe entities were found. It does not expose the Home Assistant token.
 
 ## Docker Health Checks
 
@@ -52,7 +57,8 @@ does not mean the backend is down.
 - frontend `/health`
 
 Optional integration degradation should not kill the containers. A Spotify issue
-should not stop memory, and a weather failure should not stop voice.
+should not stop memory, a smart home issue should not stop Calendar, and a
+weather failure should not stop voice.
 
 ## External Monitoring
 

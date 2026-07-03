@@ -3,13 +3,16 @@ export type CommandFocusTarget =
   | 'assistant'
   | 'media'
   | 'calendar'
-  | 'context';
+  | 'context'
+  | 'smart-home';
 
 export type AssistantIntent =
   | 'open_weather'
   | 'open_assistant'
   | 'open_media'
   | 'open_calendar'
+  | 'open_smart_home'
+  | 'smart_home_sensors'
   | 'calendar_today'
   | 'daily_context';
 
@@ -51,6 +54,22 @@ const CALENDAR_TERMS = [
   'meetings',
   'appointments',
 ];
+
+const SMART_HOME_TERMS = [
+  'smart home',
+  'home devices',
+  'devices',
+  'lights',
+  'light',
+  'switches',
+  'switch',
+  'scenes',
+  'scene',
+  'sensors',
+  'sensor',
+];
+
+const SENSOR_TERMS = ['sensor', 'sensors', 'temperature', 'humidity', 'motion'];
 
 const TODAY_TERMS = ['today', 'daily', 'day'];
 
@@ -132,6 +151,21 @@ export function routeAssistantCommand(
       'context',
       'Opening your daily context.',
     );
+  }
+
+  if (includesAnyTerm(command, SENSOR_TERMS) && command.includes('show')) {
+    return createRoute(
+      'smart_home_sensors',
+      'smart-home',
+      'Opening smart home sensors.',
+    );
+  }
+
+  if (
+    includesAnyTerm(command, SMART_HOME_TERMS) ||
+    asksForView(command, ['smart home', 'home devices'])
+  ) {
+    return createRoute('open_smart_home', 'smart-home', 'Opening smart home.');
   }
 
   if (

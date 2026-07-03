@@ -40,6 +40,13 @@ class Settings(BaseSettings):
     memory_database_path: str = "data/mirrage-memory.sqlite3"
     backup_directory: str = "backups"
 
+    # Smart home / Home Assistant configuration.
+    smart_home_enabled: bool = False
+    smart_home_timeout_seconds: float = 5.0
+    home_assistant_enabled: bool = False
+    home_assistant_base_url: str = "http://homeassistant.local:8123"
+    home_assistant_token: str | None = None
+
     # Voice presence and wake word configuration.
     wake_word_enabled: bool = True
     wake_phrase: str = "Hey Mirrage"

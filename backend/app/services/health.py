@@ -10,6 +10,7 @@ from backend.app.schemas import HealthComponentResponse, HealthResponse
 from backend.app.services.calendar import get_calendar_status
 from backend.app.services.memory import memory_health
 from backend.app.services.presence import assistant_state_manager
+from backend.app.services.smart_home import smart_home_service
 from backend.app.services.spotify import get_spotify_status
 from backend.app.services.startup import validate_environment
 from backend.app.services.weather import get_weather
@@ -30,6 +31,7 @@ def full_health() -> HealthResponse:
         _ai_runtime_check(),
         _provider_check(),
         _presence_check(),
+        _smart_home_check(),
         _weather_check(),
         _calendar_check(),
         _spotify_check(),
@@ -140,6 +142,33 @@ def _presence_check() -> HealthComponentResponse:
             "state": snapshot.state,
             "wake_word_enabled": snapshot.wake_word_enabled,
             "wake_word_engine": snapshot.wake_word_engine,
+        },
+    )
+
+
+def _smart_home_check() -> HealthComponentResponse:
+    status = smart_home_service.status()
+    if not status.enabled:
+        check_status = "warning"
+    elif status.connection_status == "connected":
+        check_status = "ok"
+    elif status.connection_status in {"unconfigured", "provider_disabled"}:
+        check_status = "warning"
+    else:
+        check_status = "unavailable"
+
+    return HealthComponentResponse(
+        name="smart_home",
+        status=check_status,
+        message=status.message,
+        details={
+            "enabled": status.enabled,
+            "configured": status.configured,
+            "provider": status.provider,
+            "connection_status": status.connection_status,
+            "entity_count": status.entity_count,
+            "supported_domains": status.supported_domains,
+            "last_successful_sync": status.last_successful_sync,
         },
     )
 
