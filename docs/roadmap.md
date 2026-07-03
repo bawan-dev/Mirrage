@@ -578,6 +578,39 @@ and emit detections into the Presence Engine without sending pre-wake audio to a
 cloud provider. Full hands-free operation still needs a real model and
 microphone validation before it is claimed as working.
 
+## Phase 36: Physical Mirror Build Documentation
+
+Goal: prepare the first real Mirrage hardware build before buying final parts.
+
+- [x] Add physical build overview
+- [x] Compare display options and recommend a practical first size
+- [x] Compare mirror material options and document brightness testing
+- [x] Compare audio output options
+- [x] Compare microphone options for wake-word and voice testing
+- [x] Compare Raspberry Pi, mini PC, and future AI server compute paths
+- [x] Document thermal design and heat testing
+- [x] Document cable routing and Ethernet preference
+- [x] Document frame construction and service access
+- [x] Document maintenance planning
+- [x] Add shopping list
+- [x] Add cost estimate ranges
+- [x] Add assembly guide
+- [x] Add hardware testing checklist
+- [x] Update architecture, deployment, operations, run notes, troubleshooting,
+  and README references
+- [ ] Buy mirror material samples
+- [ ] Test chosen display through mirror material
+- [ ] Run heat tests on target frame/display setup
+- [ ] Test microphone and wake engine on target hardware
+- [ ] Build and mount the first physical frame
+
+Done when:
+
+The repo has enough hardware documentation for a realistic first build:
+component choices, assembly order, software deployment on the device,
+maintenance, cost ranges, and real-world test gates. The physical mirror itself
+is still pending until parts are purchased and tested.
+
 ## Future: Voice Interaction
 
 - [ ] Hardware-tested local trained wake model
@@ -658,6 +691,7 @@ microphone validation before it is claimed as working.
 
 ## Current Focus
 
-Phase 35 is the current milestone. Current focus is testing the OpenWakeWord
-boundary with a real `Hey Mirrage` model and microphone on target hardware,
-while also continuing Smart Home, production hardware, and local AI validation.
+Phase 36 is the current milestone. Current focus is buying/testing mirror
+material samples, validating display brightness, running heat tests, and testing
+the wake engine and microphone on target hardware before building the permanent
+frame.

@@ -16,7 +16,7 @@ Linux host
 
 Minimum practical target:
 
-- Raspberry Pi 5, Intel N100 mini PC, or similar always-on Linux machine
+- Intel N100 mini PC, Raspberry Pi 5, or similar always-on Linux machine
 - 8 GB RAM preferred
 - 32 GB storage minimum, 64 GB or more preferred
 - wired Ethernet if possible
@@ -30,6 +30,18 @@ Better target for local AI:
 - 16 GB RAM if running local models
 - SSD storage
 - active cooling or a proven passive case
+
+Recommended first physical build:
+
+- 27 inch IPS monitor with VESA mount
+- Intel N100 mini PC
+- two-way acrylic or smart mirror glass after visibility testing
+- small wired speakers
+- USB conference microphone or USB mic array
+- deep ventilated frame with removable back panel
+
+See [../hardware/physical-build.md](../hardware/physical-build.md) for the full
+hardware plan.
 
 ## Software Requirements
 
@@ -98,6 +110,28 @@ Open:
 ```text
 http://127.0.0.1:5173
 ```
+
+## First Boot On Mirror Hardware
+
+Use this after the operating system is installed on the target mini PC or
+Raspberry Pi:
+
+```text
+1. Install OS.
+2. Install Docker and Git.
+3. Clone Mirrage.
+4. Copy .env.example to .env.
+5. Set VITE_MIRROR_MODE=true.
+6. Start production Compose.
+7. Enable the systemd service.
+8. Open frontend in browser kiosk mode.
+9. Verify /api/health/full.
+10. Check /api/wake-word/status.
+11. Check /api/smart-home/status.
+12. Reboot and confirm Mirrage starts automatically.
+```
+
+Do this before installing the mirror permanently on the wall.
 
 ## Start On Boot With systemd
 
@@ -196,6 +230,10 @@ final production Docker audio configuration.
 - logs are being written to `logs/backend.log`
 - `data/mirrage-memory.sqlite3` exists after memory is used
 - backup command creates a file in `backups/`
+- Mirror Mode opens in kiosk mode
+- display is readable through the selected mirror material
+- microphone, speakers, and wake engine status have been checked
+- heat testing has passed before wall mounting
 
 ## Platform Notes
 

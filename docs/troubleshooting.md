@@ -609,3 +609,63 @@ The backend did not receive Spotify credentials.
 - Confirm there is an active Spotify device.
 - Confirm the connected account can use playback controls.
 - Try `Refresh` in the Media focus view after opening Spotify on a device.
+
+## Display is too dim behind mirror material
+
+This is a hardware fit problem, not a frontend bug.
+
+- Test the display without mirror material first.
+- Increase display brightness only for testing; watch heat after increasing it.
+- Try the mirror material in daytime and nighttime room light.
+- Test a lighter tint or different two-way material.
+- Confirm the UI uses Mirror Mode with a black background and high-contrast text.
+
+Do not order final-size mirror material until the sample is readable with the
+actual display.
+
+## Mirror frame gets too warm
+
+Stop the long-running test and inspect the physical layout.
+
+- Confirm display vents are not blocked.
+- Add bottom and top ventilation.
+- Move the mini PC away from the hottest display area.
+- Keep power bricks outside sealed cavities.
+- Check that cables are not pressed against hot electronics.
+- Run another 1 hour and 4 hour test before mounting.
+
+## Microphone works on desk but not inside the frame
+
+Microphone placement is part of the hardware build.
+
+- Move the microphone near the bottom edge of the frame.
+- Test with the mirror material installed.
+- Keep it away from speakers where possible.
+- Try a USB conference microphone or microphone array.
+- Check `/api/wake-word/status` for local wake engine state.
+
+Do not hide the microphone permanently until wake-word and speech tests pass in
+the actual room.
+
+## Speakers sound muffled
+
+- Do not fully seal speakers behind wood.
+- Add side or bottom openings for sound.
+- Reduce frame vibration with rubber isolation.
+- Use wired USB or 3.5mm speakers before trying Bluetooth.
+- Keep the speaker path serviceable so replacement is possible.
+
+## Mirror cannot be serviced after mounting
+
+The frame design needs to change.
+
+Mirrage should allow access to:
+
+- mini PC power and USB ports
+- display power/video cables
+- microphone and speaker cables
+- Ethernet cable
+- power plug or power strip
+
+A sealed frame may look clean, but it will make repairs, updates, and part
+replacement painful.

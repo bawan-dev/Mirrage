@@ -40,7 +40,7 @@ Backend API
   |
   +-- Health, Logging, Backup, Startup Validation
   |
-  +-- Hardware Status Layer
+  +-- Physical Build Planning Layer
 ```
 
 The frontend should ask for data. The backend should decide where that data comes
@@ -577,16 +577,43 @@ in [wake-engine.md](wake-engine.md) and [openwakeword.md](openwakeword.md).
 
 ## Hardware Boundary
 
-Hardware integration should also start as status only.
+The physical mirror is planned as a home appliance around the software stack.
+The hardware plan is documented before code depends on final parts.
 
-Early hardware state can include:
+```text
+Physical Mirror
+  -> mirror material
+  -> display
+  -> mini PC or Raspberry Pi
+  -> microphone
+  -> speakers
+  -> Linux + Docker production stack
+  -> frontend kiosk mode
+  -> backend services
+  -> local network
+    -> optional AI server
+    -> Home Assistant
+```
 
-- display status
-- microphone status
-- sensor status
-- mirror build status
+The first build recommendation is:
 
-The physical build should be documented before code depends on it.
+- 27 inch IPS monitor
+- two-way mirror material tested with the actual display before final assembly
+- Intel N100 mini PC
+- wired USB or 3.5mm speakers
+- USB conference microphone or USB microphone array
+- Ethernet where practical
+- deep frame with removable back, ventilation, and cable strain relief
+
+The mirror should not require workstation GPUs. Heavy local AI can run later on
+a separate LAN machine while the mirror remains the always-on appliance.
+
+Hardware integration in code should still start with status and safe service
+boundaries. Real display brightness, microphone reliability, wake-word behavior,
+thermal performance, and wall mounting must be tested before the project claims
+the physical installation is complete.
+
+Build details live in [../hardware/physical-build.md](../hardware/physical-build.md).
 
 ## Operations Boundary
 

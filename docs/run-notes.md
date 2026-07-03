@@ -44,6 +44,10 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health/full
 Startup-on-boot is documented in [deployment](deployment.md). Normal maintenance
 is documented in [operations](operations.md).
 
+Hardware build planning is documented in
+[physical build](../hardware/physical-build.md) and
+[testing checklist](../hardware/testing-checklist.md).
+
 ## Local path: run each service
 
 ### 1. Backend (terminal one)
@@ -97,6 +101,21 @@ Expected result:
 - Weather, Assistant, Media, Calendar, Context, and Smart Home focus views still open
 - `Close` or `Esc` returns to the ambient home
 - after inactivity, the screen dims and then returns to the home state
+
+## Physical mirror readiness checks
+
+Before building or mounting the mirror:
+
+- test the chosen display with Mirrage Mirror Mode
+- test mirror material over the actual display
+- confirm day/night readability
+- run a 1 hour and 4 hour heat test
+- confirm mini PC, microphone, speakers, and cables have service access
+- confirm wall mounting hardware is suitable for the total weight and wall type
+- confirm Docker production Compose starts after reboot
+
+Use [hardware/testing-checklist.md](../hardware/testing-checklist.md) before
+final installation.
 
 ## Wake word and presence checks
 

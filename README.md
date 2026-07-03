@@ -4,7 +4,10 @@
 
 Mirrage is a privacy-first ambient AI assistant for the home, starting with a smart mirror interface.
 
-The project is being built as a serious full-stack system: a mirror-first frontend, a FastAPI backend, provider-based AI routing, live information endpoints, Docker deployment, CI, and hardware planning for a future physical build.
+The project is being built as a serious full-stack system: a mirror-first
+frontend, a FastAPI backend, provider-based AI routing, live information
+endpoints, Docker deployment, CI, and a documented hardware path for the first
+physical build.
 
 ## Product Direction
 
@@ -23,7 +26,8 @@ Planned direction:
 - local-first AI support where possible
 - push-to-talk voice interaction first, with local wake-word runtime support
   being prepared before backend/local speech engines
-- physical mirror build after the display, material, audio, heat, and wiring choices are tested
+- physical mirror build planned around tested display, mirror material, audio,
+  microphone, heat, cable routing, and maintenance choices
 
 Development note: I use AI-assisted development heavily on this project, but I
 define the product direction, architecture, roadmap, acceptance criteria, testing
@@ -63,7 +67,9 @@ What works now:
 - local SQLite backup and restore utilities
 - backend-owned smart home foundation for Home Assistant discovery, safe light/switch control, scene activation, and read-only sensors
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
-- hardware planning notes for the first mirror prototype
+- physical build documentation for the first mirror prototype, including
+  display, mirror material, compute, audio, microphone, frame, thermal, cable,
+  maintenance, cost, assembly, and testing plans
 
 What is still planned:
 
@@ -77,7 +83,7 @@ What is still planned:
 - true provider token streaming
 - richer local model profiles for small, summary, planning, and future agent tasks
 - richer smart home permissions, confirmations, and device categories
-- physical mirror installation
+- physical mirror installation and real hardware validation
 
 The default assistant provider is still `stub`. Real model replies require configuring Ollama or an OpenAI-compatible API provider.
 
@@ -98,7 +104,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Operations | Production Compose, health checks, logs, startup validation, local backups |
 | Proactive assistant | Local rule-based daily nudge from context sources |
 | Smart home | Home Assistant foundation with safe domains; real devices require local configuration |
-| Hardware | Planning docs only |
+| Hardware | Physical build plan documented; real parts still need testing |
 | Vision | Not built yet |
 
 ## Screenshots And Demo
@@ -151,10 +157,20 @@ FastAPI Backend
       |
       +-- Health, Logging, Backups
       |
-      +-- Hardware Planning Layer
+      +-- Physical Build Planning Layer
 ```
 
-The frontend renders the mirror experience. The backend owns API boundaries, service state, assistant routing, daily context, proactive summaries, local memory, smart home safety rules, external data, health checks, structured logs, and local backup utilities. The AI runtime builds a small privacy-aware context, chooses a provider, and falls back safely if the selected provider is unavailable. AI providers, context aggregation, memory storage, smart home control, voice input, and hardware integration stay behind those boundaries so they can change without rewriting the mirror surface.
+The physical plan treats the mirror as a home appliance: mirror glass, display,
+mini PC, microphone, speakers, ventilation, cable routing, and service access
+are documented before buying final parts. The frontend renders the mirror
+experience. The backend owns API boundaries, service state, assistant routing,
+daily context, proactive summaries, local memory, smart home safety rules,
+external data, health checks, structured logs, and local backup utilities. The
+AI runtime builds a small privacy-aware context, chooses a provider, and falls
+back safely if the selected provider is unavailable. AI providers, context
+aggregation, memory storage, smart home control, voice input, and hardware
+integration stay behind those boundaries so they can change without rewriting
+the mirror surface.
 
 More detail:
 
@@ -191,6 +207,20 @@ Hardware notes:
 - [Build plan](hardware/build-plan.md)
 - [Component tracker](hardware/components.md)
 - [Wiring notes](hardware/wiring-notes.md)
+- [Physical build overview](hardware/physical-build.md)
+- [Display selection](hardware/display-selection.md)
+- [Mirror material](hardware/mirror-glass.md)
+- [Compute options](hardware/compute-options.md)
+- [Audio](hardware/audio.md)
+- [Microphones](hardware/microphones.md)
+- [Thermal design](hardware/thermal-design.md)
+- [Cable routing](hardware/cable-routing.md)
+- [Frame design](hardware/frame-design.md)
+- [Maintenance](hardware/maintenance.md)
+- [Shopping list](hardware/shopping-list.md)
+- [Cost estimate](hardware/cost-estimate.md)
+- [Assembly guide](hardware/assembly-guide.md)
+- [Testing checklist](hardware/testing-checklist.md)
 
 ## Tech Stack
 
@@ -212,6 +242,7 @@ Hardware notes:
 | Mirror Mode | Frontend kiosk mode behind `VITE_MIRROR_MODE=true` |
 | Deployment | Docker Compose for development and production, systemd examples |
 | Operations | Health endpoints, structured logs, startup validation, local backups |
+| Hardware Plan | 27 inch display target, two-way mirror material testing, Intel N100 mini PC recommendation |
 | Quality | Pytest, Ruff, ESLint, Prettier, TypeScript |
 | CI | GitHub Actions |
 
@@ -421,11 +452,12 @@ Completed foundation work:
 - Docker development setup
 - production Compose, health monitoring, structured logging, local backups, and systemd examples
 - tests and CI
-- first hardware planning notes
+- physical mirror build documentation and hardware plan
 
 Next planned milestone:
 
-- Production install test on target hardware, then local AI runtime testing with Ollama and wake-word model/microphone testing
+- Buy/test mirror material samples, validate display brightness, run heat tests,
+  and test production deployment on target hardware
 
 Future milestones:
 
@@ -437,7 +469,7 @@ Future milestones:
 - Memory Refinement
 - Context Refinement
 - Smart Home Refinement
-- Physical Mirror Build
+- Physical Mirror Assembly
 - Home Installation
 
 The full phase breakdown lives in [docs/roadmap.md](docs/roadmap.md).

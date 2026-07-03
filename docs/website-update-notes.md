@@ -33,7 +33,7 @@ hardware.
 | Proactive nudges | Local rule-based summaries from weather, Calendar, and memory context |
 | Smart home | Home Assistant foundation with safe supported domains; real-home testing still needed |
 | Wake word | Local wake engine boundary prepared; real model and microphone testing still needed |
-| Hardware | Planning docs only |
+| Hardware | Physical build plan documented; real parts still need testing |
 | Vision | Not built |
 
 ## Suggested Portfolio Bullets
@@ -52,6 +52,9 @@ hardware.
 - Added local SQLite memory for preferences, goals, facts, and routines.
 - Prepared a local OpenWakeWord wake engine boundary without sending pre-wake
   audio to cloud services.
+- Documented the first physical mirror build path, including display, mirror
+  material, mini PC, microphone, audio, thermal, frame, maintenance, and cost
+  planning.
 
 ## Assets To Include
 
@@ -73,6 +76,7 @@ Recommended docs to link:
 - `docs/proactive-assistant.md`
 - `docs/demo-guide.md`
 - `docs/wake-engine.md`
+- `hardware/physical-build.md`
 - `hardware/build-plan.md`
 
 ## Video Placeholder

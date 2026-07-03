@@ -15,6 +15,13 @@ Expected:
 - frontend and backend containers are running
 - optional integrations may be degraded if they are not configured
 
+For installed hardware, also check:
+
+- mirror is not unusually warm
+- ventilation is clear
+- power and network cables are not strained
+- frontend is still in kiosk/Mirror Mode
+
 ## Full Health Check
 
 ```bash
@@ -151,6 +158,8 @@ Weekly:
 - check health
 - check disk space
 - create a local backup
+- check the frame vents for dust or blockage
+- confirm the mirror can still be safely unplugged or serviced
 
 Before updates:
 
@@ -164,3 +173,19 @@ Monthly:
 - update the host OS
 - restart the machine during a planned maintenance window
 - confirm Mirrage starts after reboot
+- inspect cable strain relief and wall mounting hardware
+- clean the mirror surface with material-safe cleaner
+
+## Hardware Service Notes
+
+The physical mirror should keep these parts accessible:
+
+- mini PC power button and USB ports
+- display power and video cables
+- microphone cable
+- speaker cable
+- Ethernet cable
+- main power plug or power strip
+
+Do not build Mirrage as a sealed box. If the display, microphone, speaker, or
+mini PC fails, it should be replaceable without destroying the frame.

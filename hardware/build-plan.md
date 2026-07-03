@@ -1,96 +1,64 @@
 # Hardware Build Plan
 
-These are the first hardware notes for Mirrage. Nothing here is final yet.
+Mirrage is now planned as a real wall-mounted appliance, not a temporary desk
+demo.
 
-The main thing I need to avoid is buying parts too early. The software can already run, but the mirror build depends on a few real-world tests: brightness, mirror material, heat, frame depth, and cable routing.
+The first build should stay practical: prove the display/mirror combination,
+keep heat under control, run the software reliably, and avoid permanent choices
+until the physical tests pass.
 
-## First Prototype
+## Recommended V1 Direction
 
-The first version should be simple:
+| Area | Direction |
+| --- | --- |
+| Display | 27 inch IPS monitor with VESA mount |
+| Mirror material | Two-way acrylic sample first; final acrylic or glass after visibility test |
+| Compute | Intel N100 mini PC |
+| Audio | Small wired USB or 3.5mm speakers |
+| Microphone | USB conference microphone or USB mic array |
+| Frame | Deep wooden shadow-box frame with removable back |
+| Deployment | Linux, Docker production Compose, systemd, Mirror Mode |
 
-1. Run Mirrage on a normal screen.
-2. Put mirror material in front of it.
-3. Check if the dashboard is bright enough.
-4. Check if the text is still readable.
-5. Decide if the display size feels right.
+## Build Manual
 
-I do not need a perfect wall mount for the first test. I need proof that the screen/mirror combo works.
+Start here:
 
-## Display
+- [Physical build overview](physical-build.md)
+- [Display selection](display-selection.md)
+- [Mirror material](mirror-glass.md)
+- [Compute options](compute-options.md)
+- [Audio](audio.md)
+- [Microphones](microphones.md)
+- [Thermal design](thermal-design.md)
+- [Cable routing](cable-routing.md)
+- [Frame design](frame-design.md)
+- [Maintenance](maintenance.md)
+- [Shopping list](shopping-list.md)
+- [Cost estimate](cost-estimate.md)
+- [Assembly guide](assembly-guide.md)
+- [Testing checklist](testing-checklist.md)
 
-Best first move: use a monitor I already have.
+## Current Build Order
 
-That keeps the cost low and lets me test the mirror effect before choosing a thinner display.
-
-Possible display paths:
-
-- Existing monitor: easiest for testing, probably too thick for the final build.
-- Portable monitor: thinner and cleaner, but smaller.
-- Laptop panel with controller board: thin, but more wiring and more things that can go wrong.
-- Small TV: good size, but the frame may get bulky fast.
-
-For now, the existing monitor path makes the most sense.
-
-## Mirror Material
-
-Need to test this before making any final frame.
-
-Options:
-
-- Acrylic two-way mirror: light and easier to work with, but scratches easier.
-- Glass two-way mirror: better final look, but heavier and less forgiving.
-- Mirror film: cheap for experiments, but it can look bad if applied poorly.
-
-First test should use acrylic or film. If the project gets to a cleaner wall version, glass might be worth it.
-
-## Computer
-
-The computer just needs to run the dashboard and backend at first.
-
-Possible choices:
-
-- Mini PC: best long-term option if I want local AI later.
-- Raspberry Pi: small and low power, but weak for local AI.
-- Old laptop or desktop: good for testing, not clean for the final mirror.
-
-For now, the right answer is to use whatever already runs the app reliably. Local AI should not decide the hardware yet.
-
-## Audio
-
-Voice is not built yet, so I do not need hidden microphones or speakers right now.
-
-First audio setup can be basic:
-
-- USB mic or small USB mic array
-- monitor speakers or a small external speaker
-- external cables while testing
-
-Later, the frame can hide the mic and speaker, but that should happen after voice actually works.
-
-## Power And Heat
-
-Things to watch:
-
-- Do not seal power bricks inside the frame.
-- Leave airflow behind the screen.
-- Check heat after the dashboard runs for a while.
-- Plan a cable exit before building anything permanent.
-- Do not make the frame so thin that cables get crushed.
+1. Test Mirrage on a normal display.
+2. Test mirror material samples over that display.
+3. Choose the display size.
+4. Choose compute hardware.
+5. Run the production software stack on the target compute device.
+6. Test audio and microphone placement.
+7. Test heat for several hours.
+8. Design the frame around measured parts.
+9. Build the frame with service access and ventilation.
+10. Mount only after final safety and software checks pass.
 
 ## Main Risks
 
-- The mirror material could make the screen too dim.
-- The frame could end up too thick.
-- Heat could build up behind the mirror.
-- A hidden microphone might sound bad.
-- Glass could make the final build heavier than expected.
+- mirror material makes the display too dim
+- frame becomes too thick or too hot
+- microphone placement performs badly
+- power bricks become inaccessible
+- wall mounting is underestimated
+- real costs differ from planning ranges
 
-## Current Plan
-
-Start with a software-first hardware test:
-
-- existing screen
-- cheap mirror material test
-- no permanent frame yet
-- external mic/speaker later
-- final parts only after brightness and size feel right
+These risks should be tested before buying final-size mirror material or
+building the permanent frame.
