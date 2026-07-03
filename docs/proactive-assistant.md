@@ -85,4 +85,5 @@ document exactly which sources can be included.
 - There is no notification history yet.
 - The UI does not yet let the user tune what counts as important.
 - Spotify playback is not part of proactive context yet.
-- Wake word and always-listening behavior are not built.
+- The local wake engine boundary exists, but real always-listening behavior still
+  needs a trained model and microphone validation on target hardware.

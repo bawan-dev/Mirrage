@@ -78,7 +78,9 @@ The center presence reflects the current assistant state:
 | `Speaking` | browser text-to-speech is speaking |
 | `Error` | backend, voice, or assistant error is visible |
 
-This is still browser-based voice and speech output. There is no wake word yet.
+This is still browser-based speech recognition and speech output after wake. The
+backend wake engine boundary exists, but a real local model and microphone still
+need hardware testing.
 
 ## Inactivity
 
@@ -151,7 +153,8 @@ VITE_MIRROR_STARTUP_SECONDS=3
 
 ## Current Limitations
 
-- No wake word.
+- Local wake engine support is prepared, but no trained and hardware-tested
+  `Hey Mirrage` model is included.
 - Smart home controls are limited to backend-approved lights, switches, scenes,
   and read-only sensors.
 - No computer vision.

@@ -547,9 +547,40 @@ lights and switches, activate scenes, read sensors, block high-risk domains, and
 report smart home health without exposing secrets. Real-home validation still
 needs to happen on the target network.
 
+## Phase 35: Real Wake Word Integration
+
+Goal: connect the existing Presence Engine to a real local wake engine boundary.
+
+- [x] Add backend-owned wake engine service
+- [x] Add OpenWakeWord provider boundary
+- [x] Add safe configuration for provider, phrase, sensitivity, model path,
+  microphone, sample rate, frame size, and cooldown
+- [x] Keep the engine disabled by default so CI and local development do not
+  require a microphone or model file
+- [x] Add `GET /api/wake-word/status`
+- [x] Add `POST /api/wake-word/start`
+- [x] Add `POST /api/wake-word/stop`
+- [x] Keep `POST /api/wake-word/detect` compatible
+- [x] Route accepted detections into the existing Presence Engine
+- [x] Suppress duplicate wake detections during cooldown
+- [x] Add wake engine state to voice status and full health
+- [x] Add backend tests using fakes instead of a real microphone
+- [x] Document setup, OpenWakeWord notes, false activation testing, and
+  production limitations
+- [ ] Train or install a real `Hey Mirrage` OpenWakeWord model
+- [ ] Test the real model and microphone on target hardware
+- [ ] Tune sensitivity in the actual room
+
+Done when:
+
+Mirrage has a local wake engine boundary that can start, stop, report status,
+and emit detections into the Presence Engine without sending pre-wake audio to a
+cloud provider. Full hands-free operation still needs a real model and
+microphone validation before it is claimed as working.
+
 ## Future: Voice Interaction
 
-- [ ] Local trained wake model
+- [ ] Hardware-tested local trained wake model
 - [ ] Backend or local speech-to-text option
 - [ ] Assistant intent handling
 - [ ] Backend or local text-to-speech option
@@ -627,6 +658,6 @@ needs to happen on the target network.
 
 ## Current Focus
 
-Phase 34 is the current milestone. Current focus is testing the Smart Home
-foundation against a real Home Assistant instance, then continuing production
-hardware validation, local AI testing, and wake-word microphone testing.
+Phase 35 is the current milestone. Current focus is testing the OpenWakeWord
+boundary with a real `Hey Mirrage` model and microphone on target hardware,
+while also continuing Smart Home, production hardware, and local AI validation.

@@ -49,6 +49,23 @@ Mirrage uses `.env` for local and production configuration. Start from
 Smart home is off by default. Keep the Home Assistant token in `.env` only; do
 not commit it.
 
+## Wake Engine
+
+| Variable | Purpose |
+| --- | --- |
+| `MIRRAGE_WAKE_ENGINE_ENABLED` | Starts the backend local wake engine when `true` |
+| `MIRRAGE_WAKE_ENGINE_PROVIDER` | `openwakeword` for the current provider boundary |
+| `MIRRAGE_WAKE_ENGINE_MODEL_PATH` | Local wake model path, for example `models/wake/hey-mirrage.onnx` |
+| `MIRRAGE_WAKE_ENGINE_PHRASE` | Phrase the engine reports, default `Hey Mirrage` |
+| `MIRRAGE_WAKE_ENGINE_SENSITIVITY` | Normalized threshold from `0.0` to `1.0` |
+| `MIRRAGE_WAKE_ENGINE_MICROPHONE` | Optional microphone device name or index |
+| `MIRRAGE_WAKE_ENGINE_SAMPLE_RATE` | Audio sample rate, default `16000` |
+| `MIRRAGE_WAKE_ENGINE_FRAME_MS` | Audio frame length in milliseconds |
+| `MIRRAGE_WAKE_ENGINE_COOLDOWN_SECONDS` | Duplicate wake suppression window |
+
+The local wake engine is disabled by default. Leave it disabled until a real
+model file and microphone are ready on the target device.
+
 ## AI Runtime
 
 | Variable | Purpose |
@@ -72,6 +89,8 @@ The backend validates key settings during startup:
 - smart home timeout
 - Home Assistant provider/token readiness
 - wake-word sensitivity
+- wake engine provider, sensitivity, sample rate, frame size, cooldown, and
+  model path when enabled
 - presence timeout
 - AI provider names
 - production CORS wildcard usage

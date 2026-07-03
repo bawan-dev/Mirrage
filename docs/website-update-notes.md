@@ -31,9 +31,9 @@ hardware.
 | Spotify | OAuth, current playback, artwork, and basic controls |
 | Memory | Local SQLite preferences, facts, goals, and routines |
 | Proactive nudges | Local rule-based summaries from weather, Calendar, and memory context |
+| Smart home | Home Assistant foundation with safe supported domains; real-home testing still needed |
+| Wake word | Local wake engine boundary prepared; real model and microphone testing still needed |
 | Hardware | Planning docs only |
-| Wake word | Not built |
-| Smart home | Not built |
 | Vision | Not built |
 
 ## Suggested Portfolio Bullets
@@ -50,6 +50,8 @@ hardware.
 - Integrated Spotify and Google Calendar through isolated backend service
   layers.
 - Added local SQLite memory for preferences, goals, facts, and routines.
+- Prepared a local OpenWakeWord wake engine boundary without sending pre-wake
+  audio to cloud services.
 
 ## Assets To Include
 
@@ -70,6 +72,7 @@ Recommended docs to link:
 - `docs/context.md`
 - `docs/proactive-assistant.md`
 - `docs/demo-guide.md`
+- `docs/wake-engine.md`
 - `hardware/build-plan.md`
 
 ## Video Placeholder

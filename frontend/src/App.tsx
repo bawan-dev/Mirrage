@@ -26,6 +26,7 @@ import {
   getSpotifyStatus,
   getSystemStatus,
   getVoiceStatus,
+  getWakeEngineStatus,
   getWeather,
   activateSmartHomeScene,
   runSmartHomeEntityAction,
@@ -59,6 +60,7 @@ import type {
   SpotifyStatus,
   SystemStatus,
   VoiceStatus,
+  WakeEngineStatus,
   WeatherInfo,
 } from './types';
 
@@ -431,6 +433,8 @@ export default function App() {
     useState<PresenceSnapshot | null>(null);
   const [presenceSettings, setPresenceSettings] =
     useState<PresenceSettings | null>(null);
+  const [wakeEngineStatus, setWakeEngineStatus] =
+    useState<WakeEngineStatus | null>(null);
   const [presenceConnected, setPresenceConnected] = useState(false);
   const [presenceError, setPresenceError] = useState<string | null>(null);
   const [pendingWakeSequence, setPendingWakeSequence] = useState<number | null>(
@@ -799,9 +803,10 @@ export default function App() {
 
     async function loadPresence() {
       try {
-        const [snapshot, settings] = await Promise.all([
+        const [snapshot, settings, wakeEngine] = await Promise.all([
           getPresenceStatus(),
           getPresenceSettings(),
+          getWakeEngineStatus(),
         ]);
 
         if (!isActive) {
@@ -810,6 +815,7 @@ export default function App() {
 
         setPresenceSnapshot(snapshot);
         setPresenceSettings(settings);
+        setWakeEngineStatus(wakeEngine);
         setPresenceError(null);
       } catch {
         if (!isActive) {
@@ -2085,6 +2091,7 @@ export default function App() {
             presenceDetail={presenceDetail}
             presenceError={presenceError}
             presenceSettings={presenceSettings}
+            wakeEngineStatus={wakeEngineStatus}
             voiceError={voiceError}
             voiceInterimTranscript={voiceInterimTranscript}
             voiceListening={voiceListening}
@@ -2753,6 +2760,7 @@ interface AssistantFocusProps {
   presenceDetail: string;
   presenceError: string | null;
   presenceSettings: PresenceSettings | null;
+  wakeEngineStatus: WakeEngineStatus | null;
   ttsMuted: boolean;
   ttsSpeaking: boolean;
   ttsSupported: boolean;
@@ -2786,6 +2794,7 @@ function AssistantFocus({
   presenceDetail,
   presenceError,
   presenceSettings,
+  wakeEngineStatus,
   ttsMuted,
   ttsSpeaking,
   ttsSupported,
@@ -2928,6 +2937,22 @@ function AssistantFocus({
           {wakeWordConfig.browserListenerEnabled
             ? ' with experimental browser listener enabled'
             : ' with local adapter expected'}
+        </p>
+        <p>
+          Local wake engine:{' '}
+          <strong>
+            {wakeEngineStatus
+              ? `${formatStatus(wakeEngineStatus.status)} / ${wakeEngineStatus.provider}`
+              : 'Checking'}
+          </strong>
+        </p>
+        <p>
+          Wake model:{' '}
+          <strong>
+            {wakeEngineStatus?.model_configured
+              ? 'Configured'
+              : 'Not configured'}
+          </strong>
         </p>
       </section>
 

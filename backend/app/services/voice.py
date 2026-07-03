@@ -1,12 +1,14 @@
 """Voice service boundary."""
 
 from backend.app.services.presence import assistant_state_manager
+from backend.app.services.wake_engine import wake_engine_service
 from backend.app.services.wake_word import wake_word_service
 
 
 def get_voice_status() -> dict[str, str | bool | float | None]:
     presence = assistant_state_manager.snapshot()
     wake_status = wake_word_service.status()
+    wake_engine_status = wake_engine_service.status()
 
     return {
         "status": "ready",
@@ -15,6 +17,8 @@ def get_voice_status() -> dict[str, str | bool | float | None]:
         "wake_phrase": wake_status["phrase"],
         "wake_word_engine": wake_status["engine"],
         "wake_word_mode": wake_status["mode"],
+        "local_wake_engine": wake_engine_status.status,
+        "local_wake_engine_provider": wake_engine_status.provider,
         "sensitivity": wake_status["sensitivity"],
         "microphone_device": wake_status["microphone_device"],
         "presence_state": presence.state,

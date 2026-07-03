@@ -37,6 +37,8 @@ Better target for local AI:
 - Docker Engine and Docker Compose plugin
 - Git
 - Optional: Ollama if using a local model provider
+- Optional: OpenWakeWord, `sounddevice`, `numpy`, and OS audio packages if
+  testing local wake word directly on the host
 
 ## Install
 
@@ -67,6 +69,15 @@ VITE_MIRROR_MODE=true
 
 Add Spotify, Calendar, Ollama, or OpenAI-compatible settings only if those
 features are being used.
+
+For local wake word testing, keep the engine off until the microphone and model
+file are ready:
+
+```text
+MIRRAGE_WAKE_ENGINE_ENABLED=false
+MIRRAGE_WAKE_ENGINE_PROVIDER=openwakeword
+MIRRAGE_WAKE_ENGINE_MODEL_PATH=models/wake/hey-mirrage.onnx
+```
 
 ## Start With Docker Compose
 
@@ -151,11 +162,35 @@ Production Compose mounts:
 
 These folders are intentionally ignored by Git.
 
+Wake model files should live outside Git too. The suggested local path is:
+
+```text
+models/wake/hey-mirrage.onnx
+```
+
+The repo includes the folder placeholder but ignores real model files.
+
+## Microphone And Wake Word Notes
+
+For the first hardware test, run the backend directly on the host. Confirm the
+microphone works there before trying Docker audio.
+
+On Linux, wake-word testing may require:
+
+- the user running Mirrage to have audio device permission
+- ALSA, PulseAudio, or PipeWire packages depending on the OS
+- a stable USB microphone or microphone array
+- `MIRRAGE_WAKE_ENGINE_MICROPHONE` set to the correct device
+
+Docker microphone access is possible but host-specific. It may require device
+mounts or PulseAudio/PipeWire socket mounts. This repo does not yet include a
+final production Docker audio configuration.
+
 ## Verification Checklist
 
 - `/api/health` returns `online`
 - `/api/health/full` returns JSON with backend, memory, AI runtime, providers,
-  presence, weather, Calendar, and Spotify checks
+  presence, wake engine, weather, Calendar, and Spotify checks
 - frontend `/health` returns `ok`
 - containers show healthy or running
 - logs are being written to `logs/backend.log`

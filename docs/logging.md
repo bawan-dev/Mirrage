@@ -26,6 +26,8 @@ Operational events:
 - AI runtime provider selection and fallback
 - provider request failures
 - wake-word detection events
+- wake engine startup, shutdown, microphone errors, cooldown suppression, and
+  latency measurements
 - presence state changes
 - weather, Calendar, and Spotify integration failures
 
@@ -38,6 +40,7 @@ Never log:
 - raw memory values
 - user transcripts
 - assistant replies
+- raw microphone audio
 - `.env` contents
 
 The current JSON formatter only includes a small allowlist of operational fields

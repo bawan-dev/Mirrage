@@ -79,6 +79,7 @@ def test_full_health_reports_operational_components(
         "ai_runtime",
         "providers",
         "presence",
+        "wake_engine",
         "smart_home",
         "weather",
         "calendar",

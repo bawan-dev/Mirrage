@@ -22,11 +22,33 @@ export interface VoiceStatus {
   wake_phrase?: string;
   wake_word_engine?: string;
   wake_word_mode?: string;
+  local_wake_engine?: string;
+  local_wake_engine_provider?: string;
   sensitivity?: number;
   microphone_device?: string | null;
   presence_state?: PresenceState;
   speech_to_text: string;
   text_to_speech: string;
+}
+
+export interface WakeEngineStatus {
+  enabled: boolean;
+  configured: boolean;
+  provider: string;
+  phrase: string;
+  sensitivity: number;
+  microphone_device: string | null;
+  microphone_configured: boolean;
+  model_configured: boolean;
+  running: boolean;
+  status: string;
+  sample_rate: number;
+  frame_ms: number;
+  cooldown_seconds: number;
+  last_detection_time: string | null;
+  last_detection_latency_ms: number | null;
+  error_message: string | null;
+  message: string;
 }
 
 export type PresenceState =

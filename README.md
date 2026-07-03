@@ -21,7 +21,8 @@ Planned direction:
 - minimal mirror home screen with clock, weather, and subtle system state
 - focus views for assistant, weather, media, calendar, and home controls
 - local-first AI support where possible
-- push-to-talk voice interaction first, with wake word and backend/local audio later
+- push-to-talk voice interaction first, with local wake-word runtime support
+  being prepared before backend/local speech engines
 - physical mirror build after the display, material, audio, heat, and wiring choices are tested
 
 Development note: I use AI-assisted development heavily on this project, but I
@@ -42,7 +43,8 @@ What works now:
 - browser text-to-speech for assistant replies
 - mute and browser voice settings in the assistant focus view
 - backend-owned assistant presence engine with Server-Sent Events
-- wake-word adapter endpoint for local wake engines using `Hey Mirrage` by default
+- local wake engine boundary with OpenWakeWord provider support, safe
+  enable/disable configuration, cooldown handling, and `Hey Mirrage` by default
 - local command routing for opening weather, media, assistant, calendar, and context focus views
 - Spotify OAuth, currently playing, album artwork, and playback controls
 - Google Calendar OAuth, today's schedule, upcoming events, and calendar assistant command
@@ -65,7 +67,7 @@ What works now:
 
 What is still planned:
 
-- trained local `Hey Mirrage` wake-word model asset
+- trained and hardware-tested local `Hey Mirrage` wake-word model asset
 - backend or local speech-to-text option
 - backend or local text-to-speech option
 - Spotify persistence, device picker, and voice playback commands
@@ -88,7 +90,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Backend API | Working FastAPI service |
 | Assistant | Runtime, provider routing, fallback, and deterministic handlers work; default provider is still `stub` |
 | Voice | Browser push-to-talk, browser speech synthesis, and backend presence events |
-| Wake word | Adapter and lifecycle ready; local engine/model still required |
+| Wake word | Local engine boundary and OpenWakeWord provider prepared; real model and microphone testing still required |
 | Weather | Live backend weather endpoint with fallback |
 | Calendar | Google Calendar OAuth and read-only schedule views |
 | Spotify | OAuth, current playback, artwork, and basic controls |
@@ -143,7 +145,7 @@ FastAPI Backend
       |
       +-- Smart Home Layer
       |
-      +-- Wake Word + Presence Layer
+      +-- Local Wake Engine + Presence Layer
       |
       +-- Voice Pipeline
       |
@@ -177,7 +179,9 @@ More detail:
 - [Spotify setup](docs/spotify.md)
 - [Updates](docs/updates.md)
 - [Voice and presence](docs/voice.md)
+- [Wake engine](docs/wake-engine.md)
 - [Wake word and presence](docs/wake-word-presence.md)
+- [OpenWakeWord notes](docs/openwakeword.md)
 - [Run notes](docs/run-notes.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Website update notes](docs/website-update-notes.md)
@@ -199,7 +203,7 @@ Hardware notes:
 | Music | Spotify OAuth and Web API through backend endpoints |
 | Calendar | Google Calendar OAuth and read-only events through backend endpoints |
 | Voice | Browser speech recognition, browser speech synthesis, and backend presence lifecycle |
-| Wake word | Local wake adapter with configurable phrase; model asset still planned |
+| Wake word | Backend wake engine boundary with OpenWakeWord support; real model and mic testing still pending |
 | Commands | Frontend intent routing for local UI actions |
 | Context | Backend aggregation across weather, Calendar, and local memory |
 | Memory | Local SQLite storage for preferences, facts, goals, and routines |
@@ -328,10 +332,11 @@ Current manual checks:
 - confirm `Mute`, `Test voice`, and the browser voice selector work in the assistant focus view
 - open `http://127.0.0.1:8000/api/proactive/summary` and confirm it returns `headline`, `message`, `priority`, `suggestions`, and `should_interrupt`
 - open `http://127.0.0.1:8000/api/presence/status` and confirm `state` and `wake_phrase` are present
+- open `http://127.0.0.1:8000/api/wake-word/status` and confirm the local wake engine reports disabled, unconfigured, stopped, or running
 - open `http://127.0.0.1:8000/api/ai/runtime/status` and confirm runtime settings load without secrets
 - open `http://127.0.0.1:8000/api/ai/providers` and confirm `stub`, `ollama`, and `openai` are listed
 - post a message to `http://127.0.0.1:8000/api/assistant/stream` and confirm `status`, `chunk`, and `done` events are returned
-- post `{ "phrase": "Hey Mirrage" }` to `/api/wake-word/detect` and confirm the state moves to `wake_detected`
+- post `{ "phrase": "Hey Mirrage" }` to `/api/wake-word/detect` and confirm the state moves to `wake_detected`; repeat during cooldown and confirm duplicates are suppressed
 - in Mirror Mode, confirm the lower-right nudge shows a calm daily summary or fallback
 - type `What is the weather?` in the assistant view and confirm Weather focus opens
 - type `Show my music` in the assistant view and confirm Media focus opens
@@ -354,7 +359,7 @@ Current manual checks:
 - run `docker compose up --build` when development Docker changes
 - run `docker compose -f docker-compose.prod.yml config` when production Docker changes
 
-Browser voice works best in Chrome or Edge because it uses browser speech recognition and speech synthesis. Wake-word audio should be handled by a local engine; this repo currently includes the backend adapter and presence lifecycle, not a trained wake-word model asset.
+Browser voice works best in Chrome or Edge because it uses browser speech recognition and speech synthesis. Wake-word audio should be handled by a local engine. This repo now includes the backend wake engine boundary and OpenWakeWord provider support, but not a trained or hardware-tested `Hey Mirrage` model asset.
 
 Spotify playback controls require a connected Spotify account and an active Spotify
 device. The first token store is in process memory, so reconnect after backend
@@ -402,6 +407,7 @@ Completed foundation work:
 - push-to-talk voice foundation
 - browser text-to-speech foundation
 - wake-word adapter and presence engine
+- local wake engine boundary with OpenWakeWord provider support
 - local command routing for focus views
 - Spotify media integration
 - Google Calendar daily schedule integration
@@ -419,11 +425,11 @@ Completed foundation work:
 
 Next planned milestone:
 
-- Production install test on target hardware, then local AI runtime testing with Ollama and wake-word microphone testing
+- Production install test on target hardware, then local AI runtime testing with Ollama and wake-word model/microphone testing
 
 Future milestones:
 
-- Wake Word Engine Integration
+- Wake Word Hardware Validation
 - AI Runtime Refinement
 - Production Hardening Refinement
 - Spotify Refinement

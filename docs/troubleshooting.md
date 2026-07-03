@@ -255,8 +255,17 @@ Windows privacy settings and restart the browser.
 
 ## Saying "Hey Mirrage" does nothing
 
-The repo has the wake-word adapter and presence lifecycle, but it does not ship a
-trained local wake-word model asset yet.
+The repo has the local wake engine boundary, OpenWakeWord provider support, and
+presence lifecycle, but it does not ship a trained local wake-word model asset.
+
+Check the local engine status first:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/wake-word/status
+```
+
+Default local development should report `enabled: false`. If enabled but
+unconfigured, check `message`, `model_configured`, and `error_message`.
 
 First test the adapter manually:
 
@@ -271,8 +280,42 @@ Expected result:
 - the frontend moves into Conversation Mode
 
 If that works, the Mirrage backend/frontend path is working. The missing piece is
-a local wake engine such as OpenWakeWord or Porcupine calling the adapter
-endpoint after hearing the phrase.
+a real local model and microphone run.
+
+For OpenWakeWord setup notes, see [wake-engine](wake-engine.md) and
+[openwakeword](openwakeword.md).
+
+## Wake engine says unconfigured
+
+The local wake engine is enabled but cannot start.
+
+Common causes:
+
+- `MIRRAGE_WAKE_ENGINE_MODEL_PATH` is blank
+- the model file does not exist on disk
+- sensitivity is outside `0.0` to `1.0`
+- sample rate or frame size is invalid
+- provider is not `openwakeword`
+
+The backend should stay online. Check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/health/full
+```
+
+Look for the `wake_engine` check.
+
+## Wake engine starts but immediately stops
+
+This usually means the optional runtime or audio device failed.
+
+- install `openwakeword`, `sounddevice`, and `numpy` on the target device
+- confirm the microphone is visible to the OS
+- set `MIRRAGE_WAKE_ENGINE_MICROPHONE` if the default device is wrong
+- run the backend directly on the host before solving Docker audio mounts
+
+The backend logs should include a wake engine startup or microphone failure
+event, but never raw audio.
 
 ## Presence stream is disconnected
 
@@ -367,7 +410,7 @@ npm run dev
 ```
 
 Expected result: the home screen shows the large ambient clock, top-right
-weather summary, and assistant orb.
+weather summary, and assistant presence.
 
 ## Mirror Mode dims too quickly or too slowly
 
@@ -389,7 +432,8 @@ That can be normal in local development.
 
 - `Calendar` is planned until Google Calendar credentials are configured and the
   account is connected.
-- `Voice` depends on browser speech support and microphone permission.
+- `Voice` depends on browser speech support, microphone permission, and local
+  wake engine configuration if that path is enabled.
 - `Weather` can show unavailable if the backend or provider cannot be reached.
 - `Context` can be partial if weather, Calendar, or memory has a fallback state.
 - `Home` can show planned or unavailable if smart home is disabled or Home

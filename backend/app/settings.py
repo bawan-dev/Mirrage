@@ -56,6 +56,18 @@ class Settings(BaseSettings):
     presence_inactivity_timeout_seconds: int = 25
     presence_automatic_sleep: bool = True
 
+    # Local wake engine configuration. This is off by default so CI and normal
+    # local development do not require a microphone, model file, or audio stack.
+    wake_engine_enabled: bool = False
+    wake_engine_provider: str = "openwakeword"
+    wake_engine_model_path: str | None = None
+    wake_engine_phrase: str = "Hey Mirrage"
+    wake_engine_sensitivity: float = 0.5
+    wake_engine_microphone: str | None = None
+    wake_engine_sample_rate: int = 16000
+    wake_engine_frame_ms: int = 80
+    wake_engine_cooldown_seconds: float = 3.0
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="MIRRAGE_",

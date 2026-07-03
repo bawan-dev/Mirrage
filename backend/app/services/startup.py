@@ -9,6 +9,10 @@ from pathlib import Path
 from ai.config import ai_settings
 from ai.router import PROVIDER_DEFINITIONS
 from backend.app.logging_config import valid_log_level
+from backend.app.services.wake_engine_models import (
+    FUTURE_WAKE_ENGINE_PROVIDERS,
+    SUPPORTED_WAKE_ENGINE_PROVIDERS,
+)
 from backend.app.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -108,6 +112,87 @@ def validate_environment() -> list[StartupIssue]:
                 message="Smart home timeout must be greater than zero.",
             )
         )
+
+    if settings.wake_engine_provider in FUTURE_WAKE_ENGINE_PROVIDERS:
+        issues.append(
+            StartupIssue(
+                level="warning",
+                field="MIRRAGE_WAKE_ENGINE_PROVIDER",
+                message=(
+                    "Porcupine is documented as a future option, but this build "
+                    "currently implements the OpenWakeWord boundary."
+                ),
+            )
+        )
+    elif settings.wake_engine_provider not in SUPPORTED_WAKE_ENGINE_PROVIDERS:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_WAKE_ENGINE_PROVIDER",
+                message="Wake engine provider must currently be openwakeword.",
+            )
+        )
+
+    if not 0 <= settings.wake_engine_sensitivity <= 1:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_WAKE_ENGINE_SENSITIVITY",
+                message="Wake engine sensitivity must be between 0.0 and 1.0.",
+            )
+        )
+
+    if settings.wake_engine_sample_rate <= 0:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_WAKE_ENGINE_SAMPLE_RATE",
+                message="Wake engine sample rate must be greater than zero.",
+            )
+        )
+
+    if settings.wake_engine_frame_ms <= 0:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_WAKE_ENGINE_FRAME_MS",
+                message="Wake engine frame size must be greater than zero.",
+            )
+        )
+
+    if settings.wake_engine_cooldown_seconds < 0:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_WAKE_ENGINE_COOLDOWN_SECONDS",
+                message="Wake engine cooldown must be zero or greater.",
+            )
+        )
+
+    if settings.wake_engine_enabled:
+        if not settings.wake_engine_model_path:
+            issues.append(
+                StartupIssue(
+                    level="warning",
+                    field="MIRRAGE_WAKE_ENGINE_MODEL_PATH",
+                    message=(
+                        "Wake engine is enabled without a local model path. "
+                        "The backend will stay online, but local wake detection "
+                        "will not start."
+                    ),
+                )
+            )
+        elif not Path(settings.wake_engine_model_path).expanduser().exists():
+            issues.append(
+                StartupIssue(
+                    level="warning",
+                    field="MIRRAGE_WAKE_ENGINE_MODEL_PATH",
+                    message=(
+                        "Wake engine model file was not found. Local wake "
+                        "detection will report unconfigured."
+                    ),
+                )
+            )
 
     if settings.smart_home_enabled and not settings.home_assistant_enabled:
         issues.append(

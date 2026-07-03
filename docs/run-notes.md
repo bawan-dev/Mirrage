@@ -100,6 +100,26 @@ Expected result:
 
 ## Wake word and presence checks
 
+Check the local wake engine boundary:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/wake-word/status
+```
+
+Expected default result:
+
+- `enabled` is `false`
+- `status` is `disabled`
+- `provider` is `openwakeword`
+- `model_configured` is `false`
+
+Start and stop are safe even when disabled:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/wake-word/start" -Method Post
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/wake-word/stop" -Method Post
+```
+
 Check the current lifecycle snapshot:
 
 ```powershell
@@ -127,7 +147,12 @@ Expected result:
   supports it
 
 The manual wake call does not prove a real local wake model is installed. It
-only proves the adapter, presence manager, SSE stream, and frontend handoff work.
+only proves the wake service, presence manager, SSE stream, and frontend handoff
+work.
+
+Run the local wake engine only after installing a real OpenWakeWord model and
+microphone on the target device. See [wake-engine](wake-engine.md) and
+[OpenWakeWord notes](openwakeword.md).
 
 Tune the timeouts in `frontend/.env`:
 
@@ -164,7 +189,8 @@ Expected result:
 - the assistant reply is spoken aloud unless speech output is muted
 
 This works best in Chrome or Edge because the current foundation uses browser
-speech recognition and browser speech synthesis. There is no wake word yet.
+speech recognition and browser speech synthesis. The local wake engine can open
+Conversation Mode, but the spoken request still uses the browser STT path.
 
 ## Speech output setup
 
@@ -518,6 +544,8 @@ Copy-Item .env.example .env
 | `MIRRAGE_AI_STREAMING_ENABLED` | `true` | Enables the current SSE response shape |
 | `MIRRAGE_ALLOWED_ORIGINS` | localhost:5173 | CORS origins the backend accepts |
 | `MIRRAGE_MEMORY_DATABASE_PATH` | `data/mirrage-memory.sqlite3` | Local SQLite memory path |
+| `MIRRAGE_WAKE_ENGINE_ENABLED` | `false` | Enables local OpenWakeWord runtime support |
+| `MIRRAGE_WAKE_ENGINE_MODEL_PATH` | blank | Path to a local wake model file |
 | `VITE_MIRROR_MODE` | `false` | Enables the wall-display Mirror Mode frontend |
 
 The frontend reads its backend URL from `VITE_API_BASE_URL`

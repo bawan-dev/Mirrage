@@ -37,6 +37,7 @@ The response includes checks for:
 - AI runtime
 - providers
 - presence
+- wake engine
 - weather
 - Calendar
 - Spotify
@@ -44,6 +45,12 @@ The response includes checks for:
 
 Full health may be `degraded` when optional integrations are not configured. That
 does not mean the backend is down.
+
+The wake engine check reports whether the local engine is enabled, configured,
+running, and whether a model and microphone setting are present. Disabled is
+reported as healthy because push-to-talk and the detection adapter still work.
+Enabled but missing model setup is degraded or unavailable and should be fixed
+before claiming hands-free operation.
 
 The smart home check reports whether Mirrage smart home support is enabled,
 whether Home Assistant is configured, whether discovery can run, and how many

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1240" height="820" viewBox="0 0 1240 820" role="img" aria-labelledby="title desc">
-  <title id="title">Mirrage architecture with smart home safety boundary</title>
-  <desc id="desc">Mirrage system diagram showing the frontend, FastAPI backend, AI runtime, local memory, presence, integrations, smart home layer, Home Assistant provider, safe device discovery and control APIs, sensors, blocked high-risk actions, health, logs, and deployment.</desc>
+  <title id="title">Mirrage architecture with local wake engine boundary</title>
+  <desc id="desc">Mirrage system diagram showing a React mirror frontend, FastAPI backend, local microphone wake engine, local model file, cooldown and sensitivity boundary, Presence Engine, Server-Sent Events, browser voice pipeline, AI runtime, local memory, context, calendar, Spotify, smart home, health, logs, and Docker deployment.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#6ee7ff" />
@@ -12,7 +12,7 @@
       .safe { fill: #0d1719; stroke: #7cf7c4; stroke-width: 2; rx: 16; }
       .warn { fill: #17120a; stroke: #f7c66d; stroke-width: 2; rx: 16; }
       .data { fill: #101018; stroke: #b9a7ff; stroke-width: 2; rx: 16; }
-      .label { fill: #f5f7fb; font: 700 22px Arial, sans-serif; }
+      .label { fill: #f5f7fb; font: 700 21px Arial, sans-serif; }
       .small { fill: #9eb7ca; font: 500 14px Arial, sans-serif; }
       .tag { fill: #6ee7ff; font: 700 14px Arial, sans-serif; letter-spacing: 1px; }
       .line { stroke: #6ee7ff; stroke-width: 3; fill: none; marker-end: url(#arrow); }
@@ -25,103 +25,112 @@
 
   <rect class="bg" width="1240" height="820" />
 
-  <text x="70" y="54" class="tag">MIRRAGE</text>
-  <text x="70" y="92" class="label">System Architecture</text>
-  <text x="70" y="120" class="small">Backend-owned service boundaries for AI, context, voice, media, calendar, weather, smart home, health, logs, and deployment.</text>
+  <text x="60" y="52" class="tag">MIRRAGE</text>
+  <text x="60" y="88" class="label">System Architecture</text>
+  <text x="60" y="116" class="small">Local wake detection happens before any assistant or cloud provider receives a request.</text>
 
-  <rect x="70" y="170" width="235" height="86" class="core" />
-  <text x="187" y="203" text-anchor="middle" class="label">Mirror UI</text>
-  <text x="187" y="229" text-anchor="middle" class="small">React, focus views, voice UI</text>
+  <rect x="55" y="165" width="220" height="82" class="core" />
+  <text x="165" y="198" text-anchor="middle" class="label">Mirror UI</text>
+  <text x="165" y="224" text-anchor="middle" class="small">React, mirror mode, focus views</text>
 
-  <rect x="390" y="160" width="250" height="106" class="core" />
-  <text x="515" y="195" text-anchor="middle" class="label">FastAPI Backend</text>
-  <text x="515" y="221" text-anchor="middle" class="small">service boundaries and routes</text>
-  <text x="515" y="243" text-anchor="middle" class="small">no provider secrets in frontend</text>
+  <rect x="370" y="150" width="250" height="112" class="core" />
+  <text x="495" y="186" text-anchor="middle" class="label">FastAPI Backend</text>
+  <text x="495" y="214" text-anchor="middle" class="small">routes, services, boundaries</text>
+  <text x="495" y="236" text-anchor="middle" class="small">secrets stay server-side</text>
 
-  <path d="M 305 213 L 390 213" class="line" />
+  <path d="M 275 206 L 370 206" class="line" />
 
-  <rect x="735" y="145" width="210" height="82" class="service" />
-  <text x="840" y="177" text-anchor="middle" class="label">AI Runtime</text>
-  <text x="840" y="203" text-anchor="middle" class="small">provider routing, fallback</text>
+  <rect x="715" y="130" width="210" height="82" class="safe" />
+  <text x="820" y="162" text-anchor="middle" class="label">Microphone</text>
+  <text x="820" y="188" text-anchor="middle" class="small">local device input</text>
 
-  <rect x="980" y="145" width="190" height="82" class="data" />
-  <text x="1075" y="177" text-anchor="middle" class="label">Memory</text>
-  <text x="1075" y="203" text-anchor="middle" class="small">local SQLite context</text>
+  <rect x="980" y="130" width="210" height="82" class="safe" />
+  <text x="1085" y="162" text-anchor="middle" class="label">Wake Engine</text>
+  <text x="1085" y="188" text-anchor="middle" class="small">OpenWakeWord boundary</text>
 
-  <rect x="735" y="260" width="210" height="82" class="service" />
-  <text x="840" y="292" text-anchor="middle" class="label">Context</text>
-  <text x="840" y="318" text-anchor="middle" class="small">daily briefing, proactive</text>
+  <rect x="980" y="245" width="210" height="82" class="data" />
+  <text x="1085" y="277" text-anchor="middle" class="label">Model File</text>
+  <text x="1085" y="303" text-anchor="middle" class="small">models/wake, not in Git</text>
 
-  <rect x="980" y="260" width="190" height="82" class="service" />
-  <text x="1075" y="292" text-anchor="middle" class="label">Presence</text>
-  <text x="1075" y="318" text-anchor="middle" class="small">wake, voice lifecycle</text>
+  <rect x="715" y="245" width="210" height="82" class="warn" />
+  <text x="820" y="277" text-anchor="middle" class="label">Wake Guard</text>
+  <text x="820" y="303" text-anchor="middle" class="small">sensitivity and cooldown</text>
 
-  <path d="M 640 203 L 735 186" class="muted" />
-  <path d="M 640 213 L 980 186" class="muted" />
-  <path d="M 640 225 L 735 301" class="muted" />
-  <path d="M 640 235 L 980 301" class="muted" />
+  <path d="M 925 171 L 980 171" class="green" />
+  <path d="M 1085 212 L 1085 245" class="green" />
+  <path d="M 980 286 L 925 286" class="green" />
+  <path d="M 715 286 L 620 224" class="green" />
 
-  <rect x="70" y="365" width="220" height="82" class="service" />
-  <text x="180" y="397" text-anchor="middle" class="label">Weather</text>
-  <text x="180" y="423" text-anchor="middle" class="small">Open-Meteo via backend</text>
+  <rect x="55" y="345" width="220" height="82" class="service" />
+  <text x="165" y="377" text-anchor="middle" class="label">Presence Engine</text>
+  <text x="165" y="403" text-anchor="middle" class="small">idle, wake, listen, speak</text>
 
-  <rect x="330" y="365" width="220" height="82" class="service" />
-  <text x="440" y="397" text-anchor="middle" class="label">Calendar</text>
-  <text x="440" y="423" text-anchor="middle" class="small">Google read-only events</text>
+  <rect x="370" y="345" width="250" height="82" class="service" />
+  <text x="495" y="377" text-anchor="middle" class="label">SSE Events</text>
+  <text x="495" y="403" text-anchor="middle" class="small">frontend subscribes</text>
 
-  <rect x="590" y="365" width="220" height="82" class="service" />
-  <text x="700" y="397" text-anchor="middle" class="label">Spotify</text>
-  <text x="700" y="423" text-anchor="middle" class="small">OAuth, playback controls</text>
+  <rect x="715" y="365" width="210" height="82" class="service" />
+  <text x="820" y="397" text-anchor="middle" class="label">Voice Pipeline</text>
+  <text x="820" y="423" text-anchor="middle" class="small">browser STT and TTS today</text>
 
-  <rect x="850" y="365" width="320" height="82" class="safe" />
-  <text x="1010" y="397" text-anchor="middle" class="label">Smart Home Layer</text>
-  <text x="1010" y="423" text-anchor="middle" class="small">discovery, safety, normalized entities</text>
+  <rect x="980" y="365" width="210" height="82" class="service" />
+  <text x="1085" y="397" text-anchor="middle" class="label">Assistant Route</text>
+  <text x="1085" y="423" text-anchor="middle" class="small">deterministic handlers first</text>
 
-  <path d="M 515 266 L 180 365" class="muted" />
-  <path d="M 515 266 L 440 365" class="muted" />
-  <path d="M 550 266 L 700 365" class="muted" />
-  <path d="M 600 266 L 1010 365" class="green" />
+  <path d="M 495 262 L 165 345" class="green" />
+  <path d="M 275 386 L 370 386" class="line" />
+  <path d="M 620 386 L 715 406" class="line" />
+  <path d="M 925 406 L 980 406" class="line" />
 
-  <rect x="70" y="530" width="235" height="82" class="safe" />
-  <text x="187" y="562" text-anchor="middle" class="label">Control API</text>
-  <text x="187" y="588" text-anchor="middle" class="small">lights, switches, scenes</text>
+  <rect x="55" y="520" width="210" height="82" class="service" />
+  <text x="160" y="552" text-anchor="middle" class="label">AI Runtime</text>
+  <text x="160" y="578" text-anchor="middle" class="small">stub, Ollama, OpenAI</text>
 
-  <rect x="350" y="530" width="235" height="82" class="safe" />
-  <text x="467" y="562" text-anchor="middle" class="label">Sensors</text>
-  <text x="467" y="588" text-anchor="middle" class="small">read-only state</text>
+  <rect x="310" y="520" width="210" height="82" class="data" />
+  <text x="415" y="552" text-anchor="middle" class="label">Memory</text>
+  <text x="415" y="578" text-anchor="middle" class="small">local SQLite</text>
 
-  <rect x="630" y="530" width="235" height="82" class="warn" />
-  <text x="747" y="562" text-anchor="middle" class="label">Blocked</text>
-  <text x="747" y="588" text-anchor="middle" class="small">locks, alarms, cameras, garage</text>
+  <rect x="565" y="520" width="210" height="82" class="service" />
+  <text x="670" y="552" text-anchor="middle" class="label">Context</text>
+  <text x="670" y="578" text-anchor="middle" class="small">daily briefing</text>
 
-  <rect x="920" y="520" width="250" height="102" class="safe" />
-  <text x="1045" y="553" text-anchor="middle" class="label">Home Assistant</text>
-  <text x="1045" y="579" text-anchor="middle" class="small">local provider API</text>
-  <text x="1045" y="601" text-anchor="middle" class="small">token stays backend-only</text>
+  <rect x="820" y="520" width="170" height="82" class="service" />
+  <text x="905" y="552" text-anchor="middle" class="label">Calendar</text>
+  <text x="905" y="578" text-anchor="middle" class="small">Google read-only</text>
 
-  <path d="M 980 447 L 187 530" class="green" />
-  <path d="M 1010 447 L 467 530" class="green" />
-  <path d="M 1035 447 L 747 530" class="dash" />
-  <path d="M 1050 447 L 1045 520" class="green" />
+  <rect x="1020" y="520" width="170" height="82" class="service" />
+  <text x="1105" y="552" text-anchor="middle" class="label">Spotify</text>
+  <text x="1105" y="578" text-anchor="middle" class="small">OAuth, playback</text>
 
-  <rect x="70" y="690" width="235" height="82" class="warn" />
-  <text x="187" y="722" text-anchor="middle" class="label">Docker + systemd</text>
-  <text x="187" y="748" text-anchor="middle" class="small">startup and restart policy</text>
+  <path d="M 1085 447 L 160 520" class="muted" />
+  <path d="M 1085 447 L 415 520" class="muted" />
+  <path d="M 1085 447 L 670 520" class="muted" />
+  <path d="M 1085 447 L 905 520" class="muted" />
+  <path d="M 1085 447 L 1105 520" class="muted" />
 
-  <rect x="390" y="690" width="235" height="82" class="safe" />
-  <text x="507" y="722" text-anchor="middle" class="label">Health</text>
-  <text x="507" y="748" text-anchor="middle" class="small">/api/health/full checks</text>
+  <rect x="55" y="690" width="210" height="82" class="safe" />
+  <text x="160" y="722" text-anchor="middle" class="label">Smart Home</text>
+  <text x="160" y="748" text-anchor="middle" class="small">safe Home Assistant layer</text>
 
-  <rect x="710" y="690" width="210" height="82" class="data" />
-  <text x="815" y="722" text-anchor="middle" class="label">Data</text>
-  <text x="815" y="748" text-anchor="middle" class="small">SQLite, backups</text>
+  <rect x="310" y="690" width="210" height="82" class="safe" />
+  <text x="415" y="722" text-anchor="middle" class="label">Health</text>
+  <text x="415" y="748" text-anchor="middle" class="small">wake engine included</text>
 
-  <rect x="980" y="690" width="190" height="82" class="warn" />
-  <text x="1075" y="722" text-anchor="middle" class="label">Logs</text>
-  <text x="1075" y="748" text-anchor="middle" class="small">structured, no secrets</text>
+  <rect x="565" y="690" width="210" height="82" class="data" />
+  <text x="670" y="722" text-anchor="middle" class="label">Data</text>
+  <text x="670" y="748" text-anchor="middle" class="small">SQLite, backups</text>
 
-  <path d="M 515 266 L 187 690" class="gold" />
-  <path d="M 515 266 L 507 690" class="green" />
-  <path d="M 515 266 L 815 690" class="muted" />
-  <path d="M 515 266 L 1075 690" class="gold" />
+  <rect x="820" y="690" width="170" height="82" class="warn" />
+  <text x="905" y="722" text-anchor="middle" class="label">Logs</text>
+  <text x="905" y="748" text-anchor="middle" class="small">no raw audio</text>
+
+  <rect x="1020" y="690" width="170" height="82" class="warn" />
+  <text x="1105" y="722" text-anchor="middle" class="label">Docker</text>
+  <text x="1105" y="748" text-anchor="middle" class="small">audio setup is host-specific</text>
+
+  <path d="M 495 262 L 160 690" class="muted" />
+  <path d="M 495 262 L 415 690" class="green" />
+  <path d="M 495 262 L 670 690" class="muted" />
+  <path d="M 495 262 L 905 690" class="gold" />
+  <path d="M 495 262 L 1105 690" class="gold" />
 </svg>

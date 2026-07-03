@@ -29,11 +29,35 @@ Use this when diagnosing issues. It reports:
 - AI runtime
 - provider configuration
 - presence engine
+- wake engine
 - weather
 - Calendar
 - Spotify
 
 The full endpoint does not expose API keys, OAuth tokens, or memory contents.
+
+## Check Wake Engine
+
+```bash
+curl http://127.0.0.1:8000/api/wake-word/status
+```
+
+Expected default:
+
+- `enabled` is `false`
+- `status` is `disabled`
+- `provider` is `openwakeword`
+
+If the engine is enabled, check:
+
+- `configured`
+- `running`
+- `model_configured`
+- `microphone_configured`
+- `error_message`
+
+Disabled wake engine is not a backend failure. Enabled but unconfigured means
+hands-free wake word is not ready on that machine.
 
 ## View Logs
 
@@ -112,6 +136,12 @@ AI runtime:
 ```bash
 curl http://127.0.0.1:8000/api/ai/runtime/status
 curl http://127.0.0.1:8000/api/ai/providers
+```
+
+Wake engine:
+
+```bash
+curl http://127.0.0.1:8000/api/wake-word/status
 ```
 
 ## Maintenance Schedule

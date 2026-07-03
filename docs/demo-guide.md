@@ -53,8 +53,9 @@ screen falls back cleanly instead of breaking the mirror interface.
 Say:
 
 ```text
-The assistant has a provider boundary and runtime. It can run with the stub provider, Ollama,
-or an OpenAI-compatible provider. Voice is push-to-talk in the browser for now,
+The assistant has a provider boundary and runtime. It can run with the stub
+provider, Ollama, or an OpenAI-compatible provider. Voice is push-to-talk in the
+browser today, with a local wake engine boundary prepared for hardware testing,
 and responses can be spoken with browser text-to-speech.
 ```
 
@@ -93,7 +94,8 @@ next work is refinement, hardware testing, and stronger privacy controls.
 - Use `Good morning` to show the proactive assistant path.
 - If Spotify or Google Calendar is not connected, say that those integrations are
   wired but not authenticated in this local demo.
-- Do not claim wake word, smart home, vision, or physical hardware is complete.
+- Do not claim hands-free wake word, real smart home hardware, vision, or
+  physical mirror installation is complete.
 
 ## Suggested Video Title
 

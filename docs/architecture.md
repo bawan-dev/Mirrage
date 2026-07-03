@@ -34,6 +34,8 @@ Backend API
   |
   +-- Smart Home Layer
   |
+  +-- Local Wake Engine
+  |
   +-- Voice Service
   |
   +-- Health, Logging, Backup, Startup Validation
@@ -133,6 +135,8 @@ The backend validates key settings during startup:
 - backup directory
 - weather coordinates
 - wake-word sensitivity
+- wake engine provider, sensitivity, model path, sample rate, frame size, and
+  cooldown
 - presence timeout
 - AI provider names
 - production CORS wildcard usage
@@ -151,6 +155,7 @@ Its job:
 - return health and system status
 - receive assistant messages
 - report voice status
+- own the local wake engine lifecycle and wake detection cooldowns
 - handle Google Calendar OAuth and Calendar API calls
 - handle Spotify OAuth and Spotify Web API calls
 - handle Home Assistant discovery and safe smart home actions
@@ -525,13 +530,16 @@ This is documented in [command-routing.md](command-routing.md).
 
 ## Wake Word And Presence Boundary
 
-Voice is split into a backend-owned lifecycle and browser-owned speech capture.
+Voice is split into a backend-owned lifecycle, a backend-owned local wake engine
+boundary, and browser-owned speech capture.
 
 The backend now owns:
 
 - global assistant lifecycle state
 - presence settings
 - wake-word detection adapter endpoint
+- local wake engine status, start/stop lifecycle, model path validation, and
+  cooldown suppression
 - Server-Sent Events for frontend subscriptions
 - voice pipeline stage transitions
 
@@ -542,8 +550,11 @@ Mode and starts the existing browser speech-recognition path.
 Current production-shaped flow:
 
 ```text
-local wake engine
-  -> POST /api/wake-word/detect
+microphone
+  -> local wake engine
+  -> local model file
+  -> WakeEngineService
+  -> WakeWordService / cooldown check
   -> AssistantStateManager
   -> GET /api/presence/events stream
   -> frontend Conversation Mode
@@ -553,12 +564,16 @@ local wake engine
   -> returning_to_idle
 ```
 
-The repo does not include a trained `Hey Mirrage` wake-word model asset yet. A
-local engine such as OpenWakeWord or Porcupine still needs to be installed and
-tested on the target machine.
+OpenWakeWord is the first implemented provider boundary. Porcupine remains a
+possible future provider behind the same interface.
+
+The repo does not include a trained or hardware-tested `Hey Mirrage` wake-word
+model asset yet. A real model, microphone device, and false activation test
+still need to be completed on the target machine.
 
 The current voice plan is tracked in [voice.md](voice.md) and
-[wake-word-presence.md](wake-word-presence.md).
+[wake-word-presence.md](wake-word-presence.md). Wake engine setup is documented
+in [wake-engine.md](wake-engine.md) and [openwakeword.md](openwakeword.md).
 
 ## Hardware Boundary
 
@@ -585,7 +600,7 @@ operator or Docker health check
 ```
 
 The full health check reports backend, environment, memory, AI runtime,
-providers, presence, weather, Calendar, Spotify, and smart home. It does not
+providers, presence, wake engine, weather, Calendar, Spotify, and smart home. It does not
 expose secrets, OAuth tokens, Home Assistant tokens, transcripts, assistant
 replies, or memory values.
 

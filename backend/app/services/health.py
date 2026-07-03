@@ -13,6 +13,7 @@ from backend.app.services.presence import assistant_state_manager
 from backend.app.services.smart_home import smart_home_service
 from backend.app.services.spotify import get_spotify_status
 from backend.app.services.startup import validate_environment
+from backend.app.services.wake_engine import wake_engine_service
 from backend.app.services.weather import get_weather
 
 
@@ -31,6 +32,7 @@ def full_health() -> HealthResponse:
         _ai_runtime_check(),
         _provider_check(),
         _presence_check(),
+        _wake_engine_check(),
         _smart_home_check(),
         _weather_check(),
         _calendar_check(),
@@ -142,6 +144,42 @@ def _presence_check() -> HealthComponentResponse:
             "state": snapshot.state,
             "wake_word_enabled": snapshot.wake_word_enabled,
             "wake_word_engine": snapshot.wake_word_engine,
+        },
+    )
+
+
+def _wake_engine_check() -> HealthComponentResponse:
+    status = wake_engine_service.status()
+
+    if not status.enabled:
+        check_status = "ok"
+    elif status.running:
+        check_status = "ok"
+    elif status.configured:
+        check_status = "warning"
+    else:
+        check_status = "unavailable"
+
+    return HealthComponentResponse(
+        name="wake_engine",
+        status=check_status,
+        message=status.message,
+        details={
+            "enabled": status.enabled,
+            "configured": status.configured,
+            "provider": status.provider,
+            "status": status.status,
+            "running": status.running,
+            "phrase": status.phrase,
+            "sensitivity": status.sensitivity,
+            "microphone_configured": status.microphone_configured,
+            "model_configured": status.model_configured,
+            "sample_rate": status.sample_rate,
+            "frame_ms": status.frame_ms,
+            "cooldown_seconds": status.cooldown_seconds,
+            "last_detection_time": status.last_detection_time,
+            "last_detection_latency_ms": status.last_detection_latency_ms,
+            "error_message": status.error_message,
         },
     )
 

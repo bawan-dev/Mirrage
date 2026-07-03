@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.logging_config import configure_logging
 from backend.app.routes import router
 from backend.app.services.startup import run_startup_validation
+from backend.app.services.wake_engine import wake_engine_service
 from backend.app.settings import settings
 
 
@@ -16,7 +17,11 @@ from backend.app.settings import settings
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     configure_logging()
     run_startup_validation()
-    yield
+    wake_engine_service.start()
+    try:
+        yield
+    finally:
+        wake_engine_service.stop()
 
 
 app = FastAPI(

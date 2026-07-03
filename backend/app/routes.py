@@ -33,6 +33,8 @@ from backend.app.schemas import (
     SpotifyActionResponse,
     SpotifyPlaybackResponse,
     SpotifyStatusResponse,
+    WakeEngineActionResponse,
+    WakeEngineStatusResponse,
     WakeWordDetectionRequest,
     WeatherResponse,
 )
@@ -75,6 +77,7 @@ from backend.app.services.spotify import (
 from backend.app.services.system import get_system_status
 from backend.app.services.voice import get_voice_status
 from backend.app.services.voice_pipeline import voice_pipeline
+from backend.app.services.wake_engine import wake_engine_service
 from backend.app.services.wake_word import wake_word_service
 from backend.app.services.weather import get_weather
 from backend.app.settings import settings
@@ -170,10 +173,25 @@ def create_presence_transition(
 
 @router.post("/api/wake-word/detect")
 def detect_wake_word(request: WakeWordDetectionRequest) -> PresenceSnapshot:
-    matched, message = wake_word_service.handle_detection(request)
-    if not matched:
-        raise HTTPException(status_code=400, detail=message)
+    result = wake_word_service.handle_detection(request)
+    if not result.accepted:
+        raise HTTPException(status_code=result.status_code, detail=result.message)
     return assistant_state_manager.snapshot()
+
+
+@router.get("/api/wake-word/status")
+def read_wake_word_status() -> WakeEngineStatusResponse:
+    return wake_engine_service.status()
+
+
+@router.post("/api/wake-word/start")
+def start_wake_word_engine() -> WakeEngineActionResponse:
+    return wake_engine_service.start()
+
+
+@router.post("/api/wake-word/stop")
+def stop_wake_word_engine() -> WakeEngineActionResponse:
+    return wake_engine_service.stop()
 
 
 @router.get("/api/info/weather")

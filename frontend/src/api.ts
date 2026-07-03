@@ -17,6 +17,7 @@ import type {
   SpotifyStatus,
   SystemStatus,
   VoiceStatus,
+  WakeEngineStatus,
   WeatherInfo,
 } from './types';
 
@@ -61,6 +62,10 @@ export function getPresenceStatus(): Promise<PresenceSnapshot> {
 
 export function getPresenceSettings(): Promise<PresenceSettings> {
   return fetchJson<PresenceSettings>('/api/presence/settings');
+}
+
+export function getWakeEngineStatus(): Promise<WakeEngineStatus> {
+  return fetchJson<WakeEngineStatus>('/api/wake-word/status');
 }
 
 export function getPresenceEventsUrl(): string {

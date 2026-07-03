@@ -84,6 +84,33 @@ class WakeWordDetectionRequest(BaseModel):
     engine: str | None = Field(default=None, max_length=120)
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     source: str = Field(default="wake_word_engine", max_length=120)
+    detection_timestamp: str | None = Field(default=None, max_length=80)
+
+
+class WakeEngineStatusResponse(BaseModel):
+    enabled: bool
+    configured: bool
+    provider: str
+    phrase: str
+    sensitivity: float
+    microphone_device: str | None
+    microphone_configured: bool
+    model_configured: bool
+    running: bool
+    status: str
+    sample_rate: int
+    frame_ms: int
+    cooldown_seconds: float
+    last_detection_time: str | None
+    last_detection_latency_ms: float | None
+    error_message: str | None
+    message: str
+
+
+class WakeEngineActionResponse(BaseModel):
+    status: str
+    message: str
+    running: bool
 
 
 class HealthComponentResponse(BaseModel):

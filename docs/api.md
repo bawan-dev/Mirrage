@@ -96,7 +96,7 @@ Returns subsystem health for operations and troubleshooting.
 ### Notes
 
 Full health includes backend, environment, memory, AI runtime, providers,
-presence, weather, Calendar, Spotify, and smart home. Optional integration
+presence, wake engine, weather, Calendar, Spotify, and smart home. Optional integration
 issues return `warning` and make the top-level status `degraded`; they do not
 mean the backend is down.
 
@@ -138,6 +138,8 @@ Returns the current voice layer state.
   "wake_phrase": "Hey Mirrage",
   "wake_word_engine": "adapter",
   "wake_word_mode": "local_adapter",
+  "local_wake_engine": "disabled",
+  "local_wake_engine_provider": "openwakeword",
   "sensitivity": 0.55,
   "microphone_device": null,
   "presence_state": "idle",
@@ -224,6 +226,54 @@ Wake-word adapter endpoint for a local engine.
 
 Raw wake-word audio should stay inside the local wake engine. Mirrage receives
 only the detection event.
+
+Repeated detections inside the configured cooldown window can return `429` so a
+local model cannot spam presence events.
+
+## `GET /api/wake-word/status`
+
+Returns safe local wake engine state.
+
+### Example Response
+
+```json
+{
+  "enabled": false,
+  "configured": false,
+  "provider": "openwakeword",
+  "phrase": "Hey Mirrage",
+  "sensitivity": 0.5,
+  "microphone_device": null,
+  "microphone_configured": false,
+  "model_configured": false,
+  "running": false,
+  "status": "disabled",
+  "sample_rate": 16000,
+  "frame_ms": 80,
+  "cooldown_seconds": 3.0,
+  "last_detection_time": null,
+  "last_detection_latency_ms": null,
+  "error_message": null,
+  "message": "Local wake engine is disabled. Push-to-talk and adapter detection still work."
+}
+```
+
+The response does not expose raw audio, secrets, or the model file path.
+
+## `POST /api/wake-word/start`
+
+Starts the local wake engine when enabled and configured.
+
+If the engine is disabled, missing a model file, or missing optional audio
+packages, the backend stays online and returns a clear status instead of
+crashing.
+
+## `POST /api/wake-word/stop`
+
+Stops the local wake engine background worker.
+
+More detail: [wake-engine.md](wake-engine.md) and
+[openwakeword.md](openwakeword.md).
 
 ## `GET /api/info/weather`
 
