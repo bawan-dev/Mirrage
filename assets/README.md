@@ -14,6 +14,7 @@ Expected portfolio screenshots:
 | `screenshots/calendar-focus.png` | Calendar focus view |
 | `screenshots/context-focus.png` | Daily context focus view |
 | `screenshots/media-focus.png` | Media focus view |
+| `screenshots/smart-home-focus.png` | Smart Home focus view |
 
 If automated capture is not available, run Mirror Mode locally and capture each
 view manually at a wide desktop size. Do not use concept images as product

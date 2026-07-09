@@ -17,9 +17,14 @@ Mirrage uses `.env` for local and production configuration. Start from
 | Variable | Purpose |
 | --- | --- |
 | `VITE_API_BASE_URL` | Backend URL baked into the frontend build |
+| `VITE_MIRRAGE_DEMO_MODE` | Enables explicit fake frontend demo data for screenshots and walkthroughs |
 | `VITE_MIRROR_MODE` | Enables wall-display mode |
 | `VITE_MIRROR_DIM_TIMEOUT_SECONDS` | Dimming delay |
 | `VITE_MIRROR_SLEEP_TIMEOUT_SECONDS` | Sleep/return-home delay |
+
+Keep `VITE_MIRRAGE_DEMO_MODE=false` for normal development and production-style
+testing. Turn it on only when you want stable portfolio demo data without
+connecting real accounts.
 
 ## Logging
 

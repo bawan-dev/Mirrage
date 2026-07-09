@@ -90,16 +90,23 @@ same React app
 Mirror Mode owns:
 
 - ambient home layout
+- v1 premium visual polish with sparse typography and minimal visible chrome
 - startup service check overlay
 - inactivity dimming and return-to-home behavior
 - small burn-in movement for static UI elements
-- assistant orb presentation states
+- assistant presence presentation states for idle, wake, listening, processing,
+  speaking, returning, sleeping, and error
+- explicit demo-mode presentation data when `VITE_MIRRAGE_DEMO_MODE=true`
 
 The backend still owns health, weather, Calendar, Spotify, memory, and context
 data. Mirror Mode only changes how that state is presented.
 
 The current dimming behavior is a visual overlay. It does not control monitor
 brightness or operating system power settings.
+
+Demo mode is a frontend-only showcase path. It is useful for screenshots and
+portfolio walkthroughs, but it is not production data and should be disabled when
+testing real backend providers.
 
 ## Production Deployment Boundary
 

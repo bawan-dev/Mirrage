@@ -611,6 +611,33 @@ component choices, assembly order, software deployment on the device,
 maintenance, cost ranges, and real-world test gates. The physical mirror itself
 is still pending until parts are purchased and tested.
 
+## Phase 37: Mirrage v1 Final Release And Premium Polish
+
+Goal: prepare Mirrage v1.0.0 as the first complete portfolio release.
+
+- [x] Polish Mirror Mode around sparse typography, calm spacing, and lightweight
+  motion
+- [x] Improve assistant idle, wake, listening, processing, speaking, returning,
+  sleeping, and error presentation
+- [x] Add an explicit frontend demo mode for screenshots and walkthroughs
+- [x] Keep demo data separate from production behavior
+- [x] Hide technical presence setup details from Mirror Mode while keeping them
+  available in normal development mode
+- [x] Refresh mirror home, assistant, weather, calendar, context, media, and
+  smart-home screenshots
+- [x] Update README for v1 release readiness
+- [x] Add release, showcase, and demo-script docs
+- [x] Document v1 limitations honestly
+- [x] Document suggested `v1.0.0` tag commands
+- [ ] Confirm GitHub Actions is green after the final push
+- [ ] Create and push the `v1.0.0` tag
+
+Done when:
+
+Mirrage has a complete v1 software release package: premium mirror UI,
+screenshots, demo path, release checklist, honest limitations, and passing local
+checks. Physical hardware validation remains the next real-world milestone.
+
 ## Future: Voice Interaction
 
 - [ ] Hardware-tested local trained wake model
@@ -691,7 +718,6 @@ is still pending until parts are purchased and tested.
 
 ## Current Focus
 
-Phase 36 is the current milestone. Current focus is buying/testing mirror
-material samples, validating display brightness, running heat tests, and testing
-the wake engine and microphone on target hardware before building the permanent
-frame.
+Phase 37 is the current milestone. Current focus is final review, pushing the
+v1 polish commit, confirming CI, tagging `v1.0.0`, and then moving back to target
+hardware validation for the first physical mirror build.

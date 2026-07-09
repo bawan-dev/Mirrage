@@ -76,8 +76,12 @@ MIRRAGE_APP_ENV=production
 MIRRAGE_FRONTEND_URL=http://127.0.0.1:5173
 MIRRAGE_ALLOWED_ORIGINS=["http://127.0.0.1:5173"]
 VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_MIRRAGE_DEMO_MODE=false
 VITE_MIRROR_MODE=true
 ```
+
+Keep `VITE_MIRRAGE_DEMO_MODE=false` for the installed mirror. It is only for
+portfolio screenshots and local walkthroughs.
 
 Add Spotify, Calendar, Ollama, or OpenAI-compatible settings only if those
 features are being used.

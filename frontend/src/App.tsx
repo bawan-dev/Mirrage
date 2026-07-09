@@ -40,7 +40,26 @@ import {
   type AssistantCommandRoute,
   type AssistantUiAction,
 } from './intentRouting';
-import { mirrorModeConfig, wakeWordConfig } from './config';
+import { demoModeConfig, mirrorModeConfig, wakeWordConfig } from './config';
+import {
+  demoCalendarStatus,
+  demoCalendarToday,
+  demoCalendarUpcoming,
+  demoDailyContext,
+  demoHealthStatus,
+  demoPresenceSettings,
+  demoPresenceSnapshot,
+  demoProactiveSummary,
+  demoSmartHomeEntities,
+  demoSmartHomeSensors,
+  demoSmartHomeStatus,
+  demoSpotifyPlayback,
+  demoSpotifyStatus,
+  demoSystemStatus,
+  demoVoiceStatus,
+  demoWakeEngineStatus,
+  demoWeather,
+} from './demoData';
 import type {
   AssistantReply,
   CalendarEvent,
@@ -420,6 +439,7 @@ export default function App() {
   const inactivityDimTimerRef = useRef<number | null>(null);
   const inactivitySleepTimerRef = useRef<number | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
+  const isDemoMode = demoModeConfig.enabled;
   const isMirrorMode = mirrorModeConfig.enabled;
   const [mirrorInactivityLevel, setMirrorInactivityLevel] =
     useState<MirrorInactivityLevel>('active');
@@ -521,6 +541,39 @@ export default function App() {
     },
   ]);
 
+  const reportPresenceTransition = useCallback(
+    async (transition: PresenceTransition) => {
+      if (isDemoMode) {
+        setPresenceSnapshot((current) => ({
+          ...demoPresenceSnapshot,
+          ...current,
+          ...transition,
+          event: transition.event ?? 'demo_presence_transition',
+          message: transition.message ?? 'Demo presence transition.',
+          previous_state: current?.state ?? demoPresenceSnapshot.state,
+          sequence: (current?.sequence ?? demoPresenceSnapshot.sequence) + 1,
+          source: transition.source ?? 'demo',
+          state: transition.state,
+          updated_at: new Date().toISOString(),
+        }));
+        setPresenceError(null);
+        return;
+      }
+
+      try {
+        const snapshot = await sendPresenceTransition({
+          source: 'frontend',
+          ...transition,
+        });
+        setPresenceSnapshot(snapshot);
+        setPresenceError(null);
+      } catch {
+        setPresenceError('Presence service unavailable');
+      }
+    },
+    [isDemoMode],
+  );
+
   const clearMirrorInactivityTimers = useCallback(() => {
     if (inactivityDimTimerRef.current !== null) {
       window.clearTimeout(inactivityDimTimerRef.current);
@@ -554,7 +607,7 @@ export default function App() {
         message: 'Mirror is sleeping after inactivity.',
       });
     }, mirrorModeConfig.sleepTimeoutMs);
-  }, [clearMirrorInactivityTimers, isMirrorMode]);
+  }, [clearMirrorInactivityTimers, isMirrorMode, reportPresenceTransition]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -762,6 +815,15 @@ export default function App() {
     let isActive = true;
 
     async function loadBackendStatus() {
+      if (isDemoMode) {
+        setHealthStatus(demoHealthStatus);
+        setSystemStatus(demoSystemStatus);
+        setVoiceStatus(demoVoiceStatus);
+        setWeather(demoWeather);
+        setBackendState({ error: null, isLoading: false });
+        return;
+      }
+
       try {
         const [health, system, voice, currentWeather] = await Promise.all([
           getHealthStatus(),
@@ -796,12 +858,21 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadPresence() {
+      if (isDemoMode) {
+        setPresenceSnapshot(demoPresenceSnapshot);
+        setPresenceSettings(demoPresenceSettings);
+        setWakeEngineStatus(demoWakeEngineStatus);
+        setPresenceConnected(true);
+        setPresenceError(null);
+        return;
+      }
+
       try {
         const [snapshot, settings, wakeEngine] = await Promise.all([
           getPresenceStatus(),
@@ -828,6 +899,12 @@ export default function App() {
 
     loadPresence();
 
+    if (isDemoMode) {
+      return () => {
+        isActive = false;
+      };
+    }
+
     const events = new EventSource(getPresenceEventsUrl());
 
     events.addEventListener('presence', (event) => {
@@ -853,12 +930,23 @@ export default function App() {
       isActive = false;
       events.close();
     };
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadSpotify() {
+      if (isDemoMode) {
+        setSpotifyStatus(demoSpotifyStatus);
+        setSpotifyPlayback(demoSpotifyPlayback);
+        setSpotifyState({
+          actionMessage: null,
+          error: null,
+          isLoading: false,
+        });
+        return;
+      }
+
       try {
         const [status, playback] = await Promise.all([
           getSpotifyStatus(),
@@ -894,12 +982,23 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadCalendar() {
+      if (isDemoMode) {
+        setCalendarStatus(demoCalendarStatus);
+        setCalendarToday(demoCalendarToday);
+        setCalendarUpcoming(demoCalendarUpcoming);
+        setCalendarState({
+          error: null,
+          isLoading: false,
+        });
+        return;
+      }
+
       try {
         const [status, today, upcoming] = await Promise.all([
           getCalendarStatus(),
@@ -935,12 +1034,21 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadContext() {
+      if (isDemoMode) {
+        setDailyContext(demoDailyContext);
+        setContextState({
+          error: null,
+          isLoading: false,
+        });
+        return;
+      }
+
       try {
         const context = await getDailyContext();
 
@@ -970,12 +1078,21 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadProactiveSummary() {
+      if (isDemoMode) {
+        setProactiveSummary(demoProactiveSummary);
+        setProactiveState({
+          error: null,
+          isLoading: false,
+        });
+        return;
+      }
+
       try {
         const summary = await getProactiveSummary();
 
@@ -1005,12 +1122,24 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadSmartHome() {
+      if (isDemoMode) {
+        setSmartHomeStatus(demoSmartHomeStatus);
+        setSmartHomeEntities(demoSmartHomeEntities);
+        setSmartHomeSensors(demoSmartHomeSensors);
+        setSmartHomeState({
+          actionMessage: null,
+          error: null,
+          isLoading: false,
+        });
+        return;
+      }
+
       try {
         const [status, entities, sensors] = await Promise.all([
           getSmartHomeStatus(),
@@ -1048,7 +1177,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [isDemoMode]);
 
   const currentTime = useMemo(
     () =>
@@ -1314,19 +1443,6 @@ export default function App() {
     }
   }
 
-  async function reportPresenceTransition(transition: PresenceTransition) {
-    try {
-      const snapshot = await sendPresenceTransition({
-        source: 'frontend',
-        ...transition,
-      });
-      setPresenceSnapshot(snapshot);
-      setPresenceError(null);
-    } catch {
-      setPresenceError('Presence service unavailable');
-    }
-  }
-
   async function handleAssistantCommand(
     message: string,
     source: 'typed' | 'voice',
@@ -1354,10 +1470,21 @@ export default function App() {
       setAssistantBusy(true);
 
       try {
-        const [context, result] = await Promise.all([
-          getDailyContext(),
-          sendAssistantMessage(message),
-        ]);
+        const [context, result] = isDemoMode
+          ? await Promise.resolve([
+              demoDailyContext,
+              {
+                context_action: 'daily',
+                model: null,
+                provider: 'demo',
+                reply:
+                  'Daily briefing: weather is calm, calendar has two focused blocks, and the best next step is finishing Mirrage v1 polish.',
+              } satisfies AssistantReply,
+            ])
+          : await Promise.all([
+              getDailyContext(),
+              sendAssistantMessage(message),
+            ]);
 
         setDailyContext(context);
         setContextState({
@@ -1408,11 +1535,17 @@ export default function App() {
       setAssistantBusy(true);
 
       try {
-        const [status, today, upcoming] = await Promise.all([
-          getCalendarStatus(),
-          getCalendarToday(),
-          getCalendarUpcoming(),
-        ]);
+        const [status, today, upcoming] = isDemoMode
+          ? await Promise.resolve([
+              demoCalendarStatus,
+              demoCalendarToday,
+              demoCalendarUpcoming,
+            ])
+          : await Promise.all([
+              getCalendarStatus(),
+              getCalendarToday(),
+              getCalendarUpcoming(),
+            ]);
         const response = summarizeCalendarToday(today, status);
 
         setCalendarStatus(status);
@@ -1503,6 +1636,25 @@ export default function App() {
         meta: source === 'voice' ? 'Voice transcript' : undefined,
       },
     ]);
+
+    if (isDemoMode) {
+      const demoReply =
+        'Demo response: Mirrage is ready to route this through the backend assistant runtime when demo mode is off.';
+
+      setAssistantProvider('demo');
+      setAssistantMessages((messages) => [
+        ...messages,
+        {
+          role: 'assistant',
+          text: demoReply,
+          meta: 'Demo provider',
+        },
+      ]);
+      speakText(demoReply);
+      setDraft('');
+      setAssistantBusy(false);
+      return;
+    }
 
     try {
       const result: AssistantReply = await sendAssistantMessage(message);
@@ -1792,6 +1944,17 @@ export default function App() {
   async function refreshSpotify() {
     registerMirrorActivity();
 
+    if (isDemoMode) {
+      setSpotifyStatus(demoSpotifyStatus);
+      setSpotifyPlayback(demoSpotifyPlayback);
+      setSpotifyState({
+        actionMessage: 'Demo playback refreshed.',
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
+
     setSpotifyState((current) => ({
       ...current,
       error: null,
@@ -1822,6 +1985,17 @@ export default function App() {
   async function refreshCalendar() {
     registerMirrorActivity();
 
+    if (isDemoMode) {
+      setCalendarStatus(demoCalendarStatus);
+      setCalendarToday(demoCalendarToday);
+      setCalendarUpcoming(demoCalendarUpcoming);
+      setCalendarState({
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
+
     setCalendarState({
       error: null,
       isLoading: true,
@@ -1851,6 +2025,15 @@ export default function App() {
   async function refreshContext() {
     registerMirrorActivity();
 
+    if (isDemoMode) {
+      setDailyContext(demoDailyContext);
+      setContextState({
+        error: null,
+        isLoading: false,
+      });
+      return demoDailyContext;
+    }
+
     setContextState({
       error: null,
       isLoading: true,
@@ -1875,6 +2058,18 @@ export default function App() {
 
   async function refreshSmartHome() {
     registerMirrorActivity();
+
+    if (isDemoMode) {
+      setSmartHomeStatus(demoSmartHomeStatus);
+      setSmartHomeEntities(demoSmartHomeEntities);
+      setSmartHomeSensors(demoSmartHomeSensors);
+      setSmartHomeState({
+        actionMessage: 'Demo smart home state refreshed.',
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
 
     setSmartHomeState((current) => ({
       ...current,
@@ -1912,6 +2107,15 @@ export default function App() {
   ) {
     registerMirrorActivity();
 
+    if (isDemoMode) {
+      setSmartHomeState({
+        actionMessage: `Demo ${entity.name} ${action === 'turn-on' ? 'turned on' : 'turned off'}.`,
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
+
     setSmartHomeState({
       actionMessage: null,
       error: null,
@@ -1938,6 +2142,15 @@ export default function App() {
 
   async function handleSmartHomeSceneActivate(entity: SmartHomeEntity) {
     registerMirrorActivity();
+
+    if (isDemoMode) {
+      setSmartHomeState({
+        actionMessage: `Demo scene ${entity.name} activated.`,
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
 
     setSmartHomeState({
       actionMessage: null,
@@ -1967,6 +2180,15 @@ export default function App() {
     action: 'play' | 'pause' | 'next' | 'previous',
   ) {
     registerMirrorActivity();
+
+    if (isDemoMode) {
+      setSpotifyState({
+        actionMessage: `Demo Spotify ${action} action handled.`,
+        error: null,
+        isLoading: false,
+      });
+      return;
+    }
 
     setSpotifyState((current) => ({
       ...current,
@@ -2014,17 +2236,13 @@ export default function App() {
         {isMirrorMode ? (
           <MirrorHomeState
             assistantOrbState={assistantOrbState}
-            backendLabel={backendLabel}
             burnInOffset={burnInOffset}
-            calendarSummary={calendarSummary}
             currentDate={currentDate}
             currentTime={currentTime}
             inactivityLevel={mirrorInactivityLevel}
             onOpen={openFocus}
-            presenceDetail={presenceDetail}
             proactiveNudge={proactiveNudge}
             proactiveSummary={proactiveSummary}
-            smartHomeSummary={smartHomeSummary}
             voiceLabel={voiceLabel}
             weather={weather}
             weatherSummary={weatherSummary}
@@ -2295,17 +2513,13 @@ function HomeState({
 
 interface MirrorHomeStateProps {
   assistantOrbState: AssistantOrbState;
-  backendLabel: string;
   burnInOffset: BurnInOffset;
-  calendarSummary: string;
   currentDate: string;
   currentTime: string;
   inactivityLevel: MirrorInactivityLevel;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
-  presenceDetail: string;
   proactiveNudge: string;
   proactiveSummary: ProactiveSummary | null;
-  smartHomeSummary: string;
   voiceLabel: string;
   weather: WeatherInfo | null;
   weatherSummary: string;
@@ -2313,17 +2527,13 @@ interface MirrorHomeStateProps {
 
 function MirrorHomeState({
   assistantOrbState,
-  backendLabel,
   burnInOffset,
-  calendarSummary,
   currentDate,
   currentTime,
   inactivityLevel,
   onOpen,
-  presenceDetail,
   proactiveNudge,
   proactiveSummary,
-  smartHomeSummary,
   voiceLabel,
   weather,
   weatherSummary,
@@ -2399,10 +2609,6 @@ function MirrorHomeState({
             {formatStatus(proactiveSummary.priority)}
           </span>
         )}
-        <span>{calendarSummary}</span>
-        <span>{smartHomeSummary}</span>
-        <span>{presenceDetail}</span>
-        <span>{backendLabel}</span>
       </div>
     </div>
   );
@@ -2820,6 +3026,29 @@ function AssistantFocus({
   const latestAssistantMessage = [...assistantMessages]
     .reverse()
     .find((message) => message.role === 'assistant');
+  const stateCopy: Record<AssistantOrbState, string> = {
+    error: 'Something needs attention.',
+    idle: 'Ready when you are.',
+    listening: 'Listening for your request.',
+    returning: 'Settling back into the mirror.',
+    sleeping: 'Mirror is resting.',
+    speaking: 'Speaking the response.',
+    thinking: 'Composing a response.',
+    wake: 'Wake phrase detected.',
+  };
+  const transcriptText =
+    voiceTranscript ||
+    voiceInterimTranscript ||
+    latestUserMessage?.text ||
+    'Say something when you are ready.';
+  const replyText = latestAssistantMessage?.text ?? 'Standing by.';
+  const transcriptLabel = voiceListening
+    ? 'Listening'
+    : assistantBusy
+      ? 'Processing'
+      : ttsSpeaking
+        ? 'Speaking'
+        : 'Transcript';
 
   return (
     <div
@@ -2840,21 +3069,28 @@ function AssistantFocus({
           <span>Mirrage</span>
           <strong>{formatStatus(assistantOrbState)}</strong>
         </button>
-        <div className="presence-wave" aria-hidden="true" />
+        <div
+          className={`assistant-presence-field assistant-presence-${assistantOrbState}`}
+          aria-hidden="true"
+        >
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+        <p className="assistant-state-copy">{stateCopy[assistantOrbState]}</p>
 
         <div className="ambient-transcript">
-          <p className={labelClass}>Transcript</p>
-          <p>
-            {voiceTranscript ||
-              voiceInterimTranscript ||
-              latestUserMessage?.text ||
-              'Say something when you are ready.'}
-          </p>
+          <p className={labelClass}>{transcriptLabel}</p>
+          <p>{transcriptText}</p>
         </div>
 
         <div className="ambient-reply">
           <p className={labelClass}>Mirrage</p>
-          <p>{latestAssistantMessage?.text ?? 'Standing by.'}</p>
+          <p>{replyText}</p>
           {latestAssistantMessage?.meta && (
             <span>{latestAssistantMessage.meta}</span>
           )}
@@ -2921,40 +3157,42 @@ function AssistantFocus({
         </select>
       </label>
 
-      <section
-        className="ambient-presence-settings"
-        aria-label="Presence settings"
-      >
-        <p className={labelClass}>Presence</p>
-        <p>{presenceDetail}</p>
-        <p>
-          Wake phrase:{' '}
-          <strong>{presenceSettings?.wake_phrase ?? 'Hey Mirrage'}</strong>
-        </p>
-        <p>
-          Engine:{' '}
-          <strong>{presenceSettings?.wake_word_engine ?? 'adapter'}</strong>
-          {wakeWordConfig.browserListenerEnabled
-            ? ' with experimental browser listener enabled'
-            : ' with local adapter expected'}
-        </p>
-        <p>
-          Local wake engine:{' '}
-          <strong>
-            {wakeEngineStatus
-              ? `${formatStatus(wakeEngineStatus.status)} / ${wakeEngineStatus.provider}`
-              : 'Checking'}
-          </strong>
-        </p>
-        <p>
-          Wake model:{' '}
-          <strong>
-            {wakeEngineStatus?.model_configured
-              ? 'Configured'
-              : 'Not configured'}
-          </strong>
-        </p>
-      </section>
+      {!isMirrorMode && (
+        <section
+          className="ambient-presence-settings"
+          aria-label="Presence settings"
+        >
+          <p className={labelClass}>Presence</p>
+          <p>{presenceDetail}</p>
+          <p>
+            Wake phrase:{' '}
+            <strong>{presenceSettings?.wake_phrase ?? 'Hey Mirrage'}</strong>
+          </p>
+          <p>
+            Engine:{' '}
+            <strong>{presenceSettings?.wake_word_engine ?? 'adapter'}</strong>
+            {wakeWordConfig.browserListenerEnabled
+              ? ' with experimental browser listener enabled'
+              : ' with local adapter expected'}
+          </p>
+          <p>
+            Local wake engine:{' '}
+            <strong>
+              {wakeEngineStatus
+                ? `${formatStatus(wakeEngineStatus.status)} / ${wakeEngineStatus.provider}`
+                : 'Checking'}
+            </strong>
+          </p>
+          <p>
+            Wake model:{' '}
+            <strong>
+              {wakeEngineStatus?.model_configured
+                ? 'Configured'
+                : 'Not configured'}
+            </strong>
+          </p>
+        </section>
+      )}
 
       <p className="ambient-assistant-status">
         {presenceError ??

@@ -9,6 +9,16 @@ frontend, a FastAPI backend, provider-based AI routing, live information
 endpoints, Docker deployment, CI, and a documented hardware path for the first
 physical build.
 
+## v1 Release Status
+
+Mirrage v1.0.0 is prepared as the first complete portfolio release. The release
+focus is the full-stack foundation, ambient mirror experience, demo readiness,
+deployment path, and honest hardware plan.
+
+v1 does not claim the physical mirror is assembled yet. It also does not claim a
+trained wake-word model, real smart-home devices, Spotify, Calendar, or local AI
+are available unless those providers are configured on the machine running it.
+
 ## Product Direction
 
 The long-term version is not a cluttered dashboard. The goal is an assistant that stays quiet until it is needed:
@@ -26,6 +36,8 @@ Planned direction:
 - local-first AI support where possible
 - push-to-talk voice interaction first, with local wake-word runtime support
   being prepared before backend/local speech engines
+- explicit demo mode for portfolio screenshots and walkthroughs without mixing
+  fake data into production mode
 - physical mirror build planned around tested display, mirror material, audio,
   microphone, heat, cable routing, and maintenance choices
 
@@ -38,6 +50,9 @@ process, and review the implementation as it evolves.
 What works now:
 
 - React + TypeScript + Tailwind mirror interface
+- premium v1 Mirror Mode polish with sparse typography, lightweight motion, and
+  assistant listening/thinking/speaking visual states
+- explicit frontend demo mode behind `VITE_MIRRAGE_DEMO_MODE=true`
 - FastAPI backend with health, system, voice, weather, assistant, memory, Spotify, Calendar, presence, smart home, and AI runtime routes
 - mirror interface connected to backend status data
 - weather endpoint using Open-Meteo with a fallback state
@@ -91,8 +106,9 @@ The default assistant provider is still `stub`. Real model replies require confi
 
 | Area | Status |
 | --- | --- |
-| Mirror UI | Working local React app |
+| Mirror UI | v1 ambient mirror interface with polished focus views |
 | Mirror Mode | Working behind `VITE_MIRROR_MODE=true` |
+| Demo mode | Working behind `VITE_MIRRAGE_DEMO_MODE=true`; fake data is explicit |
 | Backend API | Working FastAPI service |
 | Assistant | Runtime, provider routing, fallback, and deterministic handlers work; default provider is still `stub` |
 | Voice | Browser push-to-talk, browser speech synthesis, and backend presence events |
@@ -119,6 +135,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Calendar focus | [assets/screenshots/calendar-focus.png](assets/screenshots/calendar-focus.png) |
 | Context focus | [assets/screenshots/context-focus.png](assets/screenshots/context-focus.png) |
 | Media focus | [assets/screenshots/media-focus.png](assets/screenshots/media-focus.png) |
+| Smart Home focus | [assets/screenshots/smart-home-focus.png](assets/screenshots/smart-home-focus.png) |
 
 Demo video: `TBD`
 
@@ -190,6 +207,9 @@ More detail:
 - [Operations](docs/operations.md)
 - [Proactive assistant](docs/proactive-assistant.md)
 - [Roadmap](docs/roadmap.md)
+- [v1 release notes](docs/v1-release.md)
+- [Showcase notes](docs/showcase.md)
+- [Demo script](docs/demo-script.md)
 - [Smart home](docs/smart-home.md)
 - [Home Assistant setup](docs/home-assistant.md)
 - [Spotify setup](docs/spotify.md)
@@ -240,6 +260,7 @@ Hardware notes:
 | Proactive | Deterministic backend summary for non-intrusive daily nudges |
 | Smart Home | Home Assistant integration through backend safety boundaries |
 | Mirror Mode | Frontend kiosk mode behind `VITE_MIRROR_MODE=true` |
+| Demo | Explicit frontend demo data behind `VITE_MIRRAGE_DEMO_MODE=true` |
 | Deployment | Docker Compose for development and production, systemd examples |
 | Operations | Health endpoints, structured logs, startup validation, local backups |
 | Hardware Plan | 27 inch display target, two-way mirror material testing, Intel N100 mini PC recommendation |
@@ -271,6 +292,18 @@ npm run dev
 ```
 
 Details: [docs/mirror-mode.md](docs/mirror-mode.md).
+
+Portfolio demo mode is also optional:
+
+```powershell
+cd frontend
+$env:VITE_MIRROR_MODE="true"
+$env:VITE_MIRRAGE_DEMO_MODE="true"
+npm run dev
+```
+
+Demo mode uses clearly fake local frontend data for screenshots and walkthroughs.
+Turn it off when testing real backend providers.
 
 ### Backend
 
@@ -352,6 +385,8 @@ Current manual checks:
 
 - open `http://127.0.0.1:5173` and confirm the mirror UI loads
 - set `VITE_MIRROR_MODE=true`, reload the frontend, and confirm the ambient Mirror Mode home appears
+- set `VITE_MIRRAGE_DEMO_MODE=true` only for portfolio walkthroughs and confirm
+  demo data appears without needing real OAuth accounts
 - confirm Mirror Mode dims after inactivity and returns to home from a focus view after the second timeout
 - open `http://127.0.0.1:8000/health` and confirm the backend is online
 - open `http://127.0.0.1:8000/api/health/full` and confirm subsystem health checks return without secrets
@@ -410,6 +445,31 @@ survive container restarts.
 
 CI runs the core checks on every push and pull request through [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
+## Recruiter / Interview Showcase
+
+Mirrage demonstrates full-stack product engineering across frontend, backend,
+AI boundaries, integrations, deployment, operations, and hardware planning. The
+interesting part is not one API call; it is the system shape:
+
+- React mirror interface designed for a wall display, not a normal dashboard
+- FastAPI backend with service boundaries for AI, memory, weather, Calendar,
+  Spotify, smart home, wake-word, health, logging, and backups
+- local-first privacy decisions around memory, context, wake-word detection, and
+  deterministic assistant commands
+- production path with Docker Compose, systemd notes, persistent data, health
+  checks, structured logs, and backup utilities
+- physical build documentation that covers display, mirror material, compute,
+  audio, microphones, heat, frame, cabling, cost, maintenance, and testing
+
+Short interview explanation:
+
+```text
+Mirrage is a privacy-first ambient AI mirror platform. I built it as a
+full-stack system with a React mirror interface, FastAPI backend, AI runtime,
+local memory, presence engine, smart-home boundary, production deployment setup,
+and physical hardware build documentation.
+```
+
 ## Project Structure
 
 ```text
@@ -453,11 +513,13 @@ Completed foundation work:
 - production Compose, health monitoring, structured logging, local backups, and systemd examples
 - tests and CI
 - physical mirror build documentation and hardware plan
+- v1 premium mirror polish, explicit demo mode, refreshed screenshots, and
+  release checklist
 
 Next planned milestone:
 
-- Buy/test mirror material samples, validate display brightness, run heat tests,
-  and test production deployment on target hardware
+- Create the `v1.0.0` Git tag after final review, then test the production stack
+  on the target mini PC before buying final mirror parts
 
 Future milestones:
 
@@ -473,3 +535,21 @@ Future milestones:
 - Home Installation
 
 The full phase breakdown lives in [docs/roadmap.md](docs/roadmap.md).
+
+## v1 Release Checklist
+
+- [x] README updated for v1
+- [x] demo guide updated
+- [x] screenshots refreshed
+- [x] known limitations documented
+- [x] automated checks documented
+- [ ] GitHub Actions green on the final pushed commit
+- [ ] final commit pushed
+- [ ] tag created
+
+Suggested release tag:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```

@@ -15,6 +15,7 @@ uvicorn backend.app.main:app --reload
 ```powershell
 cd frontend
 $env:VITE_MIRROR_MODE="true"
+$env:VITE_MIRRAGE_DEMO_MODE="true"
 npm run dev
 ```
 
@@ -31,9 +32,9 @@ http://127.0.0.1:5173
 Say:
 
 ```text
-This is Mirrage, a privacy-first smart mirror assistant. The home screen is meant
-to stay quiet: time, weather, assistant state, light system status, and one
-small proactive nudge when the day has useful context.
+This is Mirrage, a privacy-first ambient AI mirror platform. The home screen is
+meant to stay quiet: time, weather, assistant presence, and one small proactive
+nudge when the day has useful context.
 ```
 
 Point out that the current home screen is intentionally sparse. It should feel
@@ -53,10 +54,10 @@ screen falls back cleanly instead of breaking the mirror interface.
 Say:
 
 ```text
-The assistant has a provider boundary and runtime. It can run with the stub
-provider, Ollama, or an OpenAI-compatible provider. Voice is push-to-talk in the
-browser today, with a local wake engine boundary prepared for hardware testing,
-and responses can be spoken with browser text-to-speech.
+The assistant is designed to feel voice-first. It has visible states for idle,
+listening, processing, speaking, returning, sleeping, and error. The backend owns
+the assistant runtime and presence lifecycle; browser push-to-talk and browser
+speech output work today.
 ```
 
 4. Type `Good morning`, `daily briefing`, or open Context.
@@ -83,12 +84,16 @@ calls stay out of the frontend.
 Say:
 
 ```text
-The system is built in phases: the core full-stack foundation is working, and the
-next work is refinement, hardware testing, and stronger privacy controls.
+v1 is the first complete software release: the full-stack foundation is working,
+the mirror UI has been polished for demo use, and the remaining work is target
+hardware validation, real wake-word model testing, and deeper provider
+configuration.
 ```
 
 ## Notes For Recording
 
+- Demo mode is explicit. Use `VITE_MIRRAGE_DEMO_MODE=true` only for fake
+  portfolio data.
 - Use Chrome or Edge for browser voice features.
 - Keep the backend running so the status and context paths can show live data.
 - Use `Good morning` to show the proactive assistant path.
@@ -96,6 +101,31 @@ next work is refinement, hardware testing, and stronger privacy controls.
   wired but not authenticated in this local demo.
 - Do not claim hands-free wake word, real smart home hardware, vision, or
   physical mirror installation is complete.
+
+## Refresh Screenshots
+
+Start the frontend in mirror demo mode first:
+
+```powershell
+cd frontend
+$env:VITE_MIRROR_MODE="true"
+$env:VITE_MIRRAGE_DEMO_MODE="true"
+$env:VITE_MIRROR_STARTUP_SECONDS="1"
+npm run dev
+```
+
+Then capture each view from another terminal:
+
+```powershell
+cd frontend
+npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173 ..\assets\screenshots\mirror-home.png
+npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=assistant ..\assets\screenshots\assistant-focus.png
+npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=weather ..\assets\screenshots\weather-focus.png
+npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=calendar ..\assets\screenshots\calendar-focus.png
+npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=context ..\assets\screenshots\context-focus.png
+npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=media ..\assets\screenshots\media-focus.png
+npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=smart-home ..\assets\screenshots\smart-home-focus.png
+```
 
 ## Suggested Video Title
 

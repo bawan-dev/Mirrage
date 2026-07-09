@@ -96,11 +96,29 @@ Expected result:
 
 - a short Mirrage startup screen appears
 - the ambient home shows a large clock, weather summary, assistant presence, and
-  only subtle status text
-- a quiet proactive nudge appears near the bottom-right when context is available
+  one subtle proactive nudge
 - Weather, Assistant, Media, Calendar, Context, and Smart Home focus views still open
 - `Close` or `Esc` returns to the ambient home
 - after inactivity, the screen dims and then returns to the home state
+
+## Portfolio demo mode
+
+Use demo mode only when you want stable fake data for screenshots or a portfolio
+walkthrough.
+
+```powershell
+cd frontend
+$env:VITE_MIRROR_MODE="true"
+$env:VITE_MIRRAGE_DEMO_MODE="true"
+npm run dev
+```
+
+Expected result:
+
+- the mirror home uses demo weather and a demo daily nudge
+- Calendar, Media, Context, and Smart Home views show labelled demo data
+- no real Spotify, Google Calendar, Home Assistant, or backend account is needed
+- turning `VITE_MIRRAGE_DEMO_MODE` off returns the app to real API behavior
 
 ## Physical mirror readiness checks
 
@@ -566,6 +584,7 @@ Copy-Item .env.example .env
 | `MIRRAGE_WAKE_ENGINE_ENABLED` | `false` | Enables local OpenWakeWord runtime support |
 | `MIRRAGE_WAKE_ENGINE_MODEL_PATH` | blank | Path to a local wake model file |
 | `VITE_MIRROR_MODE` | `false` | Enables the wall-display Mirror Mode frontend |
+| `VITE_MIRRAGE_DEMO_MODE` | `false` | Enables explicit fake frontend demo data |
 
 The frontend reads its backend URL from `VITE_API_BASE_URL`
 (see [frontend/.env.example](../frontend/.env.example)); it defaults to

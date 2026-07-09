@@ -14,6 +14,29 @@ The frontend cannot reach the backend.
 - If you see a CORS error in the browser console, the origin is not allowed. Add it
   to `MIRRAGE_ALLOWED_ORIGINS` in `.env` and restart the backend.
 
+## Demo data appears instead of real integrations
+
+Check whether demo mode is enabled:
+
+```powershell
+$env:VITE_MIRRAGE_DEMO_MODE
+```
+
+Expected production value:
+
+```text
+false
+```
+
+Fix:
+
+- stop the frontend dev server
+- unset the variable or set `VITE_MIRRAGE_DEMO_MODE=false`
+- restart `npm run dev`
+
+Demo mode is only for screenshots and portfolio walkthroughs. It intentionally
+uses fake weather, Calendar, Spotify, Smart Home, memory, and context data.
+
 ## `Activate.ps1 cannot be loaded because running scripts is disabled`
 
 Windows PowerShell blocks script execution by default. Allow it for your user:

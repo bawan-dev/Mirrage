@@ -1,24 +1,33 @@
 # Mirrage Frontend
 
-React + TypeScript + Tailwind CSS dashboard for the mirror interface, built with Vite.
+React + TypeScript + Tailwind CSS mirror interface, built with Vite.
 
 ## Commands
 
 ```powershell
-npm install      # install dependencies
-npm run dev      # start the dev server on http://127.0.0.1:5173
-npm run build    # type-check then build for production
-npm run type-check  # type-check only
-npm run preview  # preview the production build
+npm install
+npm run dev
+npm run build
+npm run type-check
+npm run preview
 ```
 
 ## Structure
 
-- `src/main.tsx` — app entry point
-- `src/App.tsx` — dashboard layout and backend status wiring
-- `src/api.ts` — typed backend API client
-- `src/types.ts` — response shapes matching the backend schemas
-- `src/styles.css` — Tailwind entry plus Mirrage design tokens
+- `src/main.tsx` - app entry point
+- `src/App.tsx` - mirror UI, focus views, and backend status wiring
+- `src/api.ts` - typed backend API client
+- `src/types.ts` - response shapes matching the backend schemas
+- `src/demoData.ts` - explicit fake data used only by demo mode
+- `src/styles.css` - Tailwind entry plus Mirrage design tokens
 
-The backend URL is read from `VITE_API_BASE_URL` (see `.env.example`) and defaults
-to `http://127.0.0.1:8000`.
+The backend URL is read from `VITE_API_BASE_URL` and defaults to
+`http://127.0.0.1:8000`.
+
+For portfolio screenshots:
+
+```powershell
+$env:VITE_MIRROR_MODE="true"
+$env:VITE_MIRRAGE_DEMO_MODE="true"
+npm run dev
+```

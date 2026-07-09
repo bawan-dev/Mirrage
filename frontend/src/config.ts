@@ -29,6 +29,10 @@ export const mirrorModeConfig = {
   startupMs: readSeconds(import.meta.env.VITE_MIRROR_STARTUP_SECONDS, 3) * 1000,
 };
 
+export const demoModeConfig = {
+  enabled: readBoolean(import.meta.env.VITE_MIRRAGE_DEMO_MODE),
+};
+
 export const wakeWordConfig = {
   browserListenerEnabled: readBoolean(
     import.meta.env.VITE_EXPERIMENTAL_BROWSER_WAKE_WORD,

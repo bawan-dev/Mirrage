@@ -741,6 +741,11 @@ select {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 26%),
       linear-gradient(90deg, rgba(109, 215, 232, 0.025), transparent 24%),
+      radial-gradient(
+        circle at 52% 48%,
+        rgba(109, 215, 232, 0.045),
+        transparent 28%
+      ),
       #020304;
   }
 
@@ -760,6 +765,8 @@ select {
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(109, 215, 232, 0.28) transparent;
   }
 
   .ambient-home {
@@ -831,6 +838,15 @@ select {
     background: transparent;
     color: var(--color-text);
     text-transform: uppercase;
+    transition:
+      color 260ms ease,
+      opacity 260ms ease,
+      transform 360ms ease;
+  }
+
+  .ambient-presence-button:hover,
+  .mirror-presence-button:hover {
+    transform: translateY(-2px);
   }
 
   .ambient-presence-button span,
@@ -901,6 +917,106 @@ select {
       transparent
     );
     animation: presence-breathe 4.5s ease-in-out infinite;
+  }
+
+  .assistant-presence-field {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.45rem, 1vw, 0.9rem);
+    width: min(32rem, 72vw);
+    height: clamp(4.5rem, 11vh, 7.5rem);
+    margin: 1.8rem auto 0;
+    color: var(--color-cyan);
+    filter: drop-shadow(0 0 22px rgba(109, 215, 232, 0.18));
+  }
+
+  .assistant-presence-field span {
+    width: 1px;
+    height: 34%;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.42;
+    transform-origin: center;
+    animation: assistant-wave 2.8s ease-in-out infinite;
+  }
+
+  .assistant-presence-field span:nth-child(2) {
+    animation-delay: 120ms;
+  }
+
+  .assistant-presence-field span:nth-child(3) {
+    animation-delay: 240ms;
+  }
+
+  .assistant-presence-field span:nth-child(4) {
+    height: 58%;
+    animation-delay: 360ms;
+  }
+
+  .assistant-presence-field span:nth-child(5) {
+    animation-delay: 480ms;
+  }
+
+  .assistant-presence-field span:nth-child(6) {
+    animation-delay: 600ms;
+  }
+
+  .assistant-presence-field span:nth-child(7) {
+    animation-delay: 720ms;
+  }
+
+  .assistant-presence-idle {
+    color: rgba(109, 215, 232, 0.62);
+  }
+
+  .assistant-presence-wake {
+    color: #8cf7c4;
+    filter: drop-shadow(0 0 30px rgba(140, 247, 196, 0.28));
+  }
+
+  .assistant-presence-listening {
+    color: #8cf7c4;
+    filter: drop-shadow(0 0 34px rgba(140, 247, 196, 0.34));
+  }
+
+  .assistant-presence-listening span {
+    animation-duration: 1.15s;
+    opacity: 0.72;
+  }
+
+  .assistant-presence-thinking {
+    color: #ffd479;
+    filter: drop-shadow(0 0 30px rgba(255, 212, 121, 0.24));
+  }
+
+  .assistant-presence-thinking span {
+    animation-duration: 2.1s;
+  }
+
+  .assistant-presence-speaking {
+    color: #f8fbff;
+    filter: drop-shadow(0 0 34px rgba(248, 251, 255, 0.26));
+  }
+
+  .assistant-presence-speaking span {
+    animation-duration: 0.9s;
+    opacity: 0.82;
+  }
+
+  .assistant-presence-returning,
+  .assistant-presence-sleeping {
+    color: rgba(148, 163, 173, 0.5);
+  }
+
+  .assistant-presence-error {
+    color: #ff8a8a;
+  }
+
+  .assistant-state-copy {
+    margin-top: 0.2rem;
+    color: rgba(148, 163, 173, 0.72);
+    font-size: clamp(0.95rem, 1.1vw, 1.1rem);
   }
 
   .ambient-presence-listening + .presence-wave::before,
@@ -1219,24 +1335,28 @@ select {
   .ambient-conversation {
     display: grid;
     max-width: 62rem;
-    gap: 2.5rem;
-    margin: 5rem auto 0;
+    gap: clamp(1.8rem, 3vh, 2.6rem);
+    margin: clamp(3rem, 7vh, 6rem) auto 0;
     text-align: center;
   }
 
   .ambient-transcript p:last-child {
     margin-top: 0.8rem;
     color: var(--color-text);
-    font-size: 3.4rem;
+    font-size: clamp(2.4rem, 4.2vw, 4.2rem);
     font-weight: 580;
     line-height: 1.08;
+    text-wrap: balance;
+    animation: text-arrive 420ms ease both;
   }
 
   .ambient-reply p:last-of-type {
     margin-top: 0.8rem;
     color: rgba(148, 163, 173, 0.82);
-    font-size: 1.45rem;
+    font-size: clamp(1.25rem, 1.8vw, 1.75rem);
     line-height: 1.5;
+    text-wrap: pretty;
+    animation: text-arrive 520ms ease both;
   }
 
   .ambient-reply span {
@@ -1314,6 +1434,19 @@ select {
     color: rgba(148, 163, 173, 0.62);
     font-size: 0.86rem;
     text-align: center;
+  }
+
+  .ambient-assistant-mirror .ambient-assistant-tools,
+  .ambient-assistant-mirror .ambient-assistant-input,
+  .ambient-assistant-mirror .ambient-voice-select {
+    opacity: 0.48;
+    transition: opacity 240ms ease;
+  }
+
+  .ambient-assistant-mirror .ambient-assistant-tools:hover,
+  .ambient-assistant-mirror .ambient-assistant-input:focus-within,
+  .ambient-assistant-mirror .ambient-voice-select:focus-within {
+    opacity: 1;
   }
 
   .ambient-media-scene {
@@ -1519,6 +1652,32 @@ select {
   }
 }
 
+@keyframes assistant-wave {
+  0%,
+  100% {
+    transform: scaleY(0.45);
+    opacity: 0.3;
+  }
+
+  45%,
+  55% {
+    transform: scaleY(1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes text-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 900px) {
   .ambient-home,
   .mirror-home {
@@ -1575,5 +1734,22 @@ select {
 
   .ambient-transcript p:last-child {
     font-size: 2.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-presence-field span,
+  .ambient-transcript p:last-child,
+  .ambient-reply p:last-of-type,
+  .presence-wave::before {
+    animation: none;
+  }
+
+  .ambient-presence-button,
+  .mirror-presence-button,
+  .ambient-assistant-mirror .ambient-assistant-tools,
+  .ambient-assistant-mirror .ambient-assistant-input,
+  .ambient-assistant-mirror .ambient-voice-select {
+    transition: none;
   }
 }
