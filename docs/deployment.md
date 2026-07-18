@@ -1,5 +1,30 @@
 # Production Deployment
 
+## Identity Bootstrap Before Production Start
+
+Production Compose uses enforced identity mode. Bootstrap the first owner into
+the mounted identity database before starting the normal service:
+
+```powershell
+docker compose -f docker-compose.prod.yml run --rm backend `
+  python -m backend.app.identity_cli bootstrap-owner `
+  --name "Owner Name" --device-name "Primary Mirror"
+```
+
+The raw device token is shown once. Store it outside the repository. Then start
+the stack:
+
+```powershell
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Startup fails if production identity is disabled, not enforced, has no active
+owner, uses an invalid database path or TTL/token configuration, or enables the
+development bypass. This is intentional.
+
+`/app/data/mirrage-identity.sqlite3` shares the existing persistent `./data`
+mount. Identity backups use the existing `./backups` mount.
+
 This guide is for running Mirrage continuously on a dedicated home device.
 
 The recommended production path is:
@@ -104,8 +129,9 @@ docker compose -f docker-compose.prod.yml up -d --build
 Verify:
 
 ```bash
+export MIRRAGE_OWNER_TOKEN="<OWNER_DEVICE_TOKEN>"
 curl http://127.0.0.1:8000/api/health
-curl http://127.0.0.1:8000/api/health/full
+curl -H "Authorization: Bearer $MIRRAGE_OWNER_TOKEN" http://127.0.0.1:8000/api/health/full
 curl http://127.0.0.1:5173/health
 ```
 
@@ -129,7 +155,7 @@ Raspberry Pi:
 6. Start production Compose.
 7. Enable the systemd service.
 8. Open frontend in browser kiosk mode.
-9. Verify /api/health/full.
+9. Verify `/api/health/full` with the owner trusted-device token.
 10. Check /api/wake-word/status.
 11. Check /api/smart-home/status.
 12. Reboot and confirm Mirrage starts automatically.
@@ -227,7 +253,7 @@ final production Docker audio configuration.
 ## Verification Checklist
 
 - `/api/health` returns `online`
-- `/api/health/full` returns JSON with backend, memory, AI runtime, providers,
+- authenticated `/api/health/full` returns JSON with backend, memory, AI runtime, providers,
   presence, wake engine, weather, Calendar, and Spotify checks
 - frontend `/health` returns `ok`
 - containers show healthy or running

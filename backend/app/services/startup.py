@@ -9,6 +9,7 @@ from pathlib import Path
 from ai.config import ai_settings
 from ai.router import PROVIDER_DEFINITIONS
 from backend.app.logging_config import valid_log_level
+from backend.app.services.identity_store import identity_store
 from backend.app.services.wake_engine_models import (
     FUTURE_WAKE_ENGINE_PROVIDERS,
     SUPPORTED_WAKE_ENGINE_PROVIDERS,
@@ -67,6 +68,83 @@ def validate_environment() -> list[StartupIssue]:
                 message="Backup directory is required.",
             )
         )
+
+    if settings.identity_mode not in {"development", "enforced", "disabled"}:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_IDENTITY_MODE",
+                message="Identity mode must be development, enforced, or disabled.",
+            )
+        )
+
+    if settings.identity_enabled and not settings.identity_database_path.strip():
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_IDENTITY_DATABASE_PATH",
+                message="Identity database path is required when identity is enabled.",
+            )
+        )
+
+    if settings.identity_device_token_bytes < 32:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_IDENTITY_DEVICE_TOKEN_BYTES",
+                message="Trusted-device tokens must contain at least 32 random bytes.",
+            )
+        )
+
+    if settings.identity_session_ttl_seconds <= 0:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_IDENTITY_SESSION_TTL_SECONDS",
+                message="Identity session TTL must be greater than zero.",
+            )
+        )
+
+    if settings.approval_ttl_seconds <= 0:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_APPROVAL_TTL_SECONDS",
+                message="Approval TTL must be greater than zero.",
+            )
+        )
+
+    if settings.audit_retention_days <= 0:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_AUDIT_RETENTION_DAYS",
+                message="Audit retention must be at least one day.",
+            )
+        )
+
+    identity_status: dict[str, object] | None = None
+    if settings.identity_enabled and settings.identity_database_path.strip():
+        try:
+            identity_status = identity_store.status()
+        except Exception:
+            issues.append(
+                StartupIssue(
+                    level="error",
+                    field="MIRRAGE_IDENTITY_DATABASE_PATH",
+                    message="Identity database could not be initialized or queried.",
+                )
+            )
+
+    if settings.identity_mode == "enforced" and identity_status is not None:
+        if not identity_status["owner_present"]:
+            issues.append(
+                StartupIssue(
+                    level="error",
+                    field="MIRRAGE_IDENTITY_DATABASE_PATH",
+                    message="Enforced identity mode requires an active owner.",
+                )
+            )
 
     if not -90 <= settings.weather_latitude <= 90:
         issues.append(
@@ -260,6 +338,24 @@ def validate_environment() -> list[StartupIssue]:
         )
 
     if settings.app_env == "production":
+        if not settings.identity_enabled or settings.identity_mode != "enforced":
+            issues.append(
+                StartupIssue(
+                    level="error",
+                    field="MIRRAGE_IDENTITY_MODE",
+                    message="Production requires enabled, enforced identity mode.",
+                )
+            )
+        if settings.identity_dev_bypass:
+            issues.append(
+                StartupIssue(
+                    level="error",
+                    field="MIRRAGE_IDENTITY_DEV_BYPASS",
+                    message=(
+                        "The identity development bypass is forbidden in production."
+                    ),
+                )
+            )
         if "*" in settings.allowed_origins:
             issues.append(
                 StartupIssue(
@@ -312,4 +408,5 @@ def run_startup_validation() -> None:
 
 def _ensure_runtime_directories() -> None:
     Path(settings.memory_database_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(settings.identity_database_path).parent.mkdir(parents=True, exist_ok=True)
     Path(settings.backup_directory).mkdir(parents=True, exist_ok=True)

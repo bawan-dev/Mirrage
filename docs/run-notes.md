@@ -1,5 +1,180 @@
 # Run Notes
 
+## Phase 38 Identity And Safety Manual Validation
+
+These commands use placeholders. Do not paste a real token into committed files,
+screenshots, issue comments, or logs.
+
+1. Initialize the identity database.
+
+```powershell
+python -c "from backend.app.services.identity_store import identity_store; identity_store.initialize(); print(identity_store.database_path())"
+```
+
+Expected: `data\mirrage-identity.sqlite3` or the configured local path.
+
+2. Bootstrap the first owner and mirror device while no users exist.
+
+```powershell
+python -m backend.app.identity_cli bootstrap-owner `
+  --name "Owner Name" --device-name "Primary Mirror"
+```
+
+Expected: owner/device public UUIDs and one raw token. The command refuses a
+second bootstrap.
+
+3. Authenticate the trusted mirror device.
+
+```powershell
+$ownerToken = "<OWNER_DEVICE_TOKEN>"
+$ownerHeaders = @{ Authorization = "Bearer $ownerToken" }
+```
+
+4. Read the backend principal.
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/identity/me -Headers $ownerHeaders
+```
+
+Expected: `authenticated: true`, role `owner`, method `trusted_device`; no token
+or token hash.
+
+5. Create a family user.
+
+```powershell
+$familyBody = @{ display_name = "Sample Family"; role = "family" } | ConvertTo-Json
+$family = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/identity/users `
+  -Headers $ownerHeaders -ContentType "application/json" -Body $familyBody
+```
+
+6. Create a guest user.
+
+```powershell
+$guestBody = @{ display_name = "Sample Guest"; role = "guest"; household_member = $false } | ConvertTo-Json
+$guest = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/identity/users `
+  -Headers $ownerHeaders -ContentType "application/json" -Body $guestBody
+```
+
+7. Enroll family and guest test devices. Each token is returned once.
+
+```powershell
+$familyDeviceBody = @{
+  user_id = $family.public_id; display_name = "Family Test Phone"
+  device_type = "phone"; trust_level = "trusted"
+} | ConvertTo-Json
+$familyDevice = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/identity/devices `
+  -Headers $ownerHeaders -ContentType "application/json" -Body $familyDeviceBody
+$familyHeaders = @{ Authorization = "Bearer $($familyDevice.token)" }
+
+$guestDeviceBody = @{
+  user_id = $guest.public_id; display_name = "Guest Test Phone"
+  device_type = "phone"; trust_level = "limited"
+} | ConvertTo-Json
+$guestDevice = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/identity/devices `
+  -Headers $ownerHeaders -ContentType "application/json" -Body $guestDeviceBody
+$guestHeaders = @{ Authorization = "Bearer $($guestDevice.token)" }
+```
+
+8. List role permissions.
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/identity/roles -Headers $ownerHeaders
+```
+
+Expected: five roles. Family has low-risk home control; guest does not.
+
+9. Confirm guest smart-home control is denied before the provider call.
+
+```powershell
+try {
+  Invoke-RestMethod -Method Post `
+    -Uri http://127.0.0.1:8000/api/smart-home/entities/light.office/turn-on `
+    -Headers $guestHeaders
+} catch { $_.Exception.Response.StatusCode.value__ }
+```
+
+Expected: `403`.
+
+10. Confirm family passes authorization for a low-risk action.
+
+```powershell
+try {
+  Invoke-RestMethod -Method Post `
+    -Uri http://127.0.0.1:8000/api/smart-home/entities/light.office/turn-on `
+    -Headers $familyHeaders
+} catch { $_.Exception.Response.StatusCode.value__ }
+```
+
+Expected: not `401` or `403`. A configured provider returns success; disabled or
+unavailable Home Assistant may return `503` or `502` after authorization.
+
+11. Revoke the guest device and confirm its token stops working.
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/api/identity/devices/$($guestDevice.device.public_id)/revoke" `
+  -Headers $ownerHeaders
+try {
+  Invoke-RestMethod http://127.0.0.1:8000/api/identity/me -Headers $guestHeaders
+} catch { $_.Exception.Response.StatusCode.value__ }
+```
+
+Expected: `401` from `/api/identity/me`.
+
+12. Create and decide an approval request.
+
+```powershell
+$approvalBody = @{
+  action = "future.medium.action"; resource_type = "future_resource"
+  resource_id = "sample"; risk_level = "medium"; reason = "Owner review"
+} | ConvertTo-Json
+$approval = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/approvals `
+  -Headers $familyHeaders -ContentType "application/json" -Body $approvalBody
+$decisionBody = @{ reason = "Reviewed locally" } | ConvertTo-Json
+Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/api/approvals/$($approval.public_id)/approve" `
+  -Headers $ownerHeaders -ContentType "application/json" -Body $decisionBody
+```
+
+Expected: `approved`. This record does not unlock blocked smart-home domains.
+
+13. Read recent audit events as owner.
+
+```powershell
+$audit = Invoke-RestMethod `
+  "http://127.0.0.1:8000/api/audit/events?limit=25" -Headers $ownerHeaders
+$audit.items | Select-Object timestamp,event_type,action,result
+```
+
+14. Confirm secrets are absent from health, audit, and safe device responses.
+
+```powershell
+$safePayload = @(
+  Invoke-RestMethod http://127.0.0.1:8000/api/health/full -Headers $ownerHeaders
+  Invoke-RestMethod http://127.0.0.1:8000/api/identity/devices -Headers $ownerHeaders
+  $audit
+) | ConvertTo-Json -Depth 8
+$safePayload.Contains($ownerToken)
+$safePayload -match 'token_hash|home_assistant_token|memory_value|transcript'
+```
+
+Expected: both checks return `False`.
+
+15. Back up and explicitly restore identity data.
+
+```powershell
+python -m backend.app.identity_cli backup
+python -m backend.app.identity_cli restore --path "backups/<IDENTITY_BACKUP>.sqlite3"
+```
+
+Expected: separate `mirrage-identity-*.sqlite3` file, validated restore, and
+backup/restore audit events.
+
 Short, practical notes for getting Mirrage running. For the full explanation see the
 [README](../README.md). For problems see [troubleshooting](troubleshooting.md).
 
@@ -38,7 +213,8 @@ Check:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/health
-Invoke-RestMethod http://127.0.0.1:8000/api/health/full
+$ownerHeaders = @{ Authorization = "Bearer <OWNER_DEVICE_TOKEN>" }
+Invoke-RestMethod http://127.0.0.1:8000/api/health/full -Headers $ownerHeaders
 ```
 
 Startup-on-boot is documented in [deployment](deployment.md). Normal maintenance

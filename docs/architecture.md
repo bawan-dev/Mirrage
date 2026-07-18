@@ -1,5 +1,36 @@
 # Architecture
 
+## v2 Identity And Safety Boundary
+
+Phase 38 adds a boundary in front of private and physical services:
+
+```text
+Client request
+  -> Authentication dependency
+  -> Authenticated principal
+  -> Role permissions + explicit overrides
+  -> Risk and global safety policy
+  -> allowed / denied / approval required
+  -> backend service
+  -> append-only redacted audit event
+```
+
+`backend/app/services/identity_store.py` owns the versioned SQLite schema.
+`authentication.py` resolves bearer tokens. `authorization.py` owns deterministic
+permission and risk decisions. `approvals.py` and `audit.py` keep workflow and
+security history separate from normal operational logging.
+
+The AI runtime sits behind this policy. It may identify an intent, but it cannot
+authenticate a person, grant a permission, approve an action, or construct an
+arbitrary Home Assistant service call.
+
+The current memory store is installation-wide and is treated as owner-private.
+Per-user memory partitioning remains a later v2 phase.
+
+Future phone, UWB, voice verification, vision, vehicle, and wearable evidence
+will feed authentication. Evidence providers will not call protected services
+directly.
+
 This document explains how Mirrage is planned to fit together.
 
 ## System Overview

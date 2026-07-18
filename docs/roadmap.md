@@ -638,6 +638,31 @@ Mirrage has a complete v1 software release package: premium mirror UI,
 screenshots, demo path, release checklist, honest limitations, and passing local
 checks. Physical hardware validation remains the next real-world milestone.
 
+## Phase 38: Identity, Permissions And Safety Engine
+
+Goal: begin Mirrage v2 with a backend-owned identity and authorization boundary.
+
+- [x] Add a versioned local SQLite identity database
+- [x] Add owner, family, trusted guest, guest, and service roles
+- [x] Centralize permission keys and conservative role defaults
+- [x] Add explicit grant/deny overrides with deny precedence
+- [x] Add one-time trusted-device enrollment tokens and hash-only storage
+- [x] Add bearer authentication and typed backend principals
+- [x] Add default-deny deterministic authorization and risk decisions
+- [x] Protect memory, context, Calendar, media, health, and smart-home routes
+- [x] Keep high-risk and arbitrary Home Assistant services globally blocked
+- [x] Add expiring approval requests and owner decisions
+- [x] Add append-only redacted audit events and query filters
+- [x] Extend health, startup validation, Docker configuration, and backups
+- [x] Add a sparse owner Identity view outside Mirror Mode
+- [x] Add isolated generic demo identities
+- [x] Add security, permission, trusted-device, approval, and audit docs
+- [x] Add identity and authorization regression tests using temporary databases
+
+Current limitation: trusted-device tokens authenticate API clients. Mirrage does
+not yet recognize people by voice, face, phone proximity, UWB, vehicle, or
+wearable evidence, and memory is not partitioned per user.
+
 ## Future: Voice Interaction
 
 - [ ] Hardware-tested local trained wake model
@@ -718,6 +743,6 @@ checks. Physical hardware validation remains the next real-world milestone.
 
 ## Current Focus
 
-Phase 37 is the current milestone. Current focus is final review, pushing the
-v1 polish commit, confirming CI, tagging `v1.0.0`, and then moving back to target
-hardware validation for the first physical mirror build.
+Phase 38 is the current milestone. `v1.0.0` remains the stable portfolio release;
+`main` now begins v2 with identity, trusted-device authentication, permissions,
+approvals, audit history, private-route protection, and smart-home authorization.

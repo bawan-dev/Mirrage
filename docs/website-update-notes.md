@@ -8,7 +8,8 @@ after the v1 polish milestone.
 Mirrage is a privacy-first ambient AI mirror platform with a React mirror
 interface, FastAPI backend, provider-based assistant routing, local memory, daily
 context, rule-based proactive nudges, Spotify, Calendar, Home Assistant
-boundaries, production deployment docs, and a kiosk-style Mirror Mode.
+boundaries, trusted-device authentication, deterministic permissions, production
+deployment docs, and a kiosk-style Mirror Mode.
 
 ## Honest AI-Assisted Development Note
 
@@ -25,6 +26,7 @@ hardware.
 | Mirror frontend | Working local React app |
 | Mirror Mode | v1 polished ambient mirror mode behind `VITE_MIRROR_MODE=true` |
 | Demo mode | Explicit fake portfolio data behind `VITE_MIRRAGE_DEMO_MODE=true` |
+| Identity and safety | v2 trusted devices, roles, permissions, approvals, and audit history |
 | Backend API | Working FastAPI service |
 | Assistant routing | Working provider runtime and local command routing |
 | Voice | Browser push-to-talk and browser speech output |
@@ -58,6 +60,9 @@ hardware.
 - Documented the first physical mirror build path, including display, mirror
   material, mini PC, microphone, audio, thermal, frame, maintenance, and cost
   planning.
+- Added a backend-owned v2 identity and safety layer with hash-only
+  trusted-device tokens, default-deny permissions, approvals, protected private
+  routes, and append-only redacted audit events.
 
 ## Assets To Include
 
@@ -70,6 +75,7 @@ Recommended screenshots:
 - `assets/screenshots/context-focus.png`
 - `assets/screenshots/media-focus.png`
 - `assets/screenshots/smart-home-focus.png`
+- `assets/screenshots/identity-admin.png`
 
 Recommended docs to link:
 
@@ -82,6 +88,8 @@ Recommended docs to link:
 - `docs/v1-release.md`
 - `docs/showcase.md`
 - `docs/demo-script.md`
+- `docs/identity-safety.md`
+- `docs/security-model.md`
 - `docs/wake-engine.md`
 - `hardware/physical-build.md`
 - `hardware/build-plan.md`

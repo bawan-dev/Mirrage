@@ -30,6 +30,13 @@ Operational events:
   latency measurements
 - presence state changes
 - weather, Calendar, and Spotify integration failures
+- safe identity startup status and authentication outcomes
+- authorization decisions and approval lifecycle events
+- identity database and audit-write failures
+
+Operational logs and the durable identity audit log serve different purposes.
+Operational logs help diagnose the service. Audit events provide a redacted,
+append-only history of security decisions and administrative changes.
 
 ## What Should Not Be Logged
 
@@ -42,6 +49,8 @@ Never log:
 - assistant replies
 - raw microphone audio
 - `.env` contents
+- trusted-device token hashes or prefixes
+- private Calendar event details
 
 The current JSON formatter only includes a small allowlist of operational fields
 such as provider, model, state, event, and subsystem.

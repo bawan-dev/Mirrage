@@ -102,4 +102,4 @@ Common fixes:
 - confirm the URL is reachable from the backend machine or container
 - confirm the token is valid
 - restart the backend after changing `.env`
-- check `/api/health/full` for the smart home health component
+- check authenticated `/api/health/full` for the smart home health component

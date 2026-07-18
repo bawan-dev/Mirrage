@@ -22,7 +22,7 @@ microphone, display, or mini PC.
 | Task | Plan |
 | --- | --- |
 | Software update | Pull latest repo, rebuild Compose, restart service |
-| Health check | Use `/api/health` and `/api/health/full` |
+| Health check | Use `/api/health`; use an owner token for `/api/health/full` |
 | Logs | Read Docker logs or `logs/backend.log` |
 | Backups | Use local backup process for SQLite memory |
 | Microphone replacement | Keep USB access reachable |

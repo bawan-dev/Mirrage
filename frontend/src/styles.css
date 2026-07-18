@@ -1633,6 +1633,92 @@ select {
     gap: 1.2rem;
     margin-top: 2.4rem;
   }
+
+  .ambient-identity-login,
+  .ambient-identity-current,
+  .ambient-identity-section {
+    max-width: 58rem;
+    margin-top: 3.5rem;
+  }
+
+  .ambient-identity-login h2,
+  .ambient-identity-current h2 {
+    margin: 0.8rem 0;
+    color: var(--color-text);
+    font-size: clamp(1.8rem, 4vw, 3.4rem);
+    font-weight: 520;
+    letter-spacing: 0;
+  }
+
+  .ambient-identity-login > p,
+  .ambient-identity-current > p,
+  .ambient-identity-list p {
+    color: rgba(148, 163, 173, 0.72);
+  }
+
+  .ambient-identity-login form {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 2rem;
+  }
+
+  .ambient-identity-login input {
+    width: min(32rem, 100%);
+    padding: 0.8rem 0;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+    color: var(--color-text);
+    background: transparent;
+    outline: none;
+  }
+
+  .ambient-identity-login input:focus {
+    border-bottom-color: var(--color-cyan);
+  }
+
+  .ambient-identity button,
+  .ambient-identity-login button {
+    border: 0;
+    color: var(--color-text);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .ambient-identity button:disabled,
+  .ambient-identity-login button:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+
+  .ambient-identity-section {
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .ambient-identity-list {
+    margin-top: 1rem;
+  }
+
+  .ambient-identity-list article {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0;
+  }
+
+  .ambient-identity-list h3 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.05rem;
+    font-weight: 520;
+    letter-spacing: 0;
+  }
+
+  .ambient-identity-list p {
+    margin: 0.2rem 0 0;
+    font-size: 0.86rem;
+  }
 }
 
 @keyframes presence-breathe {
@@ -1734,6 +1820,11 @@ select {
 
   .ambient-transcript p:last-child {
     font-size: 2.2rem;
+  }
+
+  .ambient-identity-login form {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

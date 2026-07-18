@@ -30,7 +30,7 @@ Use this before permanent wall mounting.
 - [ ] systemd starts Mirrage after reboot.
 - [ ] Frontend kiosk mode opens.
 - [ ] `GET /api/health` returns online.
-- [ ] `GET /api/health/full` returns subsystem checks.
+- [ ] Authenticated `GET /api/health/full` returns subsystem checks.
 - [ ] Frontend `/health` works.
 - [ ] Logs are written.
 - [ ] Backups can be created.

@@ -1,22 +1,37 @@
 # Backups
 
-Mirrage stores private local memory in SQLite. Backups should stay local unless a
-future cloud backup feature is explicitly designed and documented.
+Mirrage stores private local memory and identity data in separate SQLite files.
+Backups should stay local unless a future cloud backup feature is explicitly
+designed and documented.
 
 ## What To Back Up
 
 Recommended:
 
 - `data/mirrage-memory.sqlite3`
+- `data/mirrage-identity.sqlite3`
 - `.env`
 - `backups/`
 - important local notes about hardware setup
 
 Optional:
-
 - `logs/`
 
 Do not commit backups or `.env` to Git.
+
+## Identity Backup And Restore
+
+```powershell
+python -m backend.app.identity_cli backup
+python -m backend.app.identity_cli restore --path "backups/<IDENTITY_BACKUP>.sqlite3"
+```
+
+Identity backups use SQLite's backup API and names beginning with
+`mirrage-identity-`. Restore validates the schema before overwriting the local
+identity database, then appends a restore audit event. The command is explicit;
+Mirrage never restores or overwrites identity state automatically.
+
+The existing memory backup functions and filenames remain unchanged.
 
 ## Manual Backup
 
@@ -60,7 +75,8 @@ docker compose -f docker-compose.prod.yml up -d
 Verify:
 
 ```bash
-curl http://127.0.0.1:8000/api/health/full
+export MIRRAGE_OWNER_TOKEN="<OWNER_DEVICE_TOKEN>"
+curl -H "Authorization: Bearer $MIRRAGE_OWNER_TOKEN" http://127.0.0.1:8000/api/health/full
 ```
 
 ## Automatic Local Backup

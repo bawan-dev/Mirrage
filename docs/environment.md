@@ -40,6 +40,27 @@ connecting real accounts.
 | --- | --- |
 | `MIRRAGE_MEMORY_DATABASE_PATH` | Local SQLite memory path |
 | `MIRRAGE_BACKUP_DIRECTORY` | Local backup directory |
+| `MIRRAGE_APP_VERSION` | API version, currently `2.0.0-dev` on `main` |
+| `MIRRAGE_IDENTITY_ENABLED` | Enables the local identity store and authentication boundary |
+| `MIRRAGE_IDENTITY_MODE` | `development`, `enforced`, or `disabled` |
+| `MIRRAGE_IDENTITY_DATABASE_PATH` | Local identity, device, approval, and audit SQLite path |
+| `MIRRAGE_IDENTITY_DEVICE_TOKEN_BYTES` | Random token bytes; minimum 32 |
+| `MIRRAGE_IDENTITY_SESSION_TTL_SECONDS` | Reserved session lifetime boundary; defaults to 86400 |
+| `MIRRAGE_APPROVAL_TTL_SECONDS` | Pending approval lifetime; defaults to 120 |
+| `MIRRAGE_AUDIT_RETENTION_DAYS` | Audit retention target; automatic cleanup is not enabled |
+| `MIRRAGE_IDENTITY_DEV_BYPASS` | Explicit local principal; forbidden in production |
+
+Production requires:
+
+```text
+MIRRAGE_IDENTITY_ENABLED=true
+MIRRAGE_IDENTITY_MODE=enforced
+MIRRAGE_IDENTITY_DEV_BYPASS=false
+```
+
+Do not place a trusted-device token in a `VITE_` variable. The normal-mode
+Identity view accepts a token for the current browser session and keeps it in
+memory only.
 
 ## Smart Home
 

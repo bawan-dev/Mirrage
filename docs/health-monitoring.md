@@ -11,6 +11,27 @@ Health endpoints are designed for Docker, systemd checks, and manual diagnosis.
 | `/api/health/full` | Full subsystem health |
 | `/api/system/status` | Existing mirror status summary |
 
+`/api/health/full` requires `health.full.read`. Supply an owner trusted-device
+bearer token, or deliberately enable the development bypass for local-only
+diagnosis.
+
+## Identity Component
+
+The full response includes safe identity details:
+
+- enabled state and operating mode
+- database status
+- active user count
+- whether an active owner exists
+- active trusted-device count
+- pending approval count
+- audit-store status
+
+It does not include names, token prefixes, token hashes, permissions, or private
+records. Enforced mode without an owner is an error. Enforced mode without an
+active trusted device is a warning. A corrupt or unavailable identity database
+is an error.
+
 ## Quick Health
 
 ```bash
@@ -26,7 +47,8 @@ Expected:
 ## Full Health
 
 ```bash
-curl http://127.0.0.1:8000/api/health/full
+export MIRRAGE_OWNER_TOKEN="<OWNER_DEVICE_TOKEN>"
+curl -H "Authorization: Bearer $MIRRAGE_OWNER_TOKEN" http://127.0.0.1:8000/api/health/full
 ```
 
 The response includes checks for:

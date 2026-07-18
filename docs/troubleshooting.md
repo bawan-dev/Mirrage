@@ -1,5 +1,42 @@
 # Troubleshooting
 
+## Protected API Returns 401
+
+The route did not receive a valid active trusted-device token. Check that the
+request uses `Authorization: Bearer <DEVICE_TOKEN>`, the user and device are
+active, and the token has not been revoked. A name or role header is not a
+replacement for authentication.
+
+For deliberate local-only work, set:
+
+```powershell
+$env:MIRRAGE_IDENTITY_DEV_BYPASS="true"
+```
+
+Restart the backend. This bypass is low-assurance, audited, and rejected in
+production.
+
+## Protected API Returns 403
+
+Authentication succeeded, but the role/override policy or global safety policy
+denied the action. Read the response `permission` and `policy_id`, then check
+[Permissions](permissions.md). Do not work around a 403 in the frontend or AI
+prompt.
+
+## Production Fails With Identity Startup Error
+
+Production requires enabled, enforced identity mode, no development bypass, and
+at least one active owner. Run the documented owner bootstrap against the
+production data volume before the first normal start. Invalid token length, TTL,
+retention, or database paths also fail startup.
+
+## Trusted Device Token Was Lost
+
+Raw tokens cannot be retrieved from SQLite or the API. Enroll a replacement from
+an active owner device, then revoke the lost device. If no owner device remains,
+stop the service and follow the controlled restore process in
+[Trusted devices](trusted-devices.md).
+
 Common setup problems and how to fix them. For normal run steps see
 [run-notes](run-notes.md).
 
@@ -211,7 +248,8 @@ appear on GitHub.
 First inspect full health:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/health/full
+$ownerHeaders = @{ Authorization = "Bearer <OWNER_DEVICE_TOKEN>" }
+Invoke-RestMethod http://127.0.0.1:8000/api/health/full -Headers $ownerHeaders
 ```
 
 Look for the `memory` check. If it reports an error:
@@ -323,7 +361,8 @@ Common causes:
 The backend should stay online. Check:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/health/full
+$ownerHeaders = @{ Authorization = "Bearer <OWNER_DEVICE_TOKEN>" }
+Invoke-RestMethod http://127.0.0.1:8000/api/health/full -Headers $ownerHeaders
 ```
 
 Look for the `wake_engine` check.

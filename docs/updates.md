@@ -19,7 +19,8 @@ git rev-parse --short HEAD
 Check current health:
 
 ```bash
-curl http://127.0.0.1:8000/api/health/full
+export MIRRAGE_OWNER_TOKEN="<OWNER_DEVICE_TOKEN>"
+curl -H "Authorization: Bearer $MIRRAGE_OWNER_TOKEN" http://127.0.0.1:8000/api/health/full
 ```
 
 ## Update
@@ -34,7 +35,7 @@ Verify:
 ```bash
 docker compose -f docker-compose.prod.yml ps
 curl http://127.0.0.1:8000/api/health
-curl http://127.0.0.1:8000/api/health/full
+curl -H "Authorization: Bearer $MIRRAGE_OWNER_TOKEN" http://127.0.0.1:8000/api/health/full
 ```
 
 Open the mirror UI and confirm it loads.

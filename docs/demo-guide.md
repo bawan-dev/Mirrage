@@ -90,6 +90,14 @@ hardware validation, real wake-word model testing, and deeper provider
 configuration.
 ```
 
+7. For a technical v2 walkthrough, restart normal mode and open Identity.
+
+```text
+Phase 38 adds trusted-device authentication and backend-owned permissions. The
+sample users are demo-only, raw tokens are never part of demo data, and the
+Mirror home does not expose administration controls.
+```
+
 ## Notes For Recording
 
 - Demo mode is explicit. Use `VITE_MIRRAGE_DEMO_MODE=true` only for fake
@@ -125,6 +133,13 @@ npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 ht
 npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=context ..\assets\screenshots\context-focus.png
 npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=media ..\assets\screenshots\media-focus.png
 npx playwright screenshot --viewport-size "1920,1080" --wait-for-timeout 1800 http://127.0.0.1:5173?view=smart-home ..\assets\screenshots\smart-home-focus.png
+```
+
+Capture the Identity view in normal demo mode, not Mirror Mode:
+
+```powershell
+$env:VITE_MIRROR_MODE="false"
+npx playwright screenshot --viewport-size "1440,1000" --wait-for-timeout 1800 http://127.0.0.1:5173?view=identity ..\assets\screenshots\identity-admin.png
 ```
 
 ## Suggested Video Title

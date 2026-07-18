@@ -24,6 +24,12 @@ npm run preview
 The backend URL is read from `VITE_API_BASE_URL` and defaults to
 `http://127.0.0.1:8000`.
 
+The normal development interface includes an owner-only Identity view. A
+trusted-device token entered there is kept in module memory for the current page
+session; it is not written to `localStorage` or bundled into a `VITE_`
+variable. Mirror Mode shows only the current display name and does not expose
+identity administration.
+
 For portfolio screenshots:
 
 ```powershell

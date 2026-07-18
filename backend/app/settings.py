@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    app_version: str = "2.0.0-dev"
     app_env: str = "development"
     api_port: int = 8000
     allowed_origins: list[str] = [
@@ -39,6 +40,16 @@ class Settings(BaseSettings):
     # Local privacy-first memory store.
     memory_database_path: str = "data/mirrage-memory.sqlite3"
     backup_directory: str = "backups"
+
+    # Local identity, trusted-device authentication, approvals, and audit data.
+    identity_enabled: bool = True
+    identity_mode: str = "development"
+    identity_database_path: str = "data/mirrage-identity.sqlite3"
+    identity_device_token_bytes: int = 32
+    identity_session_ttl_seconds: int = 86400
+    approval_ttl_seconds: int = 120
+    audit_retention_days: int = 365
+    identity_dev_bypass: bool = False
 
     # Smart home / Home Assistant configuration.
     smart_home_enabled: bool = False

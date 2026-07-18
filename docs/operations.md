@@ -1,5 +1,23 @@
 # Operations
 
+## Identity Operations
+
+Check the safe identity summary with an owner device token:
+
+```powershell
+$headers = @{ Authorization = "Bearer <OWNER_DEVICE_TOKEN>" }
+Invoke-RestMethod http://127.0.0.1:8000/api/identity/me -Headers $headers
+Invoke-RestMethod http://127.0.0.1:8000/api/identity/status
+Invoke-RestMethod http://127.0.0.1:8000/api/audit/events -Headers $headers
+```
+
+Review active users and devices after household changes. Revoke unused devices
+instead of deleting audit history. Keep at least one tested owner device and a
+recent identity backup.
+
+The normal-mode frontend Identity view accepts a token for the current browser
+session only. Mirror Mode intentionally does not expose household administration.
+
 These are the normal maintenance tasks for a Mirrage installation.
 
 ## Daily Checks
@@ -25,7 +43,8 @@ For installed hardware, also check:
 ## Full Health Check
 
 ```bash
-curl http://127.0.0.1:8000/api/health/full
+export MIRRAGE_OWNER_TOKEN="<OWNER_DEVICE_TOKEN>"
+curl -H "Authorization: Bearer $MIRRAGE_OWNER_TOKEN" http://127.0.0.1:8000/api/health/full
 ```
 
 Use this when diagnosing issues. It reports:
@@ -115,7 +134,7 @@ If the mirror does not return:
 ```bash
 systemctl status mirrage-docker
 docker compose -f /opt/mirrage/docker-compose.prod.yml ps
-curl http://127.0.0.1:8000/api/health/full
+curl -H "Authorization: Bearer $MIRRAGE_OWNER_TOKEN" http://127.0.0.1:8000/api/health/full
 ```
 
 ## Check Integrations

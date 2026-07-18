@@ -3,6 +3,8 @@ import type {
   CalendarStatus,
   DailyContext,
   HealthStatus,
+  IdentityPrincipal,
+  IdentityUser,
   PresenceSettings,
   PresenceSnapshot,
   ProactiveSummary,
@@ -11,10 +13,71 @@ import type {
   SpotifyPlayback,
   SpotifyStatus,
   SystemStatus,
+  TrustedDevice,
   VoiceStatus,
   WakeEngineStatus,
   WeatherInfo,
 } from './types';
+
+export const demoIdentityPrincipal: IdentityPrincipal = {
+  authenticated: true,
+  user_id: 'demo-owner',
+  display_name: 'Sample Owner',
+  role: 'owner',
+  device_id: 'demo-mirror',
+  authentication_method: 'development',
+  assurance_level: 'low',
+  permissions: ['identity.users.read', 'identity.devices.read', 'audit.read'],
+  correlation_id: 'demo-correlation',
+};
+
+export const demoIdentityUsers: IdentityUser[] = [
+  {
+    public_id: 'demo-owner',
+    display_name: 'Sample Owner',
+    role: 'owner',
+    status: 'active',
+    household_member: true,
+    created_at: '2026-07-18T08:00:00Z',
+    updated_at: '2026-07-18T08:00:00Z',
+    disabled_at: null,
+  },
+  {
+    public_id: 'demo-family',
+    display_name: 'Sample Family',
+    role: 'family',
+    status: 'active',
+    household_member: true,
+    created_at: '2026-07-18T08:10:00Z',
+    updated_at: '2026-07-18T08:10:00Z',
+    disabled_at: null,
+  },
+  {
+    public_id: 'demo-guest',
+    display_name: 'Sample Guest',
+    role: 'guest',
+    status: 'active',
+    household_member: false,
+    created_at: '2026-07-18T08:20:00Z',
+    updated_at: '2026-07-18T08:20:00Z',
+    disabled_at: null,
+  },
+];
+
+export const demoTrustedDevices: TrustedDevice[] = [
+  {
+    public_id: 'demo-mirror',
+    user_id: 'demo-owner',
+    display_name: 'Sample Mirror',
+    device_type: 'mirror',
+    trust_level: 'privileged',
+    status: 'active',
+    created_at: '2026-07-18T08:00:00Z',
+    last_seen_at: '2026-07-18T12:00:00Z',
+    revoked_at: null,
+    metadata: {},
+  },
+];
 
 const now = new Date();
 const today = now.toISOString().slice(0, 10);

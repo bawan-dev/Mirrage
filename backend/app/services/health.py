@@ -8,6 +8,7 @@ from ai.router import provider_router
 from ai.runtime import assistant_runtime
 from backend.app.schemas import HealthComponentResponse, HealthResponse
 from backend.app.services.calendar import get_calendar_status
+from backend.app.services.identity import identity_status
 from backend.app.services.memory import memory_health
 from backend.app.services.presence import assistant_state_manager
 from backend.app.services.smart_home import smart_home_service
@@ -28,6 +29,7 @@ def full_health() -> HealthResponse:
     checks = [
         _backend_check(),
         _environment_check(),
+        _identity_check(),
         _memory_check(),
         _ai_runtime_check(),
         _provider_check(),
@@ -101,6 +103,45 @@ def _memory_check() -> HealthComponentResponse:
         details={
             "database_path": result["database_path"],
             "record_count": result["record_count"],
+        },
+    )
+
+
+def _identity_check() -> HealthComponentResponse:
+    try:
+        status = identity_status()
+    except Exception as exc:
+        return HealthComponentResponse(
+            name="identity",
+            status="error",
+            message="Identity database health check failed.",
+            details={"error": exc.__class__.__name__},
+        )
+
+    if not status.enabled:
+        check_status = "warning"
+    elif status.mode == "enforced" and not status.owner_present:
+        check_status = "error"
+    elif status.mode == "enforced" and status.active_device_count == 0:
+        check_status = "warning"
+    elif not status.owner_present:
+        check_status = "warning"
+    else:
+        check_status = "ok"
+
+    return HealthComponentResponse(
+        name="identity",
+        status=check_status,
+        message=status.message,
+        details={
+            "enabled": status.enabled,
+            "mode": status.mode,
+            "database_status": status.database_status,
+            "active_user_count": status.active_user_count,
+            "owner_present": status.owner_present,
+            "active_device_count": status.active_device_count,
+            "pending_approval_count": status.pending_approval_count,
+            "audit_status": status.audit_status,
         },
     )
 

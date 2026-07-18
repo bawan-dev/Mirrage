@@ -5,15 +5,22 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type ReactNode,
 } from 'react';
 
 import {
+  disableIdentityUser,
+  getApprovals,
+  getAuditEvents,
   getCalendarLoginUrl,
   getCalendarStatus,
   getCalendarToday,
   getCalendarUpcoming,
   getDailyContext,
   getHealthStatus,
+  getIdentityDevices,
+  getIdentityMe,
+  getIdentityUsers,
   getPresenceEventsUrl,
   getPresenceSettings,
   getPresenceStatus,
@@ -31,9 +38,11 @@ import {
   activateSmartHomeScene,
   runSmartHomeEntityAction,
   runSpotifyAction,
+  revokeTrustedDevice,
   sendAssistantMessage,
   sendPresenceTransition,
   sendWakeWordDetection,
+  setTrustedDeviceToken,
 } from './api';
 import {
   routeAssistantCommand,
@@ -47,6 +56,8 @@ import {
   demoCalendarUpcoming,
   demoDailyContext,
   demoHealthStatus,
+  demoIdentityPrincipal,
+  demoIdentityUsers,
   demoPresenceSettings,
   demoPresenceSnapshot,
   demoProactiveSummary,
@@ -56,17 +67,22 @@ import {
   demoSpotifyPlayback,
   demoSpotifyStatus,
   demoSystemStatus,
+  demoTrustedDevices,
   demoVoiceStatus,
   demoWakeEngineStatus,
   demoWeather,
 } from './demoData';
 import type {
+  Approval,
   AssistantReply,
+  AuditEvent,
   CalendarEvent,
   CalendarSchedule,
   CalendarStatus,
   DailyContext,
   HealthStatus,
+  IdentityPrincipal,
+  IdentityUser,
   PresenceSettings,
   PresenceSnapshot,
   PresenceState,
@@ -78,6 +94,7 @@ import type {
   SpotifyPlayback,
   SpotifyStatus,
   SystemStatus,
+  TrustedDevice,
   VoiceStatus,
   WakeEngineStatus,
   WeatherInfo,
@@ -90,7 +107,8 @@ type FocusView =
   | 'media'
   | 'calendar'
   | 'context'
-  | 'smart-home';
+  | 'smart-home'
+  | 'identity';
 
 const focusViewValues: FocusView[] = [
   'home',
@@ -100,6 +118,7 @@ const focusViewValues: FocusView[] = [
   'calendar',
   'context',
   'smart-home',
+  'identity',
 ];
 
 interface BackendState {
@@ -132,6 +151,12 @@ interface SmartHomeUiState {
   actionMessage: string | null;
   error: string | null;
   isLoading: boolean;
+}
+
+interface IdentityUiState {
+  error: string | null;
+  isLoading: boolean;
+  message: string | null;
 }
 
 type AssistantOrbState =
@@ -478,6 +503,14 @@ export default function App() {
     useState<SmartHomeEntitiesResponse | null>(null);
   const [smartHomeSensors, setSmartHomeSensors] =
     useState<SmartHomeEntitiesResponse | null>(null);
+  const [identityPrincipal, setIdentityPrincipal] =
+    useState<IdentityPrincipal | null>(null);
+  const [identityUsers, setIdentityUsers] = useState<IdentityUser[]>([]);
+  const [trustedDevices, setTrustedDevices] = useState<TrustedDevice[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<Approval[]>([]);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [identityTokenDraft, setIdentityTokenDraft] = useState('');
+  const [identitySessionVersion, setIdentitySessionVersion] = useState(0);
   const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatus | null>(
     null,
   );
@@ -508,6 +541,11 @@ export default function App() {
     actionMessage: null,
     error: null,
     isLoading: true,
+  });
+  const [identityState, setIdentityState] = useState<IdentityUiState>({
+    error: null,
+    isLoading: true,
+    message: null,
   });
   const [draft, setDraft] = useState('');
   const [assistantBusy, setAssistantBusy] = useState(false);
@@ -540,6 +578,68 @@ export default function App() {
       meta: 'Provider status appears after the first message.',
     },
   ]);
+
+  const refreshIdentity = useCallback(async () => {
+    setIdentityState((current) => ({
+      ...current,
+      error: null,
+      isLoading: true,
+    }));
+
+    if (isDemoMode) {
+      setIdentityPrincipal(demoIdentityPrincipal);
+      setIdentityUsers(demoIdentityUsers);
+      setTrustedDevices(demoTrustedDevices);
+      setPendingApprovals([]);
+      setAuditEvents([]);
+      setIdentityState({
+        error: null,
+        isLoading: false,
+        message: 'Showing isolated sample identity data.',
+      });
+      return;
+    }
+
+    try {
+      const principal = await getIdentityMe();
+      setIdentityPrincipal(principal);
+
+      if (principal.role === 'owner') {
+        const [users, devices, approvals, audit] = await Promise.all([
+          getIdentityUsers(),
+          getIdentityDevices(),
+          getApprovals(),
+          getAuditEvents(),
+        ]);
+        setIdentityUsers(users);
+        setTrustedDevices(devices);
+        setPendingApprovals(approvals.items);
+        setAuditEvents(audit.items);
+      } else {
+        setIdentityUsers([]);
+        setTrustedDevices([]);
+        setPendingApprovals([]);
+        setAuditEvents([]);
+      }
+
+      setIdentityState({
+        error: null,
+        isLoading: false,
+        message: null,
+      });
+    } catch {
+      setIdentityPrincipal(null);
+      setIdentityUsers([]);
+      setTrustedDevices([]);
+      setPendingApprovals([]);
+      setAuditEvents([]);
+      setIdentityState({
+        error: 'Enter a trusted-device token for this browser session.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }, [isDemoMode]);
 
   const reportPresenceTransition = useCallback(
     async (transition: PresenceTransition) => {
@@ -616,6 +716,16 @@ export default function App() {
 
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    void refreshIdentity();
+  }, [identitySessionVersion, refreshIdentity]);
+
+  useEffect(() => {
+    if (isMirrorMode && activeView === 'identity') {
+      setActiveView('home');
+    }
+  }, [activeView, isMirrorMode]);
 
   useEffect(() => {
     if (!isMirrorMode) {
@@ -982,7 +1092,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [isDemoMode]);
+  }, [identitySessionVersion, isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
@@ -1034,7 +1144,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [isDemoMode]);
+  }, [identitySessionVersion, isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
@@ -1078,7 +1188,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [isDemoMode]);
+  }, [identitySessionVersion, isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
@@ -1122,7 +1232,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [isDemoMode]);
+  }, [identitySessionVersion, isDemoMode]);
 
   useEffect(() => {
     let isActive = true;
@@ -1177,7 +1287,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [isDemoMode]);
+  }, [identitySessionVersion, isDemoMode]);
 
   const currentTime = useMemo(
     () =>
@@ -2215,6 +2325,71 @@ export default function App() {
     }
   }
 
+  function handleIdentityTokenSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!identityTokenDraft.trim() || isDemoMode) {
+      return;
+    }
+    setTrustedDeviceToken(identityTokenDraft);
+    setIdentityTokenDraft('');
+    setIdentitySessionVersion((current) => current + 1);
+    setIdentityState({
+      error: null,
+      isLoading: true,
+      message: 'Authenticating this browser session.',
+    });
+  }
+
+  function handleIdentityDisconnect() {
+    setTrustedDeviceToken(null);
+    setIdentityPrincipal(null);
+    setIdentitySessionVersion((current) => current + 1);
+  }
+
+  async function handleDisableIdentityUser(user: IdentityUser) {
+    if (isDemoMode || user.role === 'owner') {
+      return;
+    }
+    setIdentityState({ error: null, isLoading: true, message: null });
+    try {
+      await disableIdentityUser(user.public_id);
+      await refreshIdentity();
+      setIdentityState({
+        error: null,
+        isLoading: false,
+        message: `${user.display_name} was disabled.`,
+      });
+    } catch {
+      setIdentityState({
+        error: 'The user could not be disabled.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }
+
+  async function handleRevokeTrustedDevice(device: TrustedDevice) {
+    if (isDemoMode || device.public_id === identityPrincipal?.device_id) {
+      return;
+    }
+    setIdentityState({ error: null, isLoading: true, message: null });
+    try {
+      await revokeTrustedDevice(device.public_id);
+      await refreshIdentity();
+      setIdentityState({
+        error: null,
+        isLoading: false,
+        message: `${device.display_name} was revoked.`,
+      });
+    } catch {
+      setIdentityState({
+        error: 'The trusted device could not be revoked.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }
+
   return (
     <main
       className={`relative mx-auto flex min-h-screen flex-col overflow-hidden ${
@@ -2240,6 +2415,7 @@ export default function App() {
             currentDate={currentDate}
             currentTime={currentTime}
             inactivityLevel={mirrorInactivityLevel}
+            identityName={identityPrincipal?.display_name ?? null}
             onOpen={openFocus}
             proactiveNudge={proactiveNudge}
             proactiveSummary={proactiveSummary}
@@ -2254,6 +2430,7 @@ export default function App() {
             contextSummary={contextSummary}
             currentDate={currentDate}
             currentTime={currentTime}
+            identityName={identityPrincipal?.display_name ?? null}
             assistantOrbState={assistantOrbState}
             onOpen={openFocus}
             presenceDetail={presenceDetail}
@@ -2368,6 +2545,25 @@ export default function App() {
             status={smartHomeStatus}
           />
         )}
+
+        {activeView === 'identity' && !isMirrorMode && (
+          <IdentityFocus
+            auditEvents={auditEvents}
+            devices={trustedDevices}
+            identityState={identityState}
+            onClose={closeFocus}
+            onDisableUser={(user) => void handleDisableIdentityUser(user)}
+            onDisconnect={handleIdentityDisconnect}
+            onRefresh={() => void refreshIdentity()}
+            onRevokeDevice={(device) => void handleRevokeTrustedDevice(device)}
+            onTokenChange={setIdentityTokenDraft}
+            onTokenSubmit={handleIdentityTokenSubmit}
+            pendingApprovals={pendingApprovals}
+            principal={identityPrincipal}
+            tokenDraft={identityTokenDraft}
+            users={identityUsers}
+          />
+        )}
       </section>
       {isMirrorMode && (
         <>
@@ -2388,6 +2584,7 @@ interface HomeStateProps {
   contextSummary: string;
   currentDate: string;
   currentTime: string;
+  identityName: string | null;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
   presenceDetail: string;
   smartHomeSummary: string;
@@ -2404,6 +2601,7 @@ function HomeState({
   contextSummary,
   currentDate,
   currentTime,
+  identityName,
   onOpen,
   presenceDetail,
   smartHomeSummary,
@@ -2496,9 +2694,20 @@ function HomeState({
         >
           Home
         </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('identity')}
+        >
+          Identity
+        </button>
       </nav>
 
       <footer className="ambient-home-status">
+        <p>
+          {identityName ? `Signed in as ${identityName}` : 'Anonymous session'}
+        </p>
         <p>{backendLabel}</p>
         <p>{voiceLabel}</p>
         <p>{presenceDetail}</p>
@@ -2517,6 +2726,7 @@ interface MirrorHomeStateProps {
   currentDate: string;
   currentTime: string;
   inactivityLevel: MirrorInactivityLevel;
+  identityName: string | null;
   onOpen: (view: Exclude<FocusView, 'home'>) => void;
   proactiveNudge: string;
   proactiveSummary: ProactiveSummary | null;
@@ -2531,6 +2741,7 @@ function MirrorHomeState({
   currentDate,
   currentTime,
   inactivityLevel,
+  identityName,
   onOpen,
   proactiveNudge,
   proactiveSummary,
@@ -2549,7 +2760,9 @@ function MirrorHomeState({
       className={`mirror-home ${inactivityLevel === 'sleep' ? 'mirror-home-sleep' : ''}`}
     >
       <div className="mirror-clock mirror-burn" style={{ transform }}>
-        <p className={labelClass}>Mirrage</p>
+        <p className={labelClass}>
+          {identityName ? `Mirrage / ${identityName}` : 'Mirrage'}
+        </p>
         <h1>{currentTime}</h1>
         <p>{currentDate}</p>
       </div>
@@ -3601,6 +3814,208 @@ function SmartHomeSensorSection({
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+interface IdentityFocusProps {
+  auditEvents: AuditEvent[];
+  devices: TrustedDevice[];
+  identityState: IdentityUiState;
+  onClose: () => void;
+  onDisableUser: (user: IdentityUser) => void;
+  onDisconnect: () => void;
+  onRefresh: () => void;
+  onRevokeDevice: (device: TrustedDevice) => void;
+  onTokenChange: (value: string) => void;
+  onTokenSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  pendingApprovals: Approval[];
+  principal: IdentityPrincipal | null;
+  tokenDraft: string;
+  users: IdentityUser[];
+}
+
+function IdentityFocus({
+  auditEvents,
+  devices,
+  identityState,
+  onClose,
+  onDisableUser,
+  onDisconnect,
+  onRefresh,
+  onRevokeDevice,
+  onTokenChange,
+  onTokenSubmit,
+  pendingApprovals,
+  principal,
+  tokenDraft,
+  users,
+}: IdentityFocusProps) {
+  const isOwner = principal?.role === 'owner';
+
+  return (
+    <div className={focusPanelClass}>
+      <FocusHeader
+        eyebrow="Safety"
+        onClose={onClose}
+        title="Household Identity"
+      />
+
+      {!principal ? (
+        <section className="ambient-identity-login">
+          <p className={labelClass}>Trusted Device</p>
+          <h2>Authenticate this browser session.</h2>
+          <p>
+            Use a device token issued by the backend. It stays in memory and is
+            cleared when this page closes.
+          </p>
+          <form onSubmit={onTokenSubmit}>
+            <input
+              type="password"
+              value={tokenDraft}
+              onChange={(event) => onTokenChange(event.target.value)}
+              placeholder="mrg_..."
+              autoComplete="off"
+              spellCheck={false}
+              aria-label="Trusted-device token"
+            />
+            <button type="submit" disabled={!tokenDraft.trim()}>
+              Authenticate
+            </button>
+          </form>
+        </section>
+      ) : (
+        <div className="ambient-identity">
+          <section className="ambient-identity-current">
+            <p className={labelClass}>Active Identity</p>
+            <h2>{principal.display_name}</h2>
+            <p>
+              {formatStatus(principal.role)} /{' '}
+              {formatStatus(principal.authentication_method)} /{' '}
+              {formatStatus(principal.assurance_level)} assurance
+            </p>
+            <div className="ambient-quiet-actions">
+              <button type="button" onClick={onRefresh}>
+                Refresh
+              </button>
+              <button type="button" onClick={onDisconnect}>
+                End session
+              </button>
+            </div>
+          </section>
+
+          {isOwner ? (
+            <>
+              <IdentityListSection title="Household Users">
+                {users.map((user) => (
+                  <article key={user.public_id}>
+                    <div>
+                      <h3>{user.display_name}</h3>
+                      <p>
+                        {formatStatus(user.role)} / {formatStatus(user.status)}
+                      </p>
+                    </div>
+                    {user.status === 'active' && user.role !== 'owner' && (
+                      <button
+                        type="button"
+                        onClick={() => onDisableUser(user)}
+                        disabled={identityState.isLoading}
+                      >
+                        Disable
+                      </button>
+                    )}
+                  </article>
+                ))}
+              </IdentityListSection>
+
+              <IdentityListSection title="Trusted Devices">
+                {devices.map((device) => (
+                  <article key={device.public_id}>
+                    <div>
+                      <h3>{device.display_name}</h3>
+                      <p>
+                        {formatStatus(device.device_type)} /{' '}
+                        {formatStatus(device.trust_level)} /{' '}
+                        {formatStatus(device.status)}
+                      </p>
+                    </div>
+                    {device.status === 'active' &&
+                      device.public_id !== principal.device_id && (
+                        <button
+                          type="button"
+                          onClick={() => onRevokeDevice(device)}
+                          disabled={identityState.isLoading}
+                        >
+                          Revoke
+                        </button>
+                      )}
+                  </article>
+                ))}
+              </IdentityListSection>
+
+              <IdentityListSection title="Pending Approvals">
+                {pendingApprovals.length === 0 ? (
+                  <p>No requests are waiting for review.</p>
+                ) : (
+                  pendingApprovals.map((approval) => (
+                    <article key={approval.public_id}>
+                      <div>
+                        <h3>{formatStatus(approval.action)}</h3>
+                        <p>
+                          {formatStatus(approval.risk_level)} / expires{' '}
+                          {formatUpdated(approval.expires_at)}
+                        </p>
+                      </div>
+                    </article>
+                  ))
+                )}
+              </IdentityListSection>
+
+              <IdentityListSection title="Recent Audit Events">
+                {auditEvents.map((event) => (
+                  <article key={event.public_id}>
+                    <div>
+                      <h3>{formatStatus(event.event_type)}</h3>
+                      <p>
+                        {formatUpdated(event.timestamp)} /{' '}
+                        {formatStatus(
+                          event.result ?? event.authorization_decision ?? '',
+                        )}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </IdentityListSection>
+            </>
+          ) : (
+            <p className="ambient-empty-line">
+              Household administration is available to owners only.
+            </p>
+          )}
+        </div>
+      )}
+
+      {identityState.message && (
+        <p className="ambient-success">{identityState.message}</p>
+      )}
+      {identityState.error && (
+        <p className="ambient-warning">{identityState.error}</p>
+      )}
+    </div>
+  );
+}
+
+function IdentityListSection({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: string;
+}) {
+  return (
+    <section className="ambient-identity-section">
+      <p className={labelClass}>{title}</p>
+      <div className="ambient-identity-list">{children}</div>
     </section>
   );
 }

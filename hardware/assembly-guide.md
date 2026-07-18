@@ -50,7 +50,7 @@ This is the practical order for building Mirrage v1.
 5. Start production compose.
 6. Enable systemd service.
 7. Open frontend in kiosk mode.
-8. Verify /api/health/full.
+8. Verify `/api/health/full` with the owner trusted-device token.
 9. Test wake engine status.
 10. Test Smart Home status.
 11. Reboot and confirm Mirrage returns automatically.

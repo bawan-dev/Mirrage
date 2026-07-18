@@ -44,7 +44,7 @@ the wake engine error in:
 
 ```text
 GET /api/wake-word/status
-GET /api/health/full
+GET /api/health/full (owner bearer token required)
 ```
 
 ## Honest Current Limitation

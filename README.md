@@ -11,13 +11,23 @@ physical build.
 
 ## v1 Release Status
 
-Mirrage v1.0.0 is prepared as the first complete portfolio release. The release
+Mirrage v1.0.0 remains the stable first portfolio release. The release
 focus is the full-stack foundation, ambient mirror experience, demo readiness,
 deployment path, and honest hardware plan.
 
 v1 does not claim the physical mirror is assembled yet. It also does not claim a
 trained wake-word model, real smart-home devices, Spotify, Calendar, or local AI
 are available unless those providers are configured on the machine running it.
+
+## v2 Development Status
+
+`main` now contains the first Mirrage v2 foundation: a persistent household
+identity model, trusted-device bearer authentication, central role and
+permission policy, expiring approvals, append-only audit events, protected
+private routes, and identity-aware smart-home controls.
+
+This does not mean Mirrage recognizes who is speaking. Voice, face, UWB, phone
+proximity, vehicle, and wearable identity evidence remain future work.
 
 ## Product Direction
 
@@ -80,6 +90,13 @@ What works now:
 - startup environment validation
 - full health monitoring endpoint for subsystem checks
 - local SQLite backup and restore utilities
+- local SQLite identity store with owner, family, trusted guest, guest, and
+  service roles
+- one-time trusted-device enrollment tokens stored only as secure hashes
+- deterministic default-deny authorization, permission overrides, expiring
+  approvals, and append-only redacted audit events
+- protected memory, context, Calendar, media, full-health, and smart-home routes
+- owner-only Identity view in normal mode; Mirror Mode stays uncluttered
 - backend-owned smart home foundation for Home Assistant discovery, safe light/switch control, scene activation, and read-only sensors
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - physical build documentation for the first mirror prototype, including
@@ -94,6 +111,7 @@ What is still planned:
 - Spotify persistence, device picker, and voice playback commands
 - Calendar token persistence and richer schedule actions
 - memory editing UI and stronger privacy controls
+- true per-user memory partitioning and richer household relationship context
 - AI-enhanced context summaries behind explicit privacy controls
 - true provider token streaming
 - richer local model profiles for small, summary, planning, and future agent tasks
@@ -119,6 +137,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Memory | Local SQLite preferences, facts, goals, and routines |
 | Operations | Production Compose, health checks, logs, startup validation, local backups |
 | Proactive assistant | Local rule-based daily nudge from context sources |
+| Identity and safety | v2 local identity store, trusted devices, permissions, approvals, and audit logs |
 | Smart home | Home Assistant foundation with safe domains; real devices require local configuration |
 | Hardware | Physical build plan documented; real parts still need testing |
 | Vision | Not built yet |
@@ -136,6 +155,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Context focus | [assets/screenshots/context-focus.png](assets/screenshots/context-focus.png) |
 | Media focus | [assets/screenshots/media-focus.png](assets/screenshots/media-focus.png) |
 | Smart Home focus | [assets/screenshots/smart-home-focus.png](assets/screenshots/smart-home-focus.png) |
+| Identity administration | [assets/screenshots/identity-admin.png](assets/screenshots/identity-admin.png) |
 
 Demo video: `TBD`
 
@@ -149,6 +169,9 @@ Demo flow: [docs/demo-guide.md](docs/demo-guide.md)
 Mirror Dashboard
       |
       v
+Authentication -> Principal -> Authorization / Approval -> Audit
+      |
+      v
 FastAPI Backend
       |
       +-- AI Runtime
@@ -157,6 +180,8 @@ FastAPI Backend
       |     +-- Local / Cloud Providers
       |
       +-- Local Memory Store
+      |
+      +-- Identity Store + Trusted Devices
       |
       +-- Personal Context Layer
       |
@@ -201,6 +226,12 @@ More detail:
 - [Deployment](docs/deployment.md)
 - [Environment](docs/environment.md)
 - [Health monitoring](docs/health-monitoring.md)
+- [Identity and safety](docs/identity-safety.md)
+- [Security model](docs/security-model.md)
+- [Permissions](docs/permissions.md)
+- [Trusted devices](docs/trusted-devices.md)
+- [Approvals](docs/approvals.md)
+- [Audit logs](docs/audit-logs.md)
 - [Logging](docs/logging.md)
 - [Memory layer](docs/memory.md)
 - [Mirror Mode](docs/mirror-mode.md)
@@ -355,9 +386,11 @@ Check:
 
 ```text
 http://127.0.0.1:8000/api/health
-http://127.0.0.1:8000/api/health/full
 http://127.0.0.1:5173/health
 ```
+
+Full health is protected. Call `http://127.0.0.1:8000/api/health/full` with an
+owner trusted-device bearer token.
 
 Production notes: [docs/deployment.md](docs/deployment.md).
 
@@ -383,13 +416,18 @@ pytest
 
 Current manual checks:
 
+Protected v2 endpoints require `Authorization: Bearer <DEVICE_TOKEN>`. For an
+explicit local-only shortcut, set `MIRRAGE_IDENTITY_DEV_BYPASS=true`; production
+startup rejects that setting. The complete identity walkthrough is in
+[Run notes](docs/run-notes.md#phase-38-identity-and-safety-manual-validation).
+
 - open `http://127.0.0.1:5173` and confirm the mirror UI loads
 - set `VITE_MIRROR_MODE=true`, reload the frontend, and confirm the ambient Mirror Mode home appears
 - set `VITE_MIRRAGE_DEMO_MODE=true` only for portfolio walkthroughs and confirm
   demo data appears without needing real OAuth accounts
 - confirm Mirror Mode dims after inactivity and returns to home from a focus view after the second timeout
 - open `http://127.0.0.1:8000/health` and confirm the backend is online
-- open `http://127.0.0.1:8000/api/health/full` and confirm subsystem health checks return without secrets
+- call `http://127.0.0.1:8000/api/health/full` with an owner bearer token and confirm subsystem health checks return without secrets
 - check the mirror home shows backend status when the API is running
 - check the weather view either shows live data or a clear fallback
 - open the assistant focus view, press `Push to talk`, allow microphone access, and confirm the transcript appears
@@ -453,13 +491,16 @@ interesting part is not one API call; it is the system shape:
 
 - React mirror interface designed for a wall display, not a normal dashboard
 - FastAPI backend with service boundaries for AI, memory, weather, Calendar,
-  Spotify, smart home, wake-word, health, logging, and backups
+  Spotify, smart home, identity, authorization, approvals, audit, wake-word,
+  health, logging, and backups
 - local-first privacy decisions around memory, context, wake-word detection, and
   deterministic assistant commands
 - production path with Docker Compose, systemd notes, persistent data, health
   checks, structured logs, and backup utilities
 - physical build documentation that covers display, mirror material, compute,
   audio, microphones, heat, frame, cabling, cost, maintenance, and testing
+- backend-owned trusted-device authentication and deterministic authorization;
+  AI output cannot grant access or bypass smart-home safety policy
 
 Short interview explanation:
 
@@ -515,11 +556,13 @@ Completed foundation work:
 - physical mirror build documentation and hardware plan
 - v1 premium mirror polish, explicit demo mode, refreshed screenshots, and
   release checklist
+- v2 identity, permissions, trusted devices, approvals, audit, route protection,
+  and identity backup/restore foundation
 
-Next planned milestone:
+Current milestone:
 
-- Create the `v1.0.0` Git tag after final review, then test the production stack
-  on the target mini PC before buying final mirror parts
+- Phase 38 begins v2 development on `main`; v1.0.0 remains the stable tagged
+  portfolio release
 
 Future milestones:
 

@@ -1,9 +1,13 @@
 import type {
   AssistantReply,
+  ApprovalList,
+  AuditEventList,
   CalendarSchedule,
   CalendarStatus,
   DailyContext,
   HealthStatus,
+  IdentityPrincipal,
+  IdentityUser,
   PresenceSettings,
   PresenceSnapshot,
   PresenceTransition,
@@ -16,6 +20,7 @@ import type {
   SpotifyPlayback,
   SpotifyStatus,
   SystemStatus,
+  TrustedDevice,
   VoiceStatus,
   WakeEngineStatus,
   WeatherInfo,
@@ -24,8 +29,27 @@ import type {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000';
 
+let trustedDeviceToken: string | null = null;
+
+export function setTrustedDeviceToken(token: string | null): void {
+  trustedDeviceToken = token?.trim() || null;
+}
+
+function requestHeaders(includeJson = false): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (includeJson) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (trustedDeviceToken) {
+    headers.Authorization = `Bearer ${trustedDeviceToken}`;
+  }
+  return headers;
+}
+
 async function fetchJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`);
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: requestHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
@@ -37,7 +61,7 @@ async function fetchJson<T>(path: string): Promise<T> {
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: requestHeaders(true),
     body: JSON.stringify(body),
   });
 
@@ -182,6 +206,40 @@ export function runSpotifyAction(
 ): Promise<SpotifyActionResult> {
   return postJson<SpotifyActionResult>(
     `/api/integrations/spotify/player/${action}`,
+    {},
+  );
+}
+
+export function getIdentityMe(): Promise<IdentityPrincipal> {
+  return fetchJson<IdentityPrincipal>('/api/identity/me');
+}
+
+export function getIdentityUsers(): Promise<IdentityUser[]> {
+  return fetchJson<IdentityUser[]>('/api/identity/users');
+}
+
+export function getIdentityDevices(): Promise<TrustedDevice[]> {
+  return fetchJson<TrustedDevice[]>('/api/identity/devices');
+}
+
+export function getApprovals(): Promise<ApprovalList> {
+  return fetchJson<ApprovalList>('/api/approvals?status=pending');
+}
+
+export function getAuditEvents(): Promise<AuditEventList> {
+  return fetchJson<AuditEventList>('/api/audit/events?limit=8');
+}
+
+export function disableIdentityUser(userId: string): Promise<IdentityUser> {
+  return postJson<IdentityUser>(
+    `/api/identity/users/${encodeURIComponent(userId)}/disable`,
+    {},
+  );
+}
+
+export function revokeTrustedDevice(deviceId: string): Promise<TrustedDevice> {
+  return postJson<TrustedDevice>(
+    `/api/identity/devices/${encodeURIComponent(deviceId)}/revoke`,
     {},
   );
 }

@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.app.identity_routes import router as identity_router
 from backend.app.logging_config import configure_logging
 from backend.app.routes import router
 from backend.app.services.startup import run_startup_validation
@@ -26,7 +27,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="Mirrage API",
-    version="0.1.0",
+    version=settings.app_version,
     description="Backend API for the Mirrage smart mirror system.",
     lifespan=lifespan,
 )
@@ -40,3 +41,4 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(identity_router)

@@ -6,7 +6,8 @@ Use this page when explaining Mirrage in a portfolio review or interview.
 
 Mirrage is a privacy-first ambient AI mirror platform. It combines a React mirror
 interface, FastAPI backend, AI runtime, local memory, presence engine, smart-home
-boundary, production deployment setup, and physical hardware build planning.
+boundary, v2 identity and safety engine, production deployment setup, and
+physical hardware build planning.
 
 ## Why It Is Technically Interesting
 
@@ -20,6 +21,8 @@ boundary, production deployment setup, and physical hardware build planning.
   sees speech.
 - Smart home actions are restricted to safe domains instead of letting free-form
   AI call arbitrary home services.
+- Trusted-device authentication, role permissions, approvals, and append-only
+  audit events are backend-owned. Names and AI output are not authentication.
 - Production docs cover Docker, systemd, health checks, logs, backups, and
   hardware installation planning.
 
@@ -28,6 +31,8 @@ boundary, production deployment setup, and physical hardware build planning.
 - React + Vite keeps the mirror UI simple and portable.
 - FastAPI gives a clean API boundary for the assistant and integrations.
 - SQLite is used for local memory because v1 is a single-user local appliance.
+- A separate versioned SQLite store begins v2 household identity without
+  pretending the existing memory database is already multi-user.
 - Provider routing keeps `stub`, Ollama, and OpenAI-compatible APIs behind one
   assistant interface.
 - Demo mode is explicit so fake portfolio data cannot be confused with
@@ -42,6 +47,8 @@ boundary, production deployment setup, and physical hardware build planning.
 - Spotify, Calendar, Home Assistant, and non-stub AI providers require local
   configuration.
 - Browser speech APIs depend on browser support.
+- Trusted-device tokens authenticate clients, but real voice, face, UWB, phone,
+  vehicle, and wearable identity evidence is not implemented.
 
 ## Suggested Walkthrough Order
 
@@ -51,5 +58,6 @@ boundary, production deployment setup, and physical hardware build planning.
 4. Weather
 5. Calendar or Media
 6. Smart Home boundary
-7. Architecture and deployment docs
-8. Physical mirror build plan
+7. Normal-mode Identity view and default-deny policy
+8. Architecture and deployment docs
+9. Physical mirror build plan

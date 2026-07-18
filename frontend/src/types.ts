@@ -280,3 +280,92 @@ export interface SmartHomeActionResult {
   message: string;
   entity: SmartHomeEntity | null;
 }
+
+export interface IdentityPrincipal {
+  authenticated: boolean;
+  user_id: string | null;
+  display_name: string;
+  role: string;
+  device_id: string | null;
+  authentication_method:
+    | 'anonymous'
+    | 'development'
+    | 'trusted_device'
+    | 'future_multi_factor';
+  assurance_level: 'anonymous' | 'low' | 'trusted_device' | 'strong';
+  permissions: string[];
+  correlation_id: string;
+}
+
+export interface IdentityUser {
+  public_id: string;
+  display_name: string;
+  role: 'owner' | 'family' | 'trusted_guest' | 'guest' | 'service';
+  status: 'active' | 'disabled';
+  household_member: boolean;
+  created_at: string;
+  updated_at: string;
+  disabled_at: string | null;
+}
+
+export interface TrustedDevice {
+  public_id: string;
+  user_id: string;
+  display_name: string;
+  device_type: string;
+  trust_level: string;
+  status: 'active' | 'revoked' | 'pending';
+  created_at: string;
+  last_seen_at: string | null;
+  revoked_at: string | null;
+  metadata: Record<string, unknown>;
+}
+
+export interface Approval {
+  public_id: string;
+  requester_user_id: string;
+  requester_device_id: string | null;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  risk_level: string;
+  status: string;
+  reason: string;
+  requested_at: string;
+  expires_at: string;
+  decided_at: string | null;
+  decided_by_user_id: string | null;
+  decision_reason: string | null;
+  correlation_id: string;
+}
+
+export interface ApprovalList {
+  items: Approval[];
+  count: number;
+}
+
+export interface AuditEvent {
+  public_id: string;
+  timestamp: string;
+  event_type: string;
+  actor_user_id: string | null;
+  actor_role: string | null;
+  device_id: string | null;
+  authentication_method: string | null;
+  action: string | null;
+  resource_type: string | null;
+  resource_id: string | null;
+  authorization_decision: string | null;
+  risk_level: string | null;
+  reason: string | null;
+  result: string | null;
+  correlation_id: string | null;
+  metadata: Record<string, unknown>;
+}
+
+export interface AuditEventList {
+  items: AuditEvent[];
+  count: number;
+  limit: number;
+  offset: number;
+}

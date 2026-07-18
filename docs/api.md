@@ -1,5 +1,68 @@
 # API
 
+## Authentication
+
+Public endpoints do not require a token. Protected endpoints require a trusted
+device bearer token:
+
+```http
+Authorization: Bearer <DEVICE_TOKEN>
+```
+
+The backend resolves the token to an active user and device, creates an
+authenticated principal, then checks a central permission and risk policy. A
+frontend-supplied name, role, or user ID is never accepted as authentication.
+
+Common responses:
+
+- `401`: no valid authenticated principal
+- `403`: authenticated but denied by permission or safety policy
+- `409`: the policy requires approval or the requested identity state conflicts
+- `422`: invalid request or identity policy input
+
+## Identity And Safety Endpoints
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/identity/status` | Public, safe summary | Identity store mode and counts |
+| `GET` | `/api/identity/me` | Authenticated | Current principal, assurance, effective permissions |
+| `GET` | `/api/identity/roles` | `identity.roles.read` | Built-in role policy |
+| `GET` | `/api/identity/permissions` | `identity.permissions.read` | Registered permission keys |
+| `GET` | `/api/identity/users` | `identity.users.read` | Safe household user list |
+| `POST` | `/api/identity/users` | Owner | Create user |
+| `GET` | `/api/identity/users/{id}` | `identity.users.read` | Safe user detail |
+| `PATCH` | `/api/identity/users/{id}` | Owner | Update name, role, or household flag |
+| `POST` | `/api/identity/users/{id}/disable` | Owner | Disable user and revoke devices |
+| `PUT` | `/api/identity/users/{id}/permissions` | Owner | Set explicit grant or deny |
+| `GET` | `/api/identity/devices` | `identity.devices.read` | Safe device list, no token material |
+| `POST` | `/api/identity/devices` | Owner | Enroll device; raw token returned once |
+| `GET` | `/api/identity/devices/{id}` | `identity.devices.read` | Safe device detail |
+| `POST` | `/api/identity/devices/{id}/revoke` | Owner | Revoke device token |
+| `GET` | `/api/approvals` | `approvals.read` | List/filter approvals |
+| `POST` | `/api/approvals` | Authenticated | Create expiring request |
+| `POST` | `/api/approvals/{id}/approve` | `approvals.manage` | Approve pending request |
+| `POST` | `/api/approvals/{id}/deny` | `approvals.manage` | Deny pending request |
+| `POST` | `/api/approvals/{id}/cancel` | Requester | Cancel pending request |
+| `GET` | `/api/audit/events` | `audit.read` | Paginated, filtered audit events |
+
+Token hashes and prefixes are internal storage fields and are not API response
+fields.
+
+## Protected Existing Routes
+
+- `health.full.read`: `/api/health/full`
+- `assistant.use`: assistant message and stream routes
+- `context.read_private`: daily context and proactive summaries
+- `memory.read_private` / `memory.write_private`: all memory routes
+- `calendar.read_private`: Calendar status and event reads
+- `media.read` / `media.control`: Spotify state and player controls
+- `smart_home.read`: status, entities, and sensors
+- `smart_home.control_low_risk`: lights, switches, and scenes
+- `system.admin`: presence settings and wake engine start/stop
+
+OAuth callbacks remain public protocol endpoints. They do not return private
+Calendar or Spotify payloads.
+
 Mirrage will start with a small backend API. The first endpoints should support the dashboard without pulling in AI, voice, or hardware complexity too early.
 
 Base URL for local development:

@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="820" viewBox="0 0 1240 820" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1140" viewBox="0 0 1240 1140" role="img" aria-labelledby="title desc">
   <title id="title">Mirrage physical and software architecture</title>
-  <desc id="desc">Diagram showing Mirrage as a physical smart mirror with mirror glass, display, mini PC or Raspberry Pi, microphone, speakers, Docker production stack, frontend kiosk mode, FastAPI backend, wake engine, local memory, Home Assistant, optional AI server, and local network.</desc>
+  <desc id="desc">Diagram showing the physical Mirrage appliance and its v2 identity trust boundary. Clients and future identity evidence feed authentication, which creates a principal for deterministic authorization before backend, AI, memory, or smart-home services can run.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#6ee7ff" />
@@ -20,10 +20,11 @@
       .green { stroke: #7cf7c4; stroke-width: 3; fill: none; marker-end: url(#arrow); }
       .gold { stroke: #f7c66d; stroke-width: 3; fill: none; marker-end: url(#arrow); }
       .muted { stroke: #344554; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .divider { stroke: #344554; stroke-width: 2; fill: none; }
     </style>
   </defs>
 
-  <rect class="bg" width="1240" height="820" />
+  <rect class="bg" width="1240" height="1140" />
 
   <text x="60" y="52" class="tag">MIRRAGE</text>
   <text x="60" y="88" class="label">Physical Mirror Architecture</text>
@@ -117,4 +118,55 @@
 
   <path d="M 645 476 L 360 720" class="gold" />
   <path d="M 645 476 L 880 720" class="gold" />
+
+  <path d="M 55 830 L 1180 830" class="divider" />
+  <text x="60" y="872" class="tag">V2 TRUST BOUNDARY</text>
+  <text x="60" y="900" class="small">Authentication establishes a principal. Policy alone decides whether protected services may run.</text>
+
+  <rect x="55" y="930" width="170" height="76" class="service" />
+  <text x="140" y="960" text-anchor="middle" class="label">Clients</text>
+  <text x="140" y="984" text-anchor="middle" class="small">mirror, phone, desktop</text>
+
+  <rect x="270" y="930" width="190" height="76" class="safe" />
+  <text x="365" y="960" text-anchor="middle" class="label">Authentication</text>
+  <text x="365" y="984" text-anchor="middle" class="small">trusted device today</text>
+
+  <rect x="505" y="930" width="190" height="76" class="data" />
+  <text x="600" y="960" text-anchor="middle" class="label">Principal</text>
+  <text x="600" y="984" text-anchor="middle" class="small">user, role, permissions</text>
+
+  <rect x="740" y="930" width="190" height="76" class="safe" />
+  <text x="835" y="960" text-anchor="middle" class="label">Policy Engine</text>
+  <text x="835" y="984" text-anchor="middle" class="small">allow, deny, approval</text>
+
+  <rect x="975" y="930" width="205" height="76" class="core" />
+  <text x="1077" y="960" text-anchor="middle" class="label">Backend Services</text>
+  <text x="1077" y="984" text-anchor="middle" class="small">AI, memory, smart home</text>
+
+  <path d="M 225 968 L 270 968" class="line" />
+  <path d="M 460 968 L 505 968" class="line" />
+  <path d="M 695 968 L 740 968" class="line" />
+  <path d="M 930 968 L 975 968" class="line" />
+
+  <rect x="55" y="1040" width="275" height="70" class="warn" />
+  <text x="192" y="1064" text-anchor="middle" class="label">Future Evidence</text>
+  <text x="192" y="1086" text-anchor="middle" class="small">phone, UWB, voice, vision</text>
+  <text x="192" y="1104" text-anchor="middle" class="small">vehicle, wearable</text>
+
+  <rect x="375" y="1040" width="200" height="70" class="data" />
+  <text x="475" y="1068" text-anchor="middle" class="label">Identity Store</text>
+  <text x="475" y="1092" text-anchor="middle" class="small">users, devices, overrides</text>
+
+  <rect x="620" y="1040" width="200" height="70" class="warn" />
+  <text x="720" y="1068" text-anchor="middle" class="label">Approval Engine</text>
+  <text x="720" y="1092" text-anchor="middle" class="small">expiring decisions</text>
+
+  <rect x="865" y="1040" width="200" height="70" class="data" />
+  <text x="965" y="1068" text-anchor="middle" class="label">Audit Log</text>
+  <text x="965" y="1092" text-anchor="middle" class="small">append-only, redacted</text>
+
+  <path d="M 330 1075 L 365 1006" class="gold" />
+  <path d="M 475 1040 L 420 1006" class="muted" />
+  <path d="M 720 1040 L 800 1006" class="gold" />
+  <path d="M 965 1040 L 885 1006" class="muted" />
 </svg>

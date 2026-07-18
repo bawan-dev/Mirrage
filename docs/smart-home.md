@@ -10,6 +10,8 @@ backend talk to Home Assistant.
 ```text
 Frontend Smart Home view
   -> FastAPI smart home routes
+  -> trusted-device authentication
+  -> permission and risk policy
   -> SmartHomeService
   -> HomeAssistantClient
   -> Home Assistant local API
@@ -52,6 +54,12 @@ Not supported yet:
 
 The frontend cannot call raw Home Assistant services by name. There is a guard
 route that rejects arbitrary service calls with `403`.
+
+Smart-home reads require `smart_home.read`. Current light, switch, and scene
+actions require `smart_home.control_low_risk`. Every allow or deny decision and
+every provider result is written to the redacted audit log. Globally blocked
+domains remain blocked even for an owner and cannot be unlocked by an AI model,
+a permission override, or an approval record.
 
 ## Endpoints
 
