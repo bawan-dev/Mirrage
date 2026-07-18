@@ -106,6 +106,9 @@ class AuthenticatedPrincipal(BaseModel):
     effective_permissions: frozenset[str] = Field(default_factory=frozenset)
     correlation_id: str
     device_trust_level: DeviceTrustLevel | None = None
+    device_type: DeviceType | None = None
+    human_session_id: str | None = None
+    human_session_active: bool = False
 
     @property
     def authenticated(self) -> bool:
@@ -122,6 +125,9 @@ class IdentityPrincipalResponse(BaseModel):
     assurance_level: AssuranceLevel
     permissions: list[str]
     correlation_id: str
+    device_type: DeviceType | None
+    human_session_active: bool
+    human_session_id: str | None
 
 
 class IdentityStatusResponse(BaseModel):

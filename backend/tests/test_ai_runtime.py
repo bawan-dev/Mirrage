@@ -153,7 +153,7 @@ def test_assistant_route_uses_runtime_for_unknown_messages(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def reply(message: str) -> RuntimeResult:
+    def reply(message: str, *, principal=None) -> RuntimeResult:  # noqa: ARG001
         return RuntimeResult(
             reply=f"runtime handled {message}",
             provider="runtime-test",
@@ -213,7 +213,7 @@ def test_streaming_endpoint_uses_runtime_fallback_shape(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def reply(message: str) -> RuntimeResult:
+    def reply(message: str, *, principal=None) -> RuntimeResult:  # noqa: ARG001
         return RuntimeResult(
             reply=f"streamed {message}",
             provider="stub",

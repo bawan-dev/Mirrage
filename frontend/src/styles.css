@@ -732,6 +732,212 @@ select {
   }
 }
 
+@media (max-width: 700px) {
+  .ambient-focus-header {
+    gap: 0.75rem;
+  }
+
+  .ambient-focus-header > div {
+    min-width: 0;
+  }
+
+  .ambient-focus-header h1 {
+    overflow-wrap: normal;
+    font-size: 2.25rem;
+  }
+}
+
+.ambient-profile-intro,
+.ambient-profile-form,
+.ambient-relationship-section {
+  max-width: 66rem;
+  margin-top: 3.5rem;
+}
+
+.ambient-profile-intro h2 {
+  margin: 0.8rem 0;
+  color: var(--color-text);
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-weight: 520;
+  letter-spacing: 0;
+}
+
+.ambient-profile-intro p,
+.ambient-profile-privacy p,
+.ambient-relationship-section > p,
+.ambient-directory span {
+  color: rgba(148, 163, 173, 0.72);
+}
+
+.ambient-profile-form > section,
+.ambient-relationship-section {
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ambient-profile-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.4rem 2.4rem;
+  margin-top: 1.8rem;
+}
+
+.ambient-profile-fields label,
+.ambient-profile-privacy label,
+.ambient-context-form,
+.ambient-inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  color: rgba(203, 220, 226, 0.72);
+  font-size: 0.82rem;
+}
+
+.ambient-profile-fields input,
+.ambient-profile-fields select,
+.ambient-profile-privacy select,
+.ambient-inline-form select,
+.ambient-context-form input,
+.ambient-context-form textarea,
+.ambient-context-form select,
+.ambient-shared-list select {
+  min-height: 2.5rem;
+  padding: 0.45rem 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0;
+  color: var(--color-text);
+  background: var(--color-page);
+  outline: none;
+}
+
+.ambient-context-form textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.ambient-profile-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  margin: 1.8rem 0 2.5rem;
+  color: rgba(203, 220, 226, 0.78);
+}
+
+.ambient-profile-toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.ambient-profile-privacy {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 2.4rem;
+  margin-bottom: 1.8rem;
+}
+
+.ambient-profile-privacy > p {
+  grid-column: 1 / -1;
+}
+
+.ambient-profile-form button,
+.ambient-relationships button {
+  border: 0;
+  color: var(--color-text);
+  background: transparent;
+  cursor: pointer;
+}
+
+.ambient-profile-form button:disabled,
+.ambient-relationships button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.ambient-inline-form {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(10rem, 0.7fr) auto;
+  align-items: end;
+  margin: 1.5rem 0;
+}
+
+.ambient-relationship-list article,
+.ambient-shared-list article {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+.ambient-relationship-list h3,
+.ambient-shared-list h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 520;
+  letter-spacing: 0;
+}
+
+.ambient-relationship-list p,
+.ambient-shared-list p,
+.ambient-shared-list small {
+  margin: 0.25rem 0 0;
+  color: rgba(148, 163, 173, 0.68);
+}
+
+.ambient-context-form {
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.ambient-context-form > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ambient-directory {
+  margin-top: 1rem;
+}
+
+.ambient-directory p {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.65rem 0;
+  color: var(--color-text);
+}
+
+@media (max-width: 700px) {
+  .ambient-focus-header {
+    gap: 0.75rem;
+  }
+
+  .ambient-focus-header > div {
+    min-width: 0;
+  }
+
+  .ambient-focus-header h1 {
+    overflow-wrap: normal;
+    font-size: 2.25rem;
+  }
+
+  .ambient-profile-fields,
+  .ambient-profile-privacy,
+  .ambient-inline-form {
+    grid-template-columns: 1fr;
+  }
+
+  .ambient-relationship-list article,
+  .ambient-shared-list article,
+  .ambient-directory p {
+    flex-direction: column;
+  }
+}
+
 @layer components {
   .ambient-glass-layer {
     position: absolute;
@@ -1148,6 +1354,8 @@ select {
 
   .ambient-close {
     margin-top: 0.25rem;
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .ambient-quiet-actions {

@@ -11,6 +11,7 @@ from backend.app.services.calendar import get_calendar_status
 from backend.app.services.identity import identity_status
 from backend.app.services.memory import memory_health
 from backend.app.services.presence import assistant_state_manager
+from backend.app.services.relationship_store import relationship_store
 from backend.app.services.smart_home import smart_home_service
 from backend.app.services.spotify import get_spotify_status
 from backend.app.services.startup import validate_environment
@@ -30,6 +31,7 @@ def full_health() -> HealthResponse:
         _backend_check(),
         _environment_check(),
         _identity_check(),
+        _relationship_check(),
         _memory_check(),
         _ai_runtime_check(),
         _provider_check(),
@@ -143,6 +145,24 @@ def _identity_check() -> HealthComponentResponse:
             "pending_approval_count": status.pending_approval_count,
             "audit_status": status.audit_status,
         },
+    )
+
+
+def _relationship_check() -> HealthComponentResponse:
+    try:
+        status = relationship_store.status()
+    except Exception as exc:
+        return HealthComponentResponse(
+            name="relationships",
+            status="error",
+            message="Relationship database health check failed.",
+            details={"error": exc.__class__.__name__},
+        )
+    return HealthComponentResponse(
+        name="relationships",
+        status="ok",
+        message="Private personalization and relationship storage is available.",
+        details=status,
     )
 
 

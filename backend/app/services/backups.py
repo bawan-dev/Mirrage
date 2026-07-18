@@ -131,6 +131,16 @@ def restore_identity_backup(backup_path: str | Path) -> BackupResult:
             raise ValueError("Identity backup schema version is not supported.")
         validation_connection.execute("SELECT COUNT(*) FROM users").fetchone()
         validation_connection.execute("SELECT COUNT(*) FROM audit_events").fetchone()
+        validation_connection.execute(
+            "SELECT COUNT(*) FROM personalization_profiles"
+        ).fetchone()
+        validation_connection.execute("SELECT COUNT(*) FROM relationships").fetchone()
+        validation_connection.execute(
+            "SELECT COUNT(*) FROM shared_context_items"
+        ).fetchone()
+        validation_connection.execute(
+            "SELECT COUNT(*) FROM interaction_sessions"
+        ).fetchone()
 
     destination = Path(settings.identity_database_path)
     destination.parent.mkdir(parents=True, exist_ok=True)

@@ -1,8 +1,8 @@
 # Architecture
 
-## v2 Identity And Safety Boundary
+## v2 Identity, Relationship And Safety Boundary
 
-Phase 38 adds a boundary in front of private and physical services:
+Phase 38 added a boundary in front of private and physical services:
 
 ```text
 Client request
@@ -24,8 +24,31 @@ The AI runtime sits behind this policy. It may identify an intent, but it cannot
 authenticate a person, grant a permission, approve an action, or construct an
 arbitrary Home Assistant service call.
 
+Phase 39 adds profiles, consent relationships, explicit shared context, and
+temporary human interaction sessions without weakening that boundary:
+
+```text
+Trusted device authentication
+  -> typed principal
+  -> mirror device requires temporary human session for private data
+  -> profile field visibility
+  -> active relationship / household check where requested
+  -> deterministic personalization filter
+  -> smaller local or opt-in cloud context
+```
+
+`relationship_store.py` owns profile, relationship, sharing, and session state.
+`personalization.py` owns visibility, greetings, quiet hours, and AI context
+filtering. Neither service can grant permissions. Installation owners do not
+receive a privacy bypass into another user's profile.
+
+Session tokens are returned once, stored as hashes, bound to a user and trusted
+mirror, and expire automatically. Explicit selection is the current activation
+mechanism; it is not human recognition.
+
 The current memory store is installation-wide and is treated as owner-private.
-Per-user memory partitioning remains a later v2 phase.
+Phase 39 does not migrate it into relationship sharing. Per-user memory
+partitioning remains a later v2 phase.
 
 Future phone, UWB, voice verification, vision, vehicle, and wearable evidence
 will feed authentication. Evidence providers will not call protected services
@@ -54,6 +77,11 @@ Backend API
   |     +-- Local / Cloud Providers
   |
   +-- Local Memory Store
+  |
+  +-- Profiles + Relationships
+  |     +-- Field Visibility
+  |     +-- Human Interaction Sessions
+  |     +-- Explicit Shared Context
   |
   +-- Personal Context Layer
   |

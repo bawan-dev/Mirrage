@@ -48,6 +48,7 @@ def _event(title: str, starts_in_minutes: int) -> CalendarEventResponse:
 
 
 def _context(
+    _principal=None,
     *,
     condition: str = "Mainly clear",
     goals: list[MemoryRecordResponse] | None = None,
@@ -125,7 +126,9 @@ def test_proactive_summary_prioritizes_event_starting_soon(
     monkeypatch.setattr(
         proactive_service,
         "get_daily_context",
-        lambda: _context(today_events=[_event("Design review", 10)]),
+        lambda _principal=None: _context(
+            _principal, today_events=[_event("Design review", 10)]
+        ),
     )
 
     response = client.get("/api/proactive/summary")
@@ -144,14 +147,15 @@ def test_proactive_summary_includes_goal_reminder(
     monkeypatch.setattr(
         proactive_service,
         "get_daily_context",
-        lambda: _context(
+        lambda _principal=None: _context(
+            _principal,
             goals=[
                 _memory_record(
                     "goal",
                     "goal: finish mirror prototype",
                     "Finish the wall-mounted prototype.",
                 )
-            ]
+            ],
         ),
     )
 
@@ -168,7 +172,7 @@ def test_proactive_summary_falls_back_when_context_fails(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def broken_context() -> DailyContext:
+    def broken_context(_principal=None) -> DailyContext:
         raise RuntimeError("context unavailable")
 
     monkeypatch.setattr(proactive_service, "get_daily_context", broken_context)
@@ -208,14 +212,15 @@ def test_assistant_focus_prompt_uses_proactive_provider(
     monkeypatch.setattr(
         proactive_service,
         "get_daily_context",
-        lambda: _context(
+        lambda _principal=None: _context(
+            _principal,
             goals=[
                 _memory_record(
                     "goal",
                     "goal: finish mirror prototype",
                     "Finish the wall-mounted prototype.",
                 )
-            ]
+            ],
         ),
     )
 

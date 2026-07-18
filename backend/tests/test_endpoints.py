@@ -55,7 +55,7 @@ def test_assistant_message_requires_message_field(client: TestClient) -> None:
 def test_assistant_message_handles_runtime_unavailable(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def unavailable(_message: str) -> RuntimeResult:
+    def unavailable(_message: str, *, principal=None) -> RuntimeResult:  # noqa: ARG001
         return RuntimeResult(
             reply="The AI runtime is unavailable right now.",
             provider="runtime",

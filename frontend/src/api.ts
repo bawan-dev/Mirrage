@@ -8,10 +8,16 @@ import type {
   HealthStatus,
   IdentityPrincipal,
   IdentityUser,
+  HumanSession,
+  HumanSessionEnrollment,
+  PersonalizationProfile,
+  PersonalizationProfileUpdate,
   PresenceSettings,
   PresenceSnapshot,
   PresenceTransition,
   ProactiveSummary,
+  Relationship,
+  RelationshipList,
   SmartHomeActionResult,
   SmartHomeEntitiesResponse,
   SmartHomeEntity,
@@ -19,6 +25,8 @@ import type {
   SpotifyActionResult,
   SpotifyPlayback,
   SpotifyStatus,
+  SharedContextItem,
+  SharedContextList,
   SystemStatus,
   TrustedDevice,
   VoiceStatus,
@@ -30,9 +38,14 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000';
 
 let trustedDeviceToken: string | null = null;
+let humanSessionToken: string | null = null;
 
 export function setTrustedDeviceToken(token: string | null): void {
   trustedDeviceToken = token?.trim() || null;
+}
+
+export function setHumanSessionToken(token: string | null): void {
+  humanSessionToken = token?.trim() || null;
 }
 
 function requestHeaders(includeJson = false): HeadersInit {
@@ -42,6 +55,9 @@ function requestHeaders(includeJson = false): HeadersInit {
   }
   if (trustedDeviceToken) {
     headers.Authorization = `Bearer ${trustedDeviceToken}`;
+  }
+  if (humanSessionToken) {
+    headers['X-Mirrage-Human-Session'] = humanSessionToken;
   }
   return headers;
 }
@@ -61,6 +77,20 @@ async function fetchJson<T>(path: string): Promise<T> {
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
+    headers: requestHeaders(true),
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+async function patchJson<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'PATCH',
     headers: requestHeaders(true),
     body: JSON.stringify(body),
   });
@@ -240,6 +270,98 @@ export function disableIdentityUser(userId: string): Promise<IdentityUser> {
 export function revokeTrustedDevice(deviceId: string): Promise<TrustedDevice> {
   return postJson<TrustedDevice>(
     `/api/identity/devices/${encodeURIComponent(deviceId)}/revoke`,
+    {},
+  );
+}
+
+export function createHumanSession(): Promise<HumanSessionEnrollment> {
+  return postJson<HumanSessionEnrollment>('/api/sessions', {});
+}
+
+export function endHumanSession(): Promise<HumanSession> {
+  return postJson<HumanSession>('/api/sessions/current/end', {});
+}
+
+export function getMyProfile(): Promise<PersonalizationProfile> {
+  return fetchJson<PersonalizationProfile>('/api/profile/me');
+}
+
+export function updateMyProfile(
+  update: PersonalizationProfileUpdate,
+): Promise<PersonalizationProfile> {
+  return patchJson<PersonalizationProfile>('/api/profile/me', update);
+}
+
+export function getProfileDirectory(): Promise<
+  import('./types').VisibleProfile[]
+> {
+  return fetchJson<import('./types').VisibleProfile[]>(
+    '/api/profiles/directory',
+  );
+}
+
+export function getRelationships(): Promise<RelationshipList> {
+  return fetchJson<RelationshipList>('/api/relationships');
+}
+
+export function createRelationship(
+  targetUserId: string,
+  relationshipType: string,
+): Promise<Relationship> {
+  return postJson<Relationship>('/api/relationships', {
+    target_user_id: targetUserId,
+    relationship_type: relationshipType,
+  });
+}
+
+export function answerRelationship(
+  relationshipId: string,
+  action: 'accept' | 'reject' | 'archive',
+): Promise<Relationship> {
+  return postJson<Relationship>(
+    `/api/relationships/${encodeURIComponent(relationshipId)}/${action}`,
+    {},
+  );
+}
+
+export function getSharedContext(): Promise<SharedContextList> {
+  return fetchJson<SharedContextList>('/api/shared-context');
+}
+
+export function createSharedContext(input: {
+  context_type: SharedContextItem['context_type'];
+  title: string;
+  value: string;
+  visibility: SharedContextItem['visibility'];
+}): Promise<SharedContextItem> {
+  return postJson<SharedContextItem>('/api/shared-context', input);
+}
+
+export function shareContext(
+  contextId: string,
+  userId: string,
+): Promise<SharedContextItem> {
+  return postJson<SharedContextItem>(
+    `/api/shared-context/${encodeURIComponent(contextId)}/share`,
+    { user_id: userId },
+  );
+}
+
+export function revokeContextShare(
+  contextId: string,
+  userId: string,
+): Promise<SharedContextItem> {
+  return postJson<SharedContextItem>(
+    `/api/shared-context/${encodeURIComponent(contextId)}/revoke`,
+    { user_id: userId },
+  );
+}
+
+export function archiveSharedContext(
+  contextId: string,
+): Promise<SharedContextItem> {
+  return postJson<SharedContextItem>(
+    `/api/shared-context/${encodeURIComponent(contextId)}/archive`,
     {},
   );
 }

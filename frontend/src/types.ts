@@ -295,6 +295,101 @@ export interface IdentityPrincipal {
   assurance_level: 'anonymous' | 'low' | 'trusted_device' | 'strong';
   permissions: string[];
   correlation_id: string;
+  device_type: string | null;
+  human_session_active: boolean;
+  human_session_id: string | null;
+}
+
+export type ProfileVisibility =
+  | 'private'
+  | 'relationship'
+  | 'household'
+  | 'public';
+
+export interface PersonalizationProfile {
+  user_id: string;
+  preferred_display_name: string;
+  preferred_language: string;
+  response_tone: 'neutral' | 'direct' | 'warm' | 'formal';
+  response_length: 'concise' | 'balanced' | 'detailed';
+  greeting_style: 'none' | 'minimal' | 'standard' | 'warm';
+  humour: 'off' | 'light';
+  proactivity: 'silent' | 'low' | 'standard' | 'high';
+  quiet_hours_start: string | null;
+  quiet_hours_end: string | null;
+  time_zone: string;
+  spoken_announcements: boolean;
+  personalized_greeting: boolean;
+  cloud_personalization_opt_in: boolean;
+  visibility: Record<string, ProfileVisibility>;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PersonalizationProfileUpdate = Partial<
+  Omit<PersonalizationProfile, 'user_id' | 'created_at' | 'updated_at'>
+>;
+
+export interface VisibleProfile {
+  user_id: string;
+  fields: Record<string, string | boolean | null>;
+  visible_fields: string[];
+}
+
+export interface Relationship {
+  public_id: string;
+  user_a_id: string;
+  user_b_id: string;
+  proposed_by_user_id: string;
+  proposed_to_user_id: string;
+  relationship_type: string;
+  custom_label: string | null;
+  status: 'pending' | 'active' | 'rejected' | 'archived';
+  created_at: string;
+  updated_at: string;
+  responded_at: string | null;
+  archived_at: string | null;
+}
+
+export interface RelationshipList {
+  items: Relationship[];
+  count: number;
+}
+
+export interface SharedContextItem {
+  public_id: string;
+  owner_user_id: string;
+  context_type: 'plan' | 'reminder' | 'fact' | 'project' | 'preference';
+  title: string;
+  value: string;
+  visibility: ProfileVisibility;
+  status: 'active' | 'archived';
+  shared_with_user_ids: string[];
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+}
+
+export interface SharedContextList {
+  items: SharedContextItem[];
+  count: number;
+}
+
+export interface HumanSession {
+  public_id: string;
+  user_id: string;
+  device_id: string;
+  status: 'active' | 'ended' | 'expired';
+  created_at: string;
+  expires_at: string;
+  ended_at: string | null;
+  last_seen_at: string | null;
+}
+
+export interface HumanSessionEnrollment {
+  session: HumanSession;
+  token: string;
+  message: string;
 }
 
 export interface IdentityUser {

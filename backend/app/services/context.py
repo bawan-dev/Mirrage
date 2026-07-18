@@ -19,6 +19,8 @@ from backend.app.services import calendar as calendar_service
 from backend.app.services import memory as memory_service
 from backend.app.services import weather as weather_service
 from backend.app.services.calendar import CalendarServiceError
+from backend.app.services.identity_models import AuthenticatedPrincipal
+from backend.app.services.permissions import Permission
 from backend.app.settings import settings
 
 _CONTEXT_COMMANDS = (
@@ -34,14 +36,20 @@ _CONTEXT_COMMANDS = (
 )
 
 
-def get_daily_context() -> DailyContext:
+def get_daily_context(principal: AuthenticatedPrincipal | None = None) -> DailyContext:
     """Return a local daily context object from weather, calendar, and memory."""
 
     generated_at = datetime.now(UTC).isoformat()
     today = _today()
     weather = _weather_context()
-    calendar = _calendar_context()
-    memory = _memory_context()
+    calendar_allowed = _private_source_allowed(
+        principal, Permission.CALENDAR_READ_PRIVATE.value
+    )
+    memory_allowed = _private_source_allowed(
+        principal, Permission.MEMORY_READ_PRIVATE.value
+    )
+    calendar = _calendar_context(calendar_allowed)
+    memory = _memory_context(memory_allowed)
     suggestions = _focus_suggestions(calendar, memory)
     status = _overall_status(weather, calendar, memory)
 
@@ -57,14 +65,16 @@ def get_daily_context() -> DailyContext:
     )
 
 
-def handle_context_message(message: str) -> AssistantMessageResponse | None:
+def handle_context_message(
+    message: str, principal: AuthenticatedPrincipal | None = None
+) -> AssistantMessageResponse | None:
     """Answer daily-context prompts locally before model provider routing."""
 
     intent = _context_intent(message)
     if intent is None:
         return None
 
-    context = get_daily_context()
+    context = get_daily_context(principal)
     if intent == "goals":
         reply = _goals_reply(context)
     else:
@@ -117,7 +127,17 @@ def _weather_context() -> ContextWeatherSummary:
     )
 
 
-def _calendar_context() -> ContextCalendarSummary:
+def _calendar_context(allowed: bool = True) -> ContextCalendarSummary:
+    if not allowed:
+        return ContextCalendarSummary(
+            status="not_authorized",
+            authenticated=False,
+            today_event_count=0,
+            upcoming_event_count=0,
+            today_events=[],
+            upcoming_events=[],
+            message="Calendar context is private and was not included.",
+        )
     today_events: list[CalendarEventResponse] = []
     upcoming_events: list[CalendarEventResponse] = []
     authenticated = False
@@ -159,7 +179,16 @@ def _calendar_context() -> ContextCalendarSummary:
     )
 
 
-def _memory_context() -> ContextMemorySummary:
+def _memory_context(allowed: bool = True) -> ContextMemorySummary:
+    if not allowed:
+        return ContextMemorySummary(
+            status="not_authorized",
+            preferences=[],
+            goals=[],
+            routines=[],
+            facts_count=0,
+            message="Local memory is private and was not included.",
+        )
     try:
         summary = memory_service.summarize_memories()
     except Exception:
@@ -378,6 +407,18 @@ def _today() -> str:
         timezone = ZoneInfo("UTC")
 
     return datetime.now(timezone).date().isoformat()
+
+
+def _private_source_allowed(
+    principal: AuthenticatedPrincipal | None, permission: str
+) -> bool:
+    if principal is None:
+        return True
+    if permission not in principal.effective_permissions:
+        return False
+    return not (
+        principal.device_type == "mirror" and not principal.human_session_active
+    )
 
 
 def _normalize(value: str) -> str:

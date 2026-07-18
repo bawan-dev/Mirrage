@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from ai.models import RuntimeContext, RuntimePrivacyLevel, RuntimeTaskType
 from backend.app.services.context import get_daily_context
+from backend.app.services.identity_models import AuthenticatedPrincipal
 from backend.app.services.memory import summarize_memories
+from backend.app.services.permissions import Permission
+from backend.app.services.personalization import build_safe_personalization_context
 from backend.app.services.proactive import get_proactive_summary
 
 _PLANNING_TERMS = ("plan", "roadmap", "schedule", "strategy", "next steps")
@@ -32,13 +35,20 @@ def classify_task_type(message: str) -> RuntimeTaskType:
 def build_runtime_context(
     message: str,
     task_type: RuntimeTaskType | None = None,
+    principal: AuthenticatedPrincipal | None = None,
 ) -> RuntimeContext:
     """Return a small context bundle for a model request."""
 
     selected_task = task_type or classify_task_type(message)
-    daily_context = _safe_daily_context()
-    memory_summary = _safe_memory_summary()
-    proactive_summary = _safe_proactive_summary()
+    if principal is None:
+        daily_context = _safe_daily_context()
+        memory_summary = _safe_memory_summary()
+        proactive_summary = _safe_proactive_summary()
+    else:
+        daily_context = _safe_daily_context(principal)
+        memory_summary = _safe_memory_summary(principal)
+        proactive_summary = _safe_proactive_summary(principal)
+    personalization = build_safe_personalization_context(principal)
     privacy_level = _privacy_level(selected_task, memory_summary)
     sources: list[str] = []
     local_lines = [
@@ -50,6 +60,12 @@ def build_runtime_context(
         "Answer concisely. Private local memory has been summarized or withheld.",
     ]
 
+    if personalization.local_lines:
+        sources.extend(personalization.sources)
+        local_lines.extend(personalization.local_lines)
+    if personalization.cloud_lines:
+        cloud_lines.extend(personalization.cloud_lines)
+
     if daily_context is not None:
         sources.append("daily_context")
         local_lines.extend(
@@ -59,12 +75,9 @@ def build_runtime_context(
                 f"Suggested focus: {daily_context.suggested_focus[0].title}",
             ]
         )
-        cloud_lines.extend(
-            [
-                f"Weather: {daily_context.weather.summary}",
-                f"Calendar: {daily_context.calendar.message}",
-            ]
-        )
+        cloud_lines.append(f"Weather: {daily_context.weather.summary}")
+        if principal is None:
+            cloud_lines.append(f"Calendar: {daily_context.calendar.message}")
 
     memory_count = 0
     if memory_summary is not None:
@@ -129,22 +142,38 @@ def _privacy_level(
     return "standard"
 
 
-def _safe_daily_context():
+def _safe_daily_context(principal: AuthenticatedPrincipal | None = None):
     try:
-        return get_daily_context()
+        return get_daily_context(principal)
     except Exception:
         return None
 
 
-def _safe_memory_summary():
+def _safe_memory_summary(principal: AuthenticatedPrincipal | None = None):
+    if principal is not None and not _principal_allows(
+        principal, Permission.MEMORY_READ_PRIVATE.value
+    ):
+        return None
     try:
         return summarize_memories()
     except Exception:
         return None
 
 
-def _safe_proactive_summary():
+def _safe_proactive_summary(principal: AuthenticatedPrincipal | None = None):
+    if principal is not None and not _principal_allows(
+        principal, Permission.CONTEXT_READ_PRIVATE.value
+    ):
+        return None
     try:
-        return get_proactive_summary()
+        return get_proactive_summary(principal)
     except Exception:
         return None
+
+
+def _principal_allows(principal: AuthenticatedPrincipal, permission: str) -> bool:
+    if permission not in principal.effective_permissions:
+        return False
+    return not (
+        principal.device_type == "mirror" and not principal.human_session_active
+    )

@@ -11,6 +11,7 @@ from ai.context_builder import build_runtime_context
 from ai.models import RuntimeResult, RuntimeTaskType
 from ai.providers.base import AIProviderError
 from ai.router import PROVIDER_DEFINITIONS, provider_router
+from backend.app.services.identity_models import AuthenticatedPrincipal
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,13 @@ class AIRuntime:
         self,
         message: str,
         task_type: RuntimeTaskType | None = None,
+        principal: AuthenticatedPrincipal | None = None,
     ) -> RuntimeResult:
-        context = build_runtime_context(message, task_type)
+        context = (
+            build_runtime_context(message, task_type)
+            if principal is None
+            else build_runtime_context(message, task_type, principal)
+        )
         selection = provider_router.select_provider(context)
         prompt = context.local_prompt if selection.is_local else context.cloud_prompt
         provider = provider_router.build_provider(selection.provider, selection.model)
@@ -89,7 +95,12 @@ class AIRuntime:
                 context_sources=context.sources,
             )
 
-    def stream_assistant_request(self, message: str) -> Iterator[str]:
+    def stream_assistant_request(
+        self,
+        message: str,
+        *,
+        principal: AuthenticatedPrincipal | None = None,
+    ) -> Iterator[str]:
         """Yield Server-Sent Events.
 
         Providers do not expose token streaming yet, so this path keeps the API
@@ -101,7 +112,7 @@ class AIRuntime:
             return
 
         yield _sse("status", {"stage": "runtime_started"})
-        result = self.run_assistant_request(message)
+        result = self.run_assistant_request(message, principal=principal)
         yield _sse(
             "chunk",
             {

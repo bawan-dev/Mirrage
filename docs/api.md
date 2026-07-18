@@ -13,6 +13,16 @@ The backend resolves the token to an active user and device, creates an
 authenticated principal, then checks a central permission and risk policy. A
 frontend-supplied name, role, or user ID is never accepted as authentication.
 
+Private requests from a device registered as `mirror` also require a temporary
+human interaction session:
+
+```http
+X-Mirrage-Human-Session: <ONE_TIME_SESSION_TOKEN>
+```
+
+The session is bound to the authenticated mirror and selected user. It is a
+short-lived explicit selection, not proof from voice, face, or proximity.
+
 Common responses:
 
 - `401`: no valid authenticated principal
@@ -44,6 +54,33 @@ Common responses:
 | `POST` | `/api/approvals/{id}/deny` | `approvals.manage` | Deny pending request |
 | `POST` | `/api/approvals/{id}/cancel` | Requester | Cancel pending request |
 | `GET` | `/api/audit/events` | `audit.read` | Paginated, filtered audit events |
+
+## Relationship And Personalization Endpoints
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/api/profile/me` | `profile.read_self` | Read the current user's full profile |
+| `PATCH` | `/api/profile/me` | `profile.update_self` | Update personal settings and field visibility |
+| `GET` | `/api/profiles/directory` | `profile.directory.read` | List privacy-filtered household profiles |
+| `GET` | `/api/profiles/{user_id}` | `profile.directory.read` | Read one privacy-filtered profile |
+| `GET` | `/api/greeting` | Authenticated | Deterministic greeting for the current session |
+| `GET` | `/api/relationships` | `relationships.read` | List the current user's relationships |
+| `POST` | `/api/relationships` | `relationships.manage` | Propose a relationship |
+| `POST` | `/api/relationships/{id}/accept` | Counterpart | Accept a pending relationship |
+| `POST` | `/api/relationships/{id}/reject` | Counterpart | Reject a pending relationship |
+| `POST` | `/api/relationships/{id}/archive` | Participant | Archive an active relationship |
+| `GET` | `/api/shared-context` | `shared_context.read` | List accessible shared context |
+| `POST` | `/api/shared-context` | `shared_context.manage` | Create a private context item |
+| `PATCH` | `/api/shared-context/{id}` | Owner | Update an owned item |
+| `POST` | `/api/shared-context/{id}/share` | Owner | Share with an active relationship |
+| `POST` | `/api/shared-context/{id}/revoke` | Owner | Revoke relationship access |
+| `POST` | `/api/shared-context/{id}/archive` | Owner | Archive an item |
+| `POST` | `/api/sessions` | `human_session.manage` on a trusted device | Start a temporary human session; required for private mirror reads |
+| `POST` | `/api/sessions/current/end` | Current session | End the current human session |
+
+Profile and shared-context values are excluded from audit metadata. Relationship
+consent records are separate from the approval engine because they require the
+named counterpart's direct response, not an administrator's authorization.
 
 Token hashes and prefixes are internal storage fields and are not API response
 fields.

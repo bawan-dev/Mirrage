@@ -52,6 +52,9 @@ def principal_response(principal: AuthenticatedPrincipal) -> IdentityPrincipalRe
         assurance_level=principal.assurance_level,
         permissions=sorted(principal.effective_permissions),
         correlation_id=principal.correlation_id,
+        device_type=principal.device_type,
+        human_session_active=principal.human_session_active,
+        human_session_id=principal.human_session_id,
     )
 
 

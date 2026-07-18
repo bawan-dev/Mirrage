@@ -1,5 +1,87 @@
 # Run Notes
 
+## Phase 39 Relationship And Personalization Manual Validation
+
+Use two fictional test users and their trusted-device tokens. Never put real
+tokens or private household facts into committed files.
+
+1. For a token bound to a trusted mirror, start a temporary human session.
+
+```powershell
+$headers = @{ Authorization = "Bearer <DEVICE_TOKEN>" }
+$session = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/sessions `
+  -Headers $headers -ContentType "application/json" -Body '{}'
+$headers['X-Mirrage-Human-Session'] = $session.token
+```
+
+Expected: the token is returned once, `status` is `active`, and
+`/api/identity/me` reports `human_session_active: true` with both headers.
+
+2. Update and read the current user's profile.
+
+```powershell
+$profileBody = @{
+  preferred_display_name = "Sample One"
+  response_tone = "direct"
+  visibility = @{ preferred_display_name = "household" }
+} | ConvertTo-Json
+Invoke-RestMethod -Method Patch -Uri http://127.0.0.1:8000/api/profile/me `
+  -Headers $headers -ContentType "application/json" -Body $profileBody
+Invoke-RestMethod http://127.0.0.1:8000/api/profiles/directory -Headers $headers
+```
+
+Expected: the user's own response is complete; directory responses contain
+only fields allowed by each profile's visibility.
+
+3. Propose a relationship using the other user's public ID.
+
+```powershell
+$relationshipBody = @{
+  target_user_id = "<SECOND_USER_ID>"
+  relationship_type = "housemate"
+} | ConvertTo-Json
+$relationship = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/relationships `
+  -Headers $headers -ContentType "application/json" -Body $relationshipBody
+```
+
+Expected: `status` is `pending`. Authenticate as the second user, create that
+user's human session if the device is a mirror, then POST to
+`/api/relationships/<ID>/accept`. The relationship becomes `active`; neither
+user's permissions change.
+
+4. Create a private context item, then share it explicitly.
+
+```powershell
+$contextBody = @{
+  context_type = "reminder"
+  title = "Shared sample"
+  value = "Use fictional low-risk text only"
+  visibility = "private"
+} | ConvertTo-Json
+$item = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/shared-context `
+  -Headers $headers -ContentType "application/json" -Body $contextBody
+$shareBody = @{ user_id = "<SECOND_USER_ID>" } | ConvertTo-Json
+Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/api/shared-context/$($item.public_id)/share" `
+  -Headers $headers -ContentType "application/json" -Body $shareBody
+```
+
+Expected: the item starts private, appears for the second user only after the
+share, and disappears after the same request is sent to `/revoke`.
+
+5. End the temporary session.
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/sessions/current/end -Headers $headers
+```
+
+Expected: later private mirror requests return `403` until a new session is
+created. Generic greeting and non-private mirror state remain available.
+
 ## Phase 38 Identity And Safety Manual Validation
 
 These commands use placeholders. Do not paste a real token into committed files,

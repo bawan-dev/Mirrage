@@ -663,6 +663,36 @@ Current limitation: trusted-device tokens authenticate API clients. Mirrage does
 not yet recognize people by voice, face, phone proximity, UWB, vehicle, or
 wearable evidence, and memory is not partitioned per user.
 
+## Phase 39: Relationship And Personalization Engine
+
+Goal: add consent-based household context without confusing relationships with
+identity or authority.
+
+- [x] Migrate the identity database from schema version 1 to version 2
+- [x] Create private-by-default personalization profiles for existing and new users
+- [x] Add typed profile settings and field-level visibility
+- [x] Add mutual relationship proposal, acceptance, rejection, and archive flows
+- [x] Reject self-relationships and duplicate pending or active pairs
+- [x] Keep relationships separate from role permissions and approvals
+- [x] Add explicit private-by-default shared context with share, revoke, and archive
+- [x] Add conservative rejection for obvious sensitive shared-context categories
+- [x] Add short-lived hash-only human sessions bound to trusted mirror devices
+- [x] Require a human session before a mirror may read private user data
+- [x] Add deterministic greetings, quiet hours, and proactive settings
+- [x] Filter local and cloud AI personalization context separately
+- [x] Keep shared context values out of cloud providers in this phase
+- [x] Extend health checks, audit events, backup validation, and startup settings
+- [x] Add a sparse normal-mode Profile/Relationships workspace
+- [x] Keep profile administration out of Mirror Mode
+- [x] Add relationship, privacy, personalization, and shared-context documentation
+- [x] Add migration, authorization, consent, session, privacy, AI-boundary, audit,
+  health, and backup tests using temporary databases
+
+Current limitations: human activation is an explicit selection rather than
+biometric recognition; the Phase 21 memory database remains installation-wide
+and owner-private; sensitive-content filtering is a guardrail rather than a
+complete classifier; and no AI automatically edits profiles or relationships.
+
 ## Future: Voice Interaction
 
 - [ ] Hardware-tested local trained wake model
@@ -743,6 +773,7 @@ wearable evidence, and memory is not partitioned per user.
 
 ## Current Focus
 
-Phase 38 is the current milestone. `v1.0.0` remains the stable portfolio release;
-`main` now begins v2 with identity, trusted-device authentication, permissions,
-approvals, audit history, private-route protection, and smart-home authorization.
+Phase 38 is complete and Phase 39 is the current milestone. `v1.0.0` remains the
+stable portfolio release; `main` now adds private profiles, consent-based
+relationships, explicit shared context, and temporary human sessions on top of
+the v2 identity and authorization boundary.

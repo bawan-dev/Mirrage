@@ -11,6 +11,8 @@ from backend.app.schemas import (
     ProactiveSummaryResponse,
 )
 from backend.app.services.context import get_daily_context
+from backend.app.services.identity_models import AuthenticatedPrincipal
+from backend.app.services.personalization import build_safe_personalization_context
 
 _PROACTIVE_COMMANDS = (
     "good morning",
@@ -36,13 +38,39 @@ _WEATHER_ATTENTION_TERMS = (
 )
 
 
-def get_proactive_summary() -> ProactiveSummaryResponse:
+def get_proactive_summary(
+    principal: AuthenticatedPrincipal | None = None,
+) -> ProactiveSummaryResponse:
     """Return a deterministic proactive summary from local context sources."""
 
     generated_at = datetime.now(UTC).isoformat()
 
+    personalization = build_safe_personalization_context(principal)
+    if (
+        principal is not None
+        and "profile" in personalization.sources
+        and (personalization.proactivity == "silent" or personalization.quiet_hours)
+    ):
+        reason = (
+            "Quiet hours are active."
+            if personalization.quiet_hours
+            else "Proactivity is set to silent."
+        )
+        return ProactiveSummaryResponse(
+            status="ready",
+            generated_at=generated_at,
+            priority="none",
+            headline="Standing by",
+            message=reason,
+            suggestions=[],
+            sources=["profile"],
+            should_interrupt=False,
+        )
+
     try:
-        context = get_daily_context()
+        context = (
+            get_daily_context() if principal is None else get_daily_context(principal)
+        )
     except Exception:
         return ProactiveSummaryResponse(
             status="unavailable",
@@ -150,14 +178,16 @@ def get_proactive_summary() -> ProactiveSummaryResponse:
     )
 
 
-def handle_proactive_message(message: str) -> AssistantMessageResponse | None:
+def handle_proactive_message(
+    message: str, principal: AuthenticatedPrincipal | None = None
+) -> AssistantMessageResponse | None:
     """Answer proactive prompts locally before model provider routing."""
 
     command = _normalize(message)
     if not command or not any(phrase in command for phrase in _PROACTIVE_COMMANDS):
         return None
 
-    summary = get_proactive_summary()
+    summary = get_proactive_summary(principal)
 
     return AssistantMessageResponse(
         reply=_summary_reply(summary),

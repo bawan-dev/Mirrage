@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.identity_routes import router as identity_router
 from backend.app.logging_config import configure_logging
+from backend.app.relationship_routes import router as relationship_router
 from backend.app.routes import router
 from backend.app.services.startup import run_startup_validation
 from backend.app.services.wake_engine import wake_engine_service
@@ -42,3 +43,4 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(identity_router)
+app.include_router(relationship_router)

@@ -29,6 +29,14 @@ class Permission(StrEnum):
     APPROVALS_MANAGE = "approvals.manage"
     AUDIT_READ = "audit.read"
     SYSTEM_ADMIN = "system.admin"
+    PROFILE_READ_SELF = "profile.read_self"
+    PROFILE_UPDATE_SELF = "profile.update_self"
+    PROFILE_DIRECTORY_READ = "profile.directory.read"
+    RELATIONSHIPS_READ = "relationships.read"
+    RELATIONSHIPS_MANAGE = "relationships.manage"
+    SHARED_CONTEXT_READ = "shared_context.read"
+    SHARED_CONTEXT_MANAGE = "shared_context.manage"
+    HUMAN_SESSION_MANAGE = "human_session.manage"
 
 
 PERMISSION_REGISTRY = frozenset(permission.value for permission in Permission)
@@ -39,11 +47,23 @@ _PUBLIC = {
     Permission.SYSTEM_STATUS_READ.value,
 }
 
+_PERSONAL = {
+    Permission.PROFILE_READ_SELF.value,
+    Permission.PROFILE_UPDATE_SELF.value,
+    Permission.PROFILE_DIRECTORY_READ.value,
+    Permission.RELATIONSHIPS_READ.value,
+    Permission.RELATIONSHIPS_MANAGE.value,
+    Permission.SHARED_CONTEXT_READ.value,
+    Permission.SHARED_CONTEXT_MANAGE.value,
+    Permission.HUMAN_SESSION_MANAGE.value,
+}
+
 ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
     "owner": PERMISSION_REGISTRY,
     "family": frozenset(
         {
             *_PUBLIC,
+            *_PERSONAL,
             Permission.MEDIA_READ.value,
             Permission.MEDIA_CONTROL.value,
             Permission.SMART_HOME_READ.value,
@@ -54,11 +74,12 @@ ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
     "trusted_guest": frozenset(
         {
             *_PUBLIC,
+            *_PERSONAL,
             Permission.MEDIA_READ.value,
             Permission.SMART_HOME_READ.value,
         }
     ),
-    "guest": frozenset(_PUBLIC),
+    "guest": frozenset({*_PUBLIC, *_PERSONAL}),
     "service": frozenset(
         {
             Permission.SYSTEM_STATUS_READ.value,

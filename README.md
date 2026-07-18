@@ -21,10 +21,11 @@ are available unless those providers are configured on the machine running it.
 
 ## v2 Development Status
 
-`main` now contains the first Mirrage v2 foundation: a persistent household
-identity model, trusted-device bearer authentication, central role and
-permission policy, expiring approvals, append-only audit events, protected
-private routes, and identity-aware smart-home controls.
+`main` now contains the first two Mirrage v2 foundations: household identity and
+safety, followed by consent-based relationships and privacy-aware
+personalization. Profiles are private by default, relationships never grant
+permissions, shared context must be deliberate, and a trusted mirror still
+requires a temporary human interaction session before showing private data.
 
 This does not mean Mirrage recognizes who is speaking. Voice, face, UWB, phone
 proximity, vehicle, and wearable identity evidence remain future work.
@@ -96,7 +97,14 @@ What works now:
 - deterministic default-deny authorization, permission overrides, expiring
   approvals, and append-only redacted audit events
 - protected memory, context, Calendar, media, full-health, and smart-home routes
-- owner-only Identity view in normal mode; Mirror Mode stays uncluttered
+- owner-only Identity view and a personal Profile/Relationships workspace in
+  normal mode; Mirror Mode stays uncluttered
+- private-by-default profiles with field-level visibility and deterministic
+  greeting, communication, quiet-hour, and proactive settings
+- consent-based relationships that do not alter role permissions
+- explicit shared context with relationship-scoped access and revocation
+- short-lived, hash-only human interaction sessions bound to a trusted mirror
+- privacy-filtered local and cloud AI context; shared values remain local
 - backend-owned smart home foundation for Home Assistant discovery, safe light/switch control, scene activation, and read-only sensors
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - physical build documentation for the first mirror prototype, including
@@ -111,7 +119,9 @@ What is still planned:
 - Spotify persistence, device picker, and voice playback commands
 - Calendar token persistence and richer schedule actions
 - memory editing UI and stronger privacy controls
-- true per-user memory partitioning and richer household relationship context
+- true per-user memory partitioning and migration from the existing owner-only
+  memory store
+- real human recognition evidence for automatic mirror sessions
 - AI-enhanced context summaries behind explicit privacy controls
 - true provider token streaming
 - richer local model profiles for small, summary, planning, and future agent tasks
@@ -138,6 +148,8 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Operations | Production Compose, health checks, logs, startup validation, local backups |
 | Proactive assistant | Local rule-based daily nudge from context sources |
 | Identity and safety | v2 local identity store, trusted devices, permissions, approvals, and audit logs |
+| Relationships | Consent-based lifecycle with no permission side effects |
+| Personalization | Private profiles, human sessions, deterministic greetings, and explicit shared context |
 | Smart home | Home Assistant foundation with safe domains; real devices require local configuration |
 | Hardware | Physical build plan documented; real parts still need testing |
 | Vision | Not built yet |
@@ -166,7 +178,7 @@ Demo flow: [docs/demo-guide.md](docs/demo-guide.md)
 ![Mirrage architecture](assets/diagrams/architecture.svg)
 
 ```text
-Mirror Dashboard
+Mirror Interface
       |
       v
 Authentication -> Principal -> Authorization / Approval -> Audit
@@ -182,6 +194,10 @@ FastAPI Backend
       +-- Local Memory Store
       |
       +-- Identity Store + Trusted Devices
+      |
+      +-- Profiles + Relationships + Human Sessions
+      |
+      +-- Explicit Shared Context
       |
       +-- Personal Context Layer
       |
@@ -227,6 +243,10 @@ More detail:
 - [Environment](docs/environment.md)
 - [Health monitoring](docs/health-monitoring.md)
 - [Identity and safety](docs/identity-safety.md)
+- [Relationship engine](docs/relationship-engine.md)
+- [Relationship privacy](docs/relationship-privacy.md)
+- [Personalization](docs/personalization.md)
+- [Shared context](docs/shared-context.md)
 - [Security model](docs/security-model.md)
 - [Permissions](docs/permissions.md)
 - [Trusted devices](docs/trusted-devices.md)
@@ -558,11 +578,13 @@ Completed foundation work:
   release checklist
 - v2 identity, permissions, trusted devices, approvals, audit, route protection,
   and identity backup/restore foundation
+- v2 profiles, consent-based relationships, temporary human sessions, explicit
+  shared context, and privacy-filtered personalization
 
 Current milestone:
 
-- Phase 38 begins v2 development on `main`; v1.0.0 remains the stable tagged
-  portfolio release
+- Phase 38 is complete. Phase 39 is the current v2 development milestone on
+  `main`; v1.0.0 remains the stable tagged portfolio release
 
 Future milestones:
 

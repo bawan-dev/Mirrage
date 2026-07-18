@@ -31,6 +31,12 @@ Identity backups use SQLite's backup API and names beginning with
 identity database, then appends a restore audit event. The command is explicit;
 Mirrage never restores or overwrites identity state automatically.
 
+Identity schema version 2 also contains profiles, relationships, explicit
+shared-context access, and temporary interaction-session records. Restore
+validation checks these tables before replacing the live database. Because this
+backup now contains household relationship and personalization data, protect it
+with the same care as private memory and device credentials.
+
 The existing memory backup functions and filenames remain unchanged.
 
 ## Manual Backup

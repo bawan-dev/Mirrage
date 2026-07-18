@@ -29,6 +29,9 @@ export const demoIdentityPrincipal: IdentityPrincipal = {
   assurance_level: 'low',
   permissions: ['identity.users.read', 'identity.devices.read', 'audit.read'],
   correlation_id: 'demo-correlation',
+  device_type: 'mirror',
+  human_session_active: true,
+  human_session_id: 'demo-human-session',
 };
 
 export const demoIdentityUsers: IdentityUser[] = [

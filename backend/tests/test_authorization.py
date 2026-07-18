@@ -62,6 +62,16 @@ def _headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
+def _session_headers(client: TestClient, enrollment) -> dict[str, str]:
+    headers = _headers(enrollment.token)
+    response = client.post("/api/sessions", headers=headers, json={})
+    assert response.status_code == 201
+    return {
+        **headers,
+        "X-Mirrage-Human-Session": response.json()["token"],
+    }
+
+
 @pytest.fixture
 def no_bypass(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "identity_dev_bypass", False)
@@ -208,7 +218,7 @@ def test_owner_and_family_can_control_low_risk_light(
 
     response = client.post(
         "/api/smart-home/entities/light.office/turn-on",
-        headers=_headers(enrollment.token),
+        headers=_session_headers(client, enrollment),
     )
 
     assert response.status_code == 200
@@ -256,7 +266,7 @@ def test_owner_lock_control_stays_blocked(
 
     response = client.post(
         "/api/smart-home/entities/lock.front_door/turn-on",
-        headers=_headers(enrollment.token),
+        headers=_session_headers(client, enrollment),
     )
 
     assert response.status_code == 403

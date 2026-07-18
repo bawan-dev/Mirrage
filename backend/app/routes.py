@@ -239,7 +239,11 @@ def read_weather() -> WeatherResponse:
 @router.get("/api/smart-home/status")
 def read_smart_home_status(
     _principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.SMART_HOME_READ.value, resource_type="smart_home")
+        require_permission(
+            Permission.SMART_HOME_READ.value,
+            resource_type="smart_home",
+            human_session_required=True,
+        )
     ),
 ) -> SmartHomeStatusResponse:
     return smart_home_service.status()
@@ -248,7 +252,11 @@ def read_smart_home_status(
 @router.get("/api/smart-home/entities")
 def read_smart_home_entities(
     _principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.SMART_HOME_READ.value, resource_type="smart_home")
+        require_permission(
+            Permission.SMART_HOME_READ.value,
+            resource_type="smart_home",
+            human_session_required=True,
+        )
     ),
 ) -> SmartHomeEntitiesResponse:
     return smart_home_service.entities_response()
@@ -258,7 +266,11 @@ def read_smart_home_entities(
 def read_smart_home_entity(
     entity_id: str,
     _principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.SMART_HOME_READ.value, resource_type="smart_home")
+        require_permission(
+            Permission.SMART_HOME_READ.value,
+            resource_type="smart_home",
+            human_session_required=True,
+        )
     ),
 ) -> SmartHomeEntityResponse:
     try:
@@ -274,7 +286,11 @@ def read_smart_home_entity(
 @router.get("/api/smart-home/sensors")
 def read_smart_home_sensors(
     _principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.SMART_HOME_READ.value, resource_type="smart_home")
+        require_permission(
+            Permission.SMART_HOME_READ.value,
+            resource_type="smart_home",
+            human_session_required=True,
+        )
     ),
 ) -> SmartHomeEntitiesResponse:
     return smart_home_service.sensors_response()
@@ -288,6 +304,7 @@ def turn_on_smart_home_entity(
             Permission.SMART_HOME_CONTROL_LOW_RISK.value,
             resource_type="smart_home",
             risk_level="low",
+            human_session_required=True,
         )
     ),
 ) -> SmartHomeActionResponse:
@@ -308,6 +325,7 @@ def turn_off_smart_home_entity(
             Permission.SMART_HOME_CONTROL_LOW_RISK.value,
             resource_type="smart_home",
             risk_level="low",
+            human_session_required=True,
         )
     ),
 ) -> SmartHomeActionResponse:
@@ -328,6 +346,7 @@ def activate_smart_home_scene(
             Permission.SMART_HOME_CONTROL_LOW_RISK.value,
             resource_type="smart_home",
             risk_level="low",
+            human_session_required=True,
         )
     ),
 ) -> SmartHomeActionResponse:
@@ -349,6 +368,7 @@ def block_arbitrary_smart_home_service(
             Permission.SMART_HOME_CONTROL_LOW_RISK.value,
             resource_type="smart_home",
             risk_level="low",
+            human_session_required=True,
         )
     ),
 ) -> SmartHomeActionResponse:
@@ -420,7 +440,7 @@ def create_assistant_message(
 ) -> AssistantMessageResponse:
     _authorize_assistant_private_intent(message.message, principal)
     voice_pipeline.processing(message.message)
-    response = create_assistant_reply(message)
+    response = create_assistant_reply(message, principal)
     voice_pipeline.speaking(response.reply, transcript=message.message)
     return response
 
@@ -435,7 +455,9 @@ def stream_assistant_message(
     _authorize_assistant_private_intent(message.message, principal)
     voice_pipeline.processing(message.message)
     return StreamingResponse(
-        assistant_runtime.stream_assistant_request(message.message),
+        assistant_runtime.stream_assistant_request(
+            message.message, principal=principal
+        ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -448,10 +470,12 @@ def stream_assistant_message(
 @router.get("/api/context/daily")
 def read_daily_context(
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.CONTEXT_READ_PRIVATE.value)
+        require_permission(
+            Permission.CONTEXT_READ_PRIVATE.value, human_session_required=True
+        )
     ),
 ) -> DailyContext:
-    response = get_daily_context()
+    response = get_daily_context(principal)
     record_sensitive_access(
         principal, action="context.daily.read", resource_type="personal_context"
     )
@@ -461,10 +485,12 @@ def read_daily_context(
 @router.get("/api/proactive/summary")
 def read_proactive_summary(
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.CONTEXT_READ_PRIVATE.value)
+        require_permission(
+            Permission.CONTEXT_READ_PRIVATE.value, human_session_required=True
+        )
     ),
 ) -> ProactiveSummaryResponse:
-    response = get_proactive_summary()
+    response = get_proactive_summary(principal)
     record_sensitive_access(
         principal, action="context.proactive.read", resource_type="personal_context"
     )
@@ -477,7 +503,9 @@ def read_memories(
     q: str | None = None,
     status: MemoryStatus | None = "active",
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.MEMORY_READ_PRIVATE.value)
+        require_permission(
+            Permission.MEMORY_READ_PRIVATE.value, human_session_required=True
+        )
     ),
 ) -> MemorySearchResponse:
     response = list_memories(kind=kind, query=q, status=status)
@@ -490,7 +518,9 @@ def read_memories(
 @router.get("/api/memory/summary")
 def read_memory_summary(
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.MEMORY_READ_PRIVATE.value)
+        require_permission(
+            Permission.MEMORY_READ_PRIVATE.value, human_session_required=True
+        )
     ),
 ) -> MemorySummaryResponse:
     response = summarize_memories()
@@ -504,7 +534,11 @@ def read_memory_summary(
 def create_memory_record(
     memory: MemoryCreateRequest,
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.MEMORY_WRITE_PRIVATE.value, risk_level="low")
+        require_permission(
+            Permission.MEMORY_WRITE_PRIVATE.value,
+            risk_level="low",
+            human_session_required=True,
+        )
     ),
 ) -> MemoryRecordResponse:
     response = create_memory(memory)
@@ -526,7 +560,11 @@ def update_memory_record(
     memory_id: int,
     update: MemoryUpdateRequest,
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.MEMORY_WRITE_PRIVATE.value, risk_level="low")
+        require_permission(
+            Permission.MEMORY_WRITE_PRIVATE.value,
+            risk_level="low",
+            human_session_required=True,
+        )
     ),
 ) -> MemoryRecordResponse:
     try:
@@ -549,7 +587,9 @@ def update_memory_record(
 @router.get("/api/integrations/calendar/status")
 def read_calendar_status(
     _principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.CALENDAR_READ_PRIVATE.value)
+        require_permission(
+            Permission.CALENDAR_READ_PRIVATE.value, human_session_required=True
+        )
     ),
 ) -> CalendarStatusResponse:
     return get_calendar_status()
@@ -586,7 +626,9 @@ def complete_calendar_login(
 @router.get("/api/integrations/calendar/events/today")
 def read_calendar_today(
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.CALENDAR_READ_PRIVATE.value)
+        require_permission(
+            Permission.CALENDAR_READ_PRIVATE.value, human_session_required=True
+        )
     ),
 ) -> CalendarScheduleResponse:
     try:
@@ -603,7 +645,9 @@ def read_calendar_today(
 def read_calendar_upcoming(
     days: int = 7,
     principal: AuthenticatedPrincipal = Depends(
-        require_permission(Permission.CALENDAR_READ_PRIVATE.value)
+        require_permission(
+            Permission.CALENDAR_READ_PRIVATE.value, human_session_required=True
+        )
     ),
 ) -> CalendarScheduleResponse:
     try:
@@ -704,6 +748,26 @@ def _authorize_assistant_private_intent(
                 "reason": decision.reason,
                 "permission": permission,
                 "policy_id": decision.policy_id,
+            },
+        )
+    if principal.device_type == "mirror" and not principal.human_session_active:
+        identity_store.append_audit_event(
+            event_type="authorization_decision",
+            principal=principal,
+            action=permission,
+            resource_type="assistant_private_intent",
+            authorization_decision="denied",
+            risk_level="read_only",
+            reason="human_session.required_for_mirror",
+            result="denied",
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "decision": "denied",
+                "reason": "A human interaction session is required on a mirror.",
+                "permission": permission,
+                "policy_id": "human_session.required_for_mirror",
             },
         )
 

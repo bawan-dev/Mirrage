@@ -27,5 +27,15 @@ Rules:
 
 The default TTL is 120 seconds through `MIRRAGE_APPROVAL_TTL_SECONDS`.
 
+## Relationship Consent Is Separate
+
+Relationship proposals do not use the approval engine. The named counterpart
+must accept or reject directly, and either participant may later archive the
+relationship. An owner cannot approve a relationship on another user's behalf.
+
+This separation matters because an approval is authorization for an action,
+while a relationship is mutual personal context. Neither mechanism grants a
+role permission by itself.
+
 See [API](api.md) for endpoint details and [Security model](security-model.md)
 for the authorization boundary.

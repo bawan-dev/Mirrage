@@ -23,6 +23,36 @@ denied the action. Read the response `permission` and `policy_id`, then check
 [Permissions](permissions.md). Do not work around a 403 in the frontend or AI
 prompt.
 
+If the authenticated device is registered as `mirror`, a private route also
+requires `X-Mirrage-Human-Session`. Open the normal-mode Identity view and use
+**Activate selected user**, or call `POST /api/sessions`. An expired or ended
+session must be replaced; it cannot be refreshed from its hash.
+
+## Profile Or Relationship View Is Unavailable
+
+Check `/api/identity/me` first. The principal needs the relevant profile or
+relationship permission and, on a mirror device, an active human session.
+Profile management intentionally stays outside Mirror Mode.
+
+If a relationship proposal returns `409`, check for an existing pending or
+active relationship between the same two users. Self-relationships and
+duplicate pairs are rejected.
+
+## A Profile Field Is Missing From The Directory
+
+This is normally the privacy filter working. The field owner controls its
+visibility. Installation owners do not receive an automatic privacy bypass.
+Confirm the field is marked `relationship`, `household`, or `public` and that
+the corresponding active relationship or household condition exists.
+
+## Shared Context Cannot Be Shared
+
+The item must belong to the current user and the target must be an active user.
+An active relationship is required only when access depends on `relationship`
+visibility. Shared context is private when created. Obvious credential,
+financial, medical, and security-code categories are rejected, but the filter
+is not a substitute for keeping secrets out of the feature.
+
 ## Production Fails With Identity Startup Error
 
 Production requires enabled, enforced identity mode, no development bypass, and

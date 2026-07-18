@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1140" viewBox="0 0 1240 1140" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1320" viewBox="0 0 1240 1320" role="img" aria-labelledby="title desc">
   <title id="title">Mirrage physical and software architecture</title>
-  <desc id="desc">Diagram showing the physical Mirrage appliance and its v2 identity trust boundary. Clients and future identity evidence feed authentication, which creates a principal for deterministic authorization before backend, AI, memory, or smart-home services can run.</desc>
+  <desc id="desc">Diagram showing the physical Mirrage appliance and its v2 trust boundary. Device authentication creates a principal, trusted mirrors require temporary human sessions for private data, profiles and relationships apply privacy filters, and deterministic authorization protects backend services.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#6ee7ff" />
@@ -24,7 +24,7 @@
     </style>
   </defs>
 
-  <rect class="bg" width="1240" height="1140" />
+  <rect class="bg" width="1240" height="1320" />
 
   <text x="60" y="52" class="tag">MIRRAGE</text>
   <text x="60" y="88" class="label">Physical Mirror Architecture</text>
@@ -121,7 +121,7 @@
 
   <path d="M 55 830 L 1180 830" class="divider" />
   <text x="60" y="872" class="tag">V2 TRUST BOUNDARY</text>
-  <text x="60" y="900" class="small">Authentication establishes a principal. Policy alone decides whether protected services may run.</text>
+  <text x="60" y="900" class="small">Device trust, human presence, privacy visibility, and permission policy are separate decisions.</text>
 
   <rect x="55" y="930" width="170" height="76" class="service" />
   <text x="140" y="960" text-anchor="middle" class="label">Clients</text>
@@ -148,25 +148,46 @@
   <path d="M 695 968 L 740 968" class="line" />
   <path d="M 930 968 L 975 968" class="line" />
 
-  <rect x="55" y="1040" width="275" height="70" class="warn" />
-  <text x="192" y="1064" text-anchor="middle" class="label">Future Evidence</text>
-  <text x="192" y="1086" text-anchor="middle" class="small">phone, UWB, voice, vision</text>
-  <text x="192" y="1104" text-anchor="middle" class="small">vehicle, wearable</text>
+  <rect x="55" y="1040" width="250" height="76" class="safe" />
+  <text x="180" y="1070" text-anchor="middle" class="label">Human Session</text>
+  <text x="180" y="1094" text-anchor="middle" class="small">temporary, mirror-bound</text>
 
-  <rect x="375" y="1040" width="200" height="70" class="data" />
-  <text x="475" y="1068" text-anchor="middle" class="label">Identity Store</text>
-  <text x="475" y="1092" text-anchor="middle" class="small">users, devices, overrides</text>
+  <rect x="350" y="1040" width="250" height="76" class="data" />
+  <text x="475" y="1070" text-anchor="middle" class="label">Profiles + Privacy</text>
+  <text x="475" y="1094" text-anchor="middle" class="small">private fields by default</text>
 
-  <rect x="620" y="1040" width="200" height="70" class="warn" />
-  <text x="720" y="1068" text-anchor="middle" class="label">Approval Engine</text>
-  <text x="720" y="1092" text-anchor="middle" class="small">expiring decisions</text>
+  <rect x="645" y="1040" width="250" height="76" class="data" />
+  <text x="770" y="1070" text-anchor="middle" class="label">Relationships</text>
+  <text x="770" y="1094" text-anchor="middle" class="small">mutual consent, no authority</text>
 
-  <rect x="865" y="1040" width="200" height="70" class="data" />
-  <text x="965" y="1068" text-anchor="middle" class="label">Audit Log</text>
-  <text x="965" y="1092" text-anchor="middle" class="small">append-only, redacted</text>
+  <rect x="940" y="1040" width="240" height="76" class="data" />
+  <text x="1060" y="1070" text-anchor="middle" class="label">Shared Context</text>
+  <text x="1060" y="1094" text-anchor="middle" class="small">explicit access + revocation</text>
 
-  <path d="M 330 1075 L 365 1006" class="gold" />
-  <path d="M 475 1040 L 420 1006" class="muted" />
-  <path d="M 720 1040 L 800 1006" class="gold" />
-  <path d="M 965 1040 L 885 1006" class="muted" />
+  <path d="M 180 1040 L 365 1006" class="green" />
+  <path d="M 475 1040 L 600 1006" class="muted" />
+  <path d="M 770 1040 L 800 1006" class="muted" />
+  <path d="M 1060 1040 L 1077 1006" class="muted" />
+
+  <rect x="55" y="1180" width="275" height="82" class="warn" />
+  <text x="192" y="1208" text-anchor="middle" class="label">Future Evidence</text>
+  <text x="192" y="1232" text-anchor="middle" class="small">phone, UWB, voice, vision</text>
+  <text x="192" y="1252" text-anchor="middle" class="small">vehicle, wearable</text>
+
+  <rect x="375" y="1180" width="200" height="82" class="data" />
+  <text x="475" y="1214" text-anchor="middle" class="label">Identity Store</text>
+  <text x="475" y="1238" text-anchor="middle" class="small">users, devices, overrides</text>
+
+  <rect x="620" y="1180" width="200" height="82" class="warn" />
+  <text x="720" y="1214" text-anchor="middle" class="label">Approval Engine</text>
+  <text x="720" y="1238" text-anchor="middle" class="small">expiring decisions</text>
+
+  <rect x="865" y="1180" width="200" height="82" class="data" />
+  <text x="965" y="1214" text-anchor="middle" class="label">Audit Log</text>
+  <text x="965" y="1238" text-anchor="middle" class="small">append-only, redacted</text>
+
+  <path d="M 330 1221 L 365 1006" class="gold" />
+  <path d="M 475 1180 L 475 1116" class="muted" />
+  <path d="M 720 1180 L 800 1006" class="gold" />
+  <path d="M 965 1180 L 885 1006" class="muted" />
 </svg>

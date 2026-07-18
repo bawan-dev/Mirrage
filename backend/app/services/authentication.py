@@ -23,6 +23,7 @@ from backend.app.services.identity_models import (
 )
 from backend.app.services.identity_store import identity_store
 from backend.app.services.permissions import permissions_for_role
+from backend.app.services.relationship_store import relationship_store
 from backend.app.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,29 @@ def get_optional_principal(
             raise _authentication_error("Trusted-device token is invalid or revoked.")
         user, device = authenticated
         principal = principal_for_device(user, device, correlation_id=correlation_id)
+        session_token = request.headers.get("X-Mirrage-Human-Session")
+        if session_token:
+            session = relationship_store.authenticate_human_session(
+                session_token, user.public_id, device.public_id
+            )
+            if session is None:
+                identity_store.append_audit_event(
+                    event_type="human_session_authentication_failed",
+                    principal=principal,
+                    action="human_session.authenticate",
+                    resource_type="interaction_session",
+                    result="denied",
+                    reason="invalid_expired_or_mismatched_session",
+                )
+                raise _authentication_error(
+                    "Human interaction session is invalid or expired."
+                )
+            principal = principal.model_copy(
+                update={
+                    "human_session_active": True,
+                    "human_session_id": session.public_id,
+                }
+            )
         identity_store.append_audit_event(
             event_type="authentication_succeeded",
             principal=principal,
@@ -104,6 +128,7 @@ def require_permission(
     *,
     resource_type: str = "api",
     risk_level: str = "read_only",
+    human_session_required: bool = False,
 ) -> Callable[..., AuthenticatedPrincipal]:
     def dependency(
         request: Request,
@@ -118,6 +143,34 @@ def require_permission(
                 risk_level=risk_level,
             ),
         )
+        if (
+            decision.decision == "allowed"
+            and human_session_required
+            and principal.device_type == "mirror"
+            and not principal.human_session_active
+        ):
+            identity_store.append_audit_event(
+                event_type="authorization_decision",
+                principal=principal,
+                action=permission,
+                resource_type=resource_type,
+                resource_id=request.url.path,
+                authorization_decision="denied",
+                risk_level=risk_level,
+                reason="human_session.required_for_mirror",
+                result="denied",
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "decision": "denied",
+                    "reason": (
+                        "A current human interaction session is required on a mirror."
+                    ),
+                    "permission": permission,
+                    "policy_id": "human_session.required_for_mirror",
+                },
+            )
         if decision.decision != "allowed":
             status_code = (
                 status.HTTP_409_CONFLICT
@@ -225,6 +278,8 @@ def _development_principal(correlation_id: str) -> AuthenticatedPrincipal:
         effective_permissions=permissions,
         correlation_id=correlation_id,
         device_trust_level="limited",
+        device_type="other",
+        human_session_active=True,
     )
 
 

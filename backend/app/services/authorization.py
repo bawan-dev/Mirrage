@@ -48,6 +48,7 @@ def principal_for_device(
         effective_permissions=effective_permissions(user),
         correlation_id=correlation_id,
         device_trust_level=device.trust_level,
+        device_type=device.device_type,
     )
 
 
@@ -170,12 +171,16 @@ def required_assistant_permission(message: str) -> str | None:
         "my routines",
     )
     context_markers = (
+        "good morning",
+        "brief me",
         "daily briefing",
         "what is my day like",
         "what does my day look like",
         "what should i focus on",
         "what do i have today",
         "show my context",
+        "any reminders",
+        "what needs my attention",
     )
 
     if any(marker in text for marker in read_markers):

@@ -9,7 +9,14 @@ import {
 } from 'react';
 
 import {
+  activateSmartHomeScene,
+  answerRelationship,
+  archiveSharedContext,
+  createHumanSession,
+  createRelationship,
+  createSharedContext,
   disableIdentityUser,
+  endHumanSession,
   getApprovals,
   getAuditEvents,
   getCalendarLoginUrl,
@@ -21,28 +28,35 @@ import {
   getIdentityDevices,
   getIdentityMe,
   getIdentityUsers,
+  getMyProfile,
   getPresenceEventsUrl,
   getPresenceSettings,
   getPresenceStatus,
   getProactiveSummary,
+  getProfileDirectory,
+  getRelationships,
   getSmartHomeEntities,
   getSmartHomeSensors,
   getSmartHomeStatus,
   getSpotifyLoginUrl,
   getSpotifyPlayback,
   getSpotifyStatus,
+  getSharedContext,
   getSystemStatus,
   getVoiceStatus,
   getWakeEngineStatus,
   getWeather,
-  activateSmartHomeScene,
   runSmartHomeEntityAction,
   runSpotifyAction,
   revokeTrustedDevice,
+  revokeContextShare,
   sendAssistantMessage,
   sendPresenceTransition,
   sendWakeWordDetection,
+  setHumanSessionToken,
+  shareContext,
   setTrustedDeviceToken,
+  updateMyProfile,
 } from './api';
 import {
   routeAssistantCommand,
@@ -83,21 +97,26 @@ import type {
   HealthStatus,
   IdentityPrincipal,
   IdentityUser,
+  PersonalizationProfile,
+  PersonalizationProfileUpdate,
   PresenceSettings,
   PresenceSnapshot,
   PresenceState,
   PresenceTransition,
   ProactiveSummary,
+  Relationship,
   SmartHomeEntitiesResponse,
   SmartHomeEntity,
   SmartHomeStatus,
   SpotifyPlayback,
   SpotifyStatus,
+  SharedContextItem,
   SystemStatus,
   TrustedDevice,
   VoiceStatus,
   WakeEngineStatus,
   WeatherInfo,
+  VisibleProfile,
 } from './types';
 
 type FocusView =
@@ -108,7 +127,8 @@ type FocusView =
   | 'calendar'
   | 'context'
   | 'smart-home'
-  | 'identity';
+  | 'identity'
+  | 'profile';
 
 const focusViewValues: FocusView[] = [
   'home',
@@ -119,6 +139,7 @@ const focusViewValues: FocusView[] = [
   'context',
   'smart-home',
   'identity',
+  'profile',
 ];
 
 interface BackendState {
@@ -154,6 +175,12 @@ interface SmartHomeUiState {
 }
 
 interface IdentityUiState {
+  error: string | null;
+  isLoading: boolean;
+  message: string | null;
+}
+
+interface RelationshipUiState {
   error: string | null;
   isLoading: boolean;
   message: string | null;
@@ -511,6 +538,18 @@ export default function App() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [identityTokenDraft, setIdentityTokenDraft] = useState('');
   const [identitySessionVersion, setIdentitySessionVersion] = useState(0);
+  const [profile, setProfile] = useState<PersonalizationProfile | null>(null);
+  const [relationships, setRelationships] = useState<Relationship[]>([]);
+  const [sharedContext, setSharedContext] = useState<SharedContextItem[]>([]);
+  const [profileDirectory, setProfileDirectory] = useState<VisibleProfile[]>(
+    [],
+  );
+  const [relationshipState, setRelationshipState] =
+    useState<RelationshipUiState>({
+      error: null,
+      isLoading: false,
+      message: null,
+    });
   const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatus | null>(
     null,
   );
@@ -641,6 +680,84 @@ export default function App() {
     }
   }, [isDemoMode]);
 
+  const refreshPersonalization = useCallback(async () => {
+    if (!identityPrincipal) {
+      setProfile(null);
+      setRelationships([]);
+      setSharedContext([]);
+      setProfileDirectory([]);
+      return;
+    }
+
+    setRelationshipState((current) => ({
+      ...current,
+      error: null,
+      isLoading: true,
+    }));
+
+    if (isDemoMode) {
+      setProfile({
+        user_id: 'demo-owner',
+        preferred_display_name: 'Sample Owner',
+        preferred_language: 'en-GB',
+        response_tone: 'neutral',
+        response_length: 'concise',
+        greeting_style: 'minimal',
+        humour: 'off',
+        proactivity: 'low',
+        quiet_hours_start: '22:00',
+        quiet_hours_end: '07:00',
+        time_zone: 'Europe/London',
+        spoken_announcements: false,
+        personalized_greeting: true,
+        cloud_personalization_opt_in: false,
+        visibility: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      setRelationships([]);
+      setSharedContext([]);
+      setProfileDirectory([]);
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message: 'Showing isolated sample preferences.',
+      });
+      return;
+    }
+
+    try {
+      const [nextProfile, relationshipResult, contextResult, directory] =
+        await Promise.all([
+          getMyProfile(),
+          getRelationships(),
+          getSharedContext(),
+          getProfileDirectory(),
+        ]);
+      setProfile(nextProfile);
+      setRelationships(relationshipResult.items);
+      setSharedContext(contextResult.items);
+      setProfileDirectory(directory);
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message: null,
+      });
+    } catch {
+      setProfile(null);
+      setRelationships([]);
+      setSharedContext([]);
+      setProfileDirectory([]);
+      setRelationshipState({
+        error: identityPrincipal.human_session_active
+          ? 'Personalization data could not be loaded.'
+          : 'Activate a temporary human session before opening private preferences.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }, [identityPrincipal, isDemoMode]);
+
   const reportPresenceTransition = useCallback(
     async (transition: PresenceTransition) => {
       if (isDemoMode) {
@@ -722,7 +839,13 @@ export default function App() {
   }, [identitySessionVersion, refreshIdentity]);
 
   useEffect(() => {
-    if (isMirrorMode && activeView === 'identity') {
+    if (activeView === 'profile') {
+      void refreshPersonalization();
+    }
+  }, [activeView, identitySessionVersion, refreshPersonalization]);
+
+  useEffect(() => {
+    if (isMirrorMode && ['identity', 'profile'].includes(activeView)) {
       setActiveView('home');
     }
   }, [activeView, isMirrorMode]);
@@ -2341,9 +2464,190 @@ export default function App() {
   }
 
   function handleIdentityDisconnect() {
+    setHumanSessionToken(null);
     setTrustedDeviceToken(null);
     setIdentityPrincipal(null);
     setIdentitySessionVersion((current) => current + 1);
+  }
+
+  async function handleActivateHumanSession() {
+    if (isDemoMode) {
+      return;
+    }
+    setIdentityState({ error: null, isLoading: true, message: null });
+    try {
+      const enrollment = await createHumanSession();
+      setHumanSessionToken(enrollment.token);
+      setIdentitySessionVersion((current) => current + 1);
+      setIdentityState({
+        error: null,
+        isLoading: false,
+        message: 'Temporary human session activated for this device.',
+      });
+    } catch {
+      setIdentityState({
+        error: 'The temporary human session could not be activated.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }
+
+  async function handleEndHumanSession() {
+    if (isDemoMode) {
+      return;
+    }
+    setIdentityState({ error: null, isLoading: true, message: null });
+    try {
+      await endHumanSession();
+    } catch {
+      // Clear the local token even if the backend session already expired.
+    }
+    setHumanSessionToken(null);
+    setIdentitySessionVersion((current) => current + 1);
+    setIdentityState({
+      error: null,
+      isLoading: false,
+      message: 'Temporary human session ended.',
+    });
+  }
+
+  async function handleProfileUpdate(update: PersonalizationProfileUpdate) {
+    if (isDemoMode) {
+      setProfile((current) => (current ? { ...current, ...update } : current));
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message: 'Demo preferences updated locally.',
+      });
+      return;
+    }
+    setRelationshipState({ error: null, isLoading: true, message: null });
+    try {
+      const result = await updateMyProfile(update);
+      setProfile(result);
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message: 'Communication preferences saved.',
+      });
+    } catch {
+      setRelationshipState({
+        error: 'Communication preferences could not be saved.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }
+
+  async function handleRelationshipCreate(
+    targetUserId: string,
+    relationshipType: string,
+  ) {
+    if (isDemoMode) {
+      return;
+    }
+    setRelationshipState({ error: null, isLoading: true, message: null });
+    try {
+      await createRelationship(targetUserId, relationshipType);
+      await refreshPersonalization();
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message: 'Relationship request sent for confirmation.',
+      });
+    } catch {
+      setRelationshipState({
+        error: 'The relationship request could not be created.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }
+
+  async function handleRelationshipAction(
+    relationship: Relationship,
+    action: 'accept' | 'reject' | 'archive',
+  ) {
+    if (isDemoMode) {
+      return;
+    }
+    setRelationshipState({ error: null, isLoading: true, message: null });
+    try {
+      await answerRelationship(relationship.public_id, action);
+      await refreshPersonalization();
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message: `Relationship ${action} completed.`,
+      });
+    } catch {
+      setRelationshipState({
+        error: `The relationship could not be ${action}ed.`,
+        isLoading: false,
+        message: null,
+      });
+    }
+  }
+
+  async function handleSharedContextCreate(input: {
+    context_type: SharedContextItem['context_type'];
+    title: string;
+    value: string;
+    visibility: SharedContextItem['visibility'];
+  }) {
+    if (isDemoMode) {
+      return;
+    }
+    setRelationshipState({ error: null, isLoading: true, message: null });
+    try {
+      await createSharedContext(input);
+      await refreshPersonalization();
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message:
+          'Shared context created. It remains private unless you share it.',
+      });
+    } catch {
+      setRelationshipState({
+        error: 'Shared context could not be created.',
+        isLoading: false,
+        message: null,
+      });
+    }
+  }
+
+  async function handleSharedContextAccess(
+    item: SharedContextItem,
+    action: 'archive' | 'share' | 'revoke',
+    userId?: string,
+  ) {
+    if (isDemoMode) {
+      return;
+    }
+    setRelationshipState({ error: null, isLoading: true, message: null });
+    try {
+      if (action === 'archive') {
+        await archiveSharedContext(item.public_id);
+      } else if (action === 'share' && userId) {
+        await shareContext(item.public_id, userId);
+      } else if (action === 'revoke' && userId) {
+        await revokeContextShare(item.public_id, userId);
+      }
+      await refreshPersonalization();
+      setRelationshipState({
+        error: null,
+        isLoading: false,
+        message: `Shared context ${action} completed.`,
+      });
+    } catch {
+      setRelationshipState({
+        error: `Shared context ${action} failed.`,
+        isLoading: false,
+        message: null,
+      });
+    }
   }
 
   async function handleDisableIdentityUser(user: IdentityUser) {
@@ -2415,7 +2719,11 @@ export default function App() {
             currentDate={currentDate}
             currentTime={currentTime}
             inactivityLevel={mirrorInactivityLevel}
-            identityName={identityPrincipal?.display_name ?? null}
+            identityName={
+              identityPrincipal?.human_session_active
+                ? identityPrincipal.display_name
+                : null
+            }
             onOpen={openFocus}
             proactiveNudge={proactiveNudge}
             proactiveSummary={proactiveSummary}
@@ -2552,8 +2860,10 @@ export default function App() {
             devices={trustedDevices}
             identityState={identityState}
             onClose={closeFocus}
+            onActivateHumanSession={() => void handleActivateHumanSession()}
             onDisableUser={(user) => void handleDisableIdentityUser(user)}
             onDisconnect={handleIdentityDisconnect}
+            onEndHumanSession={() => void handleEndHumanSession()}
             onRefresh={() => void refreshIdentity()}
             onRevokeDevice={(device) => void handleRevokeTrustedDevice(device)}
             onTokenChange={setIdentityTokenDraft}
@@ -2561,6 +2871,33 @@ export default function App() {
             pendingApprovals={pendingApprovals}
             principal={identityPrincipal}
             tokenDraft={identityTokenDraft}
+            users={identityUsers}
+          />
+        )}
+
+        {activeView === 'profile' && !isMirrorMode && (
+          <RelationshipFocus
+            directory={profileDirectory}
+            onClose={closeFocus}
+            onCreateRelationship={(target, type) =>
+              void handleRelationshipCreate(target, type)
+            }
+            onCreateSharedContext={(input) =>
+              void handleSharedContextCreate(input)
+            }
+            onProfileUpdate={(update) => void handleProfileUpdate(update)}
+            onRefresh={() => void refreshPersonalization()}
+            onRelationshipAction={(relationship, action) =>
+              void handleRelationshipAction(relationship, action)
+            }
+            onSharedContextAction={(item, action, userId) =>
+              void handleSharedContextAccess(item, action, userId)
+            }
+            principal={identityPrincipal}
+            profile={profile}
+            relationships={relationships}
+            sharedContext={sharedContext}
+            state={relationshipState}
             users={identityUsers}
           />
         )}
@@ -2701,6 +3038,14 @@ function HomeState({
           onClick={() => onOpen('identity')}
         >
           Identity
+        </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('profile')}
+        >
+          Profile
         </button>
       </nav>
 
@@ -2921,7 +3266,7 @@ function ContextFocus({
       <FocusHeader
         eyebrow="Daily Briefing"
         onClose={onClose}
-        title={context ? 'Good morning Bawan' : 'Context unavailable'}
+        title={context ? 'Daily briefing' : 'Context unavailable'}
       />
 
       <div className="ambient-quiet-actions">
@@ -3818,13 +4163,675 @@ function SmartHomeSensorSection({
   );
 }
 
+interface RelationshipFocusProps {
+  directory: VisibleProfile[];
+  onClose: () => void;
+  onCreateRelationship: (targetUserId: string, type: string) => void;
+  onCreateSharedContext: (input: {
+    context_type: SharedContextItem['context_type'];
+    title: string;
+    value: string;
+    visibility: SharedContextItem['visibility'];
+  }) => void;
+  onProfileUpdate: (update: PersonalizationProfileUpdate) => void;
+  onRefresh: () => void;
+  onRelationshipAction: (
+    relationship: Relationship,
+    action: 'accept' | 'reject' | 'archive',
+  ) => void;
+  onSharedContextAction: (
+    item: SharedContextItem,
+    action: 'archive' | 'share' | 'revoke',
+    userId?: string,
+  ) => void;
+  principal: IdentityPrincipal | null;
+  profile: PersonalizationProfile | null;
+  relationships: Relationship[];
+  sharedContext: SharedContextItem[];
+  state: RelationshipUiState;
+  users: IdentityUser[];
+}
+
+function RelationshipFocus({
+  directory,
+  onClose,
+  onCreateRelationship,
+  onCreateSharedContext,
+  onProfileUpdate,
+  onRefresh,
+  onRelationshipAction,
+  onSharedContextAction,
+  principal,
+  profile,
+  relationships,
+  sharedContext,
+  state,
+  users,
+}: RelationshipFocusProps) {
+  const [profileDraft, setProfileDraft] =
+    useState<PersonalizationProfile | null>(profile);
+  const [relationshipTarget, setRelationshipTarget] = useState('');
+  const [relationshipType, setRelationshipType] = useState('friend');
+  const [contextTitle, setContextTitle] = useState('');
+  const [contextValue, setContextValue] = useState('');
+  const [contextType, setContextType] =
+    useState<SharedContextItem['context_type']>('plan');
+  const [contextVisibility, setContextVisibility] =
+    useState<SharedContextItem['visibility']>('private');
+  const [shareTarget, setShareTarget] = useState('');
+
+  useEffect(() => setProfileDraft(profile), [profile]);
+
+  const availablePeople = directory.filter(
+    (item) => item.user_id !== principal?.user_id,
+  );
+  const pendingIncoming = relationships.filter(
+    (item) =>
+      item.status === 'pending' &&
+      item.proposed_to_user_id === principal?.user_id,
+  );
+  const pendingOutgoing = relationships.filter(
+    (item) =>
+      item.status === 'pending' &&
+      item.proposed_by_user_id === principal?.user_id,
+  );
+  const activeRelationships = relationships.filter(
+    (item) => item.status === 'active',
+  );
+
+  function personName(userId: string): string {
+    const user = users.find((item) => item.public_id === userId);
+    if (user) {
+      return user.display_name;
+    }
+    const visible = directory.find((item) => item.user_id === userId);
+    const name = visible?.fields.preferred_display_name;
+    return typeof name === 'string' ? name : `User ${userId.slice(0, 8)}`;
+  }
+
+  function otherUser(relationship: Relationship): string {
+    return relationship.user_a_id === principal?.user_id
+      ? relationship.user_b_id
+      : relationship.user_a_id;
+  }
+
+  function submitProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!profileDraft) {
+      return;
+    }
+    onProfileUpdate({
+      preferred_display_name: profileDraft.preferred_display_name,
+      preferred_language: profileDraft.preferred_language,
+      response_tone: profileDraft.response_tone,
+      response_length: profileDraft.response_length,
+      greeting_style: profileDraft.greeting_style,
+      humour: profileDraft.humour,
+      proactivity: profileDraft.proactivity,
+      quiet_hours_start: profileDraft.quiet_hours_start,
+      quiet_hours_end: profileDraft.quiet_hours_end,
+      time_zone: profileDraft.time_zone,
+      spoken_announcements: profileDraft.spoken_announcements,
+      personalized_greeting: profileDraft.personalized_greeting,
+      cloud_personalization_opt_in: profileDraft.cloud_personalization_opt_in,
+      visibility: profileDraft.visibility,
+    });
+  }
+
+  function submitRelationship(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (relationshipTarget) {
+      onCreateRelationship(relationshipTarget, relationshipType);
+    }
+  }
+
+  function submitContext(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!contextTitle.trim() || !contextValue.trim()) {
+      return;
+    }
+    onCreateSharedContext({
+      context_type: contextType,
+      title: contextTitle.trim(),
+      value: contextValue.trim(),
+      visibility: contextVisibility,
+    });
+    setContextTitle('');
+    setContextValue('');
+  }
+
+  if (!principal) {
+    return (
+      <div className={focusPanelClass}>
+        <FocusHeader eyebrow="Personal" onClose={onClose} title="Profile" />
+        <p className="ambient-empty-line">
+          Authenticate a trusted device from Identity before opening private
+          preferences.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${focusPanelClass} ambient-relationships`}>
+      <FocusHeader
+        eyebrow="Personal"
+        onClose={onClose}
+        title="Profile & Relationships"
+      />
+
+      {!profileDraft ? (
+        <section className="ambient-profile-intro">
+          <p className={labelClass}>Private by default</p>
+          <h2>Activate your human session to continue.</h2>
+          <p>
+            A trusted mirror token identifies the device, not the person in
+            front of it. Open Identity to make a temporary user selection.
+          </p>
+        </section>
+      ) : (
+        <>
+          <form className="ambient-profile-form" onSubmit={submitProfile}>
+            <section>
+              <p className={labelClass}>My Profile</p>
+              <div className="ambient-profile-fields">
+                <label>
+                  Preferred name
+                  <input
+                    value={profileDraft.preferred_display_name}
+                    onChange={(event) =>
+                      setProfileDraft({
+                        ...profileDraft,
+                        preferred_display_name: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Language
+                  <input
+                    value={profileDraft.preferred_language}
+                    onChange={(event) =>
+                      setProfileDraft({
+                        ...profileDraft,
+                        preferred_language: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+                <ProfileSelect
+                  label="Tone"
+                  value={profileDraft.response_tone}
+                  values={['neutral', 'direct', 'warm', 'formal']}
+                  onChange={(value) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      response_tone:
+                        value as PersonalizationProfile['response_tone'],
+                    })
+                  }
+                />
+                <ProfileSelect
+                  label="Response length"
+                  value={profileDraft.response_length}
+                  values={['concise', 'balanced', 'detailed']}
+                  onChange={(value) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      response_length:
+                        value as PersonalizationProfile['response_length'],
+                    })
+                  }
+                />
+                <ProfileSelect
+                  label="Greeting"
+                  value={profileDraft.greeting_style}
+                  values={['none', 'minimal', 'standard', 'warm']}
+                  onChange={(value) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      greeting_style:
+                        value as PersonalizationProfile['greeting_style'],
+                    })
+                  }
+                />
+                <ProfileSelect
+                  label="Proactivity"
+                  value={profileDraft.proactivity}
+                  values={['silent', 'low', 'standard', 'high']}
+                  onChange={(value) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      proactivity:
+                        value as PersonalizationProfile['proactivity'],
+                    })
+                  }
+                />
+                <label>
+                  Quiet from
+                  <input
+                    type="time"
+                    value={profileDraft.quiet_hours_start ?? ''}
+                    onChange={(event) =>
+                      setProfileDraft({
+                        ...profileDraft,
+                        quiet_hours_start: event.target.value || null,
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Quiet until
+                  <input
+                    type="time"
+                    value={profileDraft.quiet_hours_end ?? ''}
+                    onChange={(event) =>
+                      setProfileDraft({
+                        ...profileDraft,
+                        quiet_hours_end: event.target.value || null,
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <div className="ambient-profile-toggles">
+                <ProfileToggle
+                  checked={profileDraft.personalized_greeting}
+                  label="Personalized greeting"
+                  onChange={(checked) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      personalized_greeting: checked,
+                    })
+                  }
+                />
+                <ProfileToggle
+                  checked={profileDraft.spoken_announcements}
+                  label="Spoken announcements"
+                  onChange={(checked) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      spoken_announcements: checked,
+                    })
+                  }
+                />
+                <ProfileToggle
+                  checked={profileDraft.cloud_personalization_opt_in}
+                  label="Cloud-safe personalization"
+                  onChange={(checked) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      cloud_personalization_opt_in: checked,
+                    })
+                  }
+                />
+              </div>
+            </section>
+
+            <section className="ambient-profile-privacy">
+              <p className={labelClass}>Privacy Visibility</p>
+              <p>
+                Private is the default. Relationship labels never grant system
+                permissions.
+              </p>
+              {[
+                'preferred_display_name',
+                'preferred_language',
+                'response_tone',
+                'response_length',
+              ].map((field) => (
+                <ProfileSelect
+                  key={field}
+                  label={formatStatus(field)}
+                  value={profileDraft.visibility[field] ?? 'private'}
+                  values={['private', 'relationship', 'household', 'public']}
+                  onChange={(value) =>
+                    setProfileDraft({
+                      ...profileDraft,
+                      visibility: {
+                        ...profileDraft.visibility,
+                        [field]: value as SharedContextItem['visibility'],
+                      },
+                    })
+                  }
+                />
+              ))}
+            </section>
+            <button type="submit" disabled={state.isLoading}>
+              Save preferences
+            </button>
+          </form>
+
+          <section className="ambient-relationship-section">
+            <p className={labelClass}>Relationships</p>
+            <form className="ambient-inline-form" onSubmit={submitRelationship}>
+              <select
+                value={relationshipTarget}
+                onChange={(event) => setRelationshipTarget(event.target.value)}
+                aria-label="Relationship user"
+              >
+                <option value="">Choose a user</option>
+                {availablePeople.map((person) => (
+                  <option key={person.user_id} value={person.user_id}>
+                    {personName(person.user_id)}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={relationshipType}
+                onChange={(event) => setRelationshipType(event.target.value)}
+                aria-label="Relationship type"
+              >
+                {[
+                  'partner',
+                  'parent',
+                  'child',
+                  'sibling',
+                  'relative',
+                  'friend',
+                  'close_friend',
+                  'colleague',
+                  'housemate',
+                  'caregiver',
+                  'household_member',
+                ].map((type) => (
+                  <option key={type} value={type}>
+                    {formatStatus(type)}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" disabled={!relationshipTarget}>
+                Request confirmation
+              </button>
+            </form>
+
+            <RelationshipList
+              empty="No active relationships."
+              items={activeRelationships}
+              personName={personName}
+              otherUser={otherUser}
+              onAction={onRelationshipAction}
+            />
+            {pendingIncoming.length > 0 && (
+              <RelationshipList
+                empty=""
+                items={pendingIncoming}
+                personName={personName}
+                otherUser={otherUser}
+                onAction={onRelationshipAction}
+                pendingIncoming
+              />
+            )}
+            {pendingOutgoing.length > 0 && (
+              <p className="ambient-empty-line">
+                {pendingOutgoing.length} request
+                {pendingOutgoing.length === 1 ? '' : 's'} waiting for consent.
+              </p>
+            )}
+          </section>
+
+          <section className="ambient-relationship-section">
+            <p className={labelClass}>Shared Context</p>
+            <p>
+              Use this only for non-sensitive plans, reminders, household facts,
+              projects, or preferences. Every item has an owner.
+            </p>
+            <form className="ambient-context-form" onSubmit={submitContext}>
+              <input
+                value={contextTitle}
+                onChange={(event) => setContextTitle(event.target.value)}
+                placeholder="Title"
+                maxLength={160}
+              />
+              <textarea
+                value={contextValue}
+                onChange={(event) => setContextValue(event.target.value)}
+                placeholder="Context"
+                maxLength={2000}
+              />
+              <div>
+                <select
+                  value={contextType}
+                  onChange={(event) =>
+                    setContextType(
+                      event.target.value as SharedContextItem['context_type'],
+                    )
+                  }
+                >
+                  {['plan', 'reminder', 'fact', 'project', 'preference'].map(
+                    (type) => (
+                      <option key={type}>{type}</option>
+                    ),
+                  )}
+                </select>
+                <select
+                  value={contextVisibility}
+                  onChange={(event) =>
+                    setContextVisibility(
+                      event.target.value as SharedContextItem['visibility'],
+                    )
+                  }
+                >
+                  {['private', 'relationship', 'household', 'public'].map(
+                    (visibility) => (
+                      <option key={visibility}>{visibility}</option>
+                    ),
+                  )}
+                </select>
+                <button type="submit">Create private-first context</button>
+              </div>
+            </form>
+
+            <div className="ambient-shared-list">
+              {sharedContext.length === 0 ? (
+                <p className="ambient-empty-line">No shared context exists.</p>
+              ) : (
+                sharedContext.map((item) => (
+                  <article key={item.public_id}>
+                    <div>
+                      <small>
+                        {formatStatus(item.context_type)} /{' '}
+                        {formatStatus(item.visibility)}
+                      </small>
+                      <h3>{item.title}</h3>
+                      <p>{item.value}</p>
+                    </div>
+                    {item.owner_user_id === principal.user_id && (
+                      <div className="ambient-quiet-actions">
+                        <select
+                          value={shareTarget}
+                          onChange={(event) =>
+                            setShareTarget(event.target.value)
+                          }
+                          aria-label="Share with user"
+                        >
+                          <option value="">Choose user</option>
+                          {availablePeople.map((person) => (
+                            <option key={person.user_id} value={person.user_id}>
+                              {personName(person.user_id)}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          disabled={!shareTarget}
+                          onClick={() =>
+                            onSharedContextAction(item, 'share', shareTarget)
+                          }
+                        >
+                          Share
+                        </button>
+                        {item.shared_with_user_ids.map((userId) => (
+                          <button
+                            key={userId}
+                            type="button"
+                            onClick={() =>
+                              onSharedContextAction(item, 'revoke', userId)
+                            }
+                          >
+                            Revoke {personName(userId)}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => onSharedContextAction(item, 'archive')}
+                        >
+                          Archive
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="ambient-relationship-section">
+            <p className={labelClass}>Household Directory</p>
+            <p>
+              Only fields each person made visible are shown. Account ownership
+              does not reveal private profile fields.
+            </p>
+            <div className="ambient-directory">
+              {directory.map((person) => (
+                <p key={person.user_id}>
+                  <strong>{personName(person.user_id)}</strong>{' '}
+                  <span>
+                    {person.visible_fields.map(formatStatus).join(', ')}
+                  </span>
+                </p>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      <div className="ambient-quiet-actions">
+        <button type="button" onClick={onRefresh}>
+          Refresh
+        </button>
+      </div>
+      {state.message && <p className="ambient-success">{state.message}</p>}
+      {state.error && <p className="ambient-warning">{state.error}</p>}
+    </div>
+  );
+}
+
+function ProfileSelect({
+  label,
+  onChange,
+  value,
+  values,
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+  values: string[];
+}) {
+  return (
+    <label>
+      {label}
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {values.map((item) => (
+          <option key={item} value={item}>
+            {formatStatus(item)}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ProfileToggle({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      {label}
+    </label>
+  );
+}
+
+function RelationshipList({
+  empty,
+  items,
+  onAction,
+  otherUser,
+  pendingIncoming = false,
+  personName,
+}: {
+  empty: string;
+  items: Relationship[];
+  onAction: (
+    relationship: Relationship,
+    action: 'accept' | 'reject' | 'archive',
+  ) => void;
+  otherUser: (relationship: Relationship) => string;
+  pendingIncoming?: boolean;
+  personName: (userId: string) => string;
+}) {
+  if (items.length === 0) {
+    return empty ? <p className="ambient-empty-line">{empty}</p> : null;
+  }
+  return (
+    <div className="ambient-relationship-list">
+      {items.map((relationship) => (
+        <article key={relationship.public_id}>
+          <div>
+            <h3>{personName(otherUser(relationship))}</h3>
+            <p>{formatStatus(relationship.relationship_type)}</p>
+          </div>
+          <div className="ambient-quiet-actions">
+            {pendingIncoming ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onAction(relationship, 'accept')}
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAction(relationship, 'reject')}
+                >
+                  Reject
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onAction(relationship, 'archive')}
+              >
+                Archive
+              </button>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 interface IdentityFocusProps {
   auditEvents: AuditEvent[];
   devices: TrustedDevice[];
   identityState: IdentityUiState;
+  onActivateHumanSession: () => void;
   onClose: () => void;
   onDisableUser: (user: IdentityUser) => void;
   onDisconnect: () => void;
+  onEndHumanSession: () => void;
   onRefresh: () => void;
   onRevokeDevice: (device: TrustedDevice) => void;
   onTokenChange: (value: string) => void;
@@ -3839,9 +4846,11 @@ function IdentityFocus({
   auditEvents,
   devices,
   identityState,
+  onActivateHumanSession,
   onClose,
   onDisableUser,
   onDisconnect,
+  onEndHumanSession,
   onRefresh,
   onRevokeDevice,
   onTokenChange,
@@ -3892,14 +4901,36 @@ function IdentityFocus({
             <p>
               {formatStatus(principal.role)} /{' '}
               {formatStatus(principal.authentication_method)} /{' '}
-              {formatStatus(principal.assurance_level)} assurance
+              {formatStatus(principal.assurance_level)} assurance /{' '}
+              {principal.human_session_active
+                ? 'human session active'
+                : 'device identity only'}
             </p>
+            {!principal.human_session_active &&
+              principal.authentication_method === 'trusted_device' && (
+                <p>
+                  Activating a user is an explicit temporary selection. It does
+                  not claim biometric or voice identity proof.
+                </p>
+              )}
             <div className="ambient-quiet-actions">
               <button type="button" onClick={onRefresh}>
                 Refresh
               </button>
+              {!principal.human_session_active &&
+                principal.authentication_method === 'trusted_device' && (
+                  <button type="button" onClick={onActivateHumanSession}>
+                    Activate selected user
+                  </button>
+                )}
+              {principal.human_session_active &&
+                principal.authentication_method === 'trusted_device' && (
+                  <button type="button" onClick={onEndHumanSession}>
+                    End human session
+                  </button>
+                )}
               <button type="button" onClick={onDisconnect}>
-                End session
+                Forget device token
               </button>
             </div>
           </section>

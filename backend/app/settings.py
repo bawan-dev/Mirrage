@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     identity_database_path: str = "data/mirrage-identity.sqlite3"
     identity_device_token_bytes: int = 32
     identity_session_ttl_seconds: int = 86400
+    human_session_ttl_seconds: int = 900
     approval_ttl_seconds: int = 120
     audit_retention_days: int = 365
     identity_dev_bypass: bool = False

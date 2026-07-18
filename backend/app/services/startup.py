@@ -104,6 +104,14 @@ def validate_environment() -> list[StartupIssue]:
                 message="Identity session TTL must be greater than zero.",
             )
         )
+    if not 60 <= settings.human_session_ttl_seconds <= 86400:
+        issues.append(
+            StartupIssue(
+                level="error",
+                field="MIRRAGE_HUMAN_SESSION_TTL_SECONDS",
+                message="Human session lifetime must be between 60 and 86400 seconds.",
+            )
+        )
 
     if settings.approval_ttl_seconds <= 0:
         issues.append(

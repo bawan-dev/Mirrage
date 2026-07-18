@@ -25,9 +25,14 @@ from backend.app.services.permissions import (
     ROLE_PERMISSIONS,
     is_registered_permission,
 )
+from backend.app.services.relationship_migrations import (
+    RELATIONSHIP_SCHEMA_VERSION,
+    migrate_relationship_schema,
+)
+from backend.app.services.relationship_models import default_profile_visibility
 from backend.app.settings import settings
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = RELATIONSHIP_SCHEMA_VERSION
 _REDACTED_METADATA_KEYS = (
     "api_key",
     "audio",
@@ -182,8 +187,9 @@ class IdentityStore:
             connection.execute(
                 """INSERT OR IGNORE INTO schema_migrations(version, applied_at)
                    VALUES (?, ?)""",
-                (SCHEMA_VERSION, _now()),
+                (1, _now()),
             )
+            migrate_relationship_schema(connection)
 
     def database_path(self) -> Path:
         return Path(settings.identity_database_path)
@@ -269,6 +275,21 @@ class IdentityStore:
                         cleaned_name,
                         role,
                         int(household_member),
+                        timestamp,
+                        timestamp,
+                    ),
+                )
+                connection.execute(
+                    """INSERT OR IGNORE INTO personalization_profiles(
+                           user_id, preferred_display_name, visibility_json,
+                           created_at, updated_at
+                       ) VALUES(
+                           (SELECT id FROM users WHERE public_id = ?), ?, ?, ?, ?
+                       )""",
+                    (
+                        identifier,
+                        cleaned_name,
+                        json.dumps(default_profile_visibility(), separators=(",", ":")),
                         timestamp,
                         timestamp,
                     ),

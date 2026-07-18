@@ -6,8 +6,8 @@ Use this page when explaining Mirrage in a portfolio review or interview.
 
 Mirrage is a privacy-first ambient AI mirror platform. It combines a React mirror
 interface, FastAPI backend, AI runtime, local memory, presence engine, smart-home
-boundary, v2 identity and safety engine, production deployment setup, and
-physical hardware build planning.
+boundary, v2 identity, relationship, and privacy foundations, production
+deployment setup, and physical hardware build planning.
 
 ## Why It Is Technically Interesting
 
@@ -23,6 +23,10 @@ physical hardware build planning.
   AI call arbitrary home services.
 - Trusted-device authentication, role permissions, approvals, and append-only
   audit events are backend-owned. Names and AI output are not authentication.
+- Profiles are private by default. Relationships require consent, never grant
+  permissions, and expose only deliberately visible or shared context.
+- A trusted mirror identifies the appliance; a temporary hash-only session is
+  still required before private user data appears.
 - Production docs cover Docker, systemd, health checks, logs, backups, and
   hardware installation planning.
 
@@ -49,6 +53,9 @@ physical hardware build planning.
 - Browser speech APIs depend on browser support.
 - Trusted-device tokens authenticate clients, but real voice, face, UWB, phone,
   vehicle, and wearable identity evidence is not implemented.
+- Mirror user activation is an explicit selection, not human recognition.
+- Existing local memory is still installation-wide and owner-private rather
+  than partitioned by relationship.
 
 ## Suggested Walkthrough Order
 
@@ -59,5 +66,6 @@ physical hardware build planning.
 5. Calendar or Media
 6. Smart Home boundary
 7. Normal-mode Identity view and default-deny policy
-8. Architecture and deployment docs
-9. Physical mirror build plan
+8. Normal-mode Profile/Relationships workspace and privacy controls
+9. Architecture and deployment docs
+10. Physical mirror build plan
