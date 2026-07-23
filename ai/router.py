@@ -43,6 +43,9 @@ _TASK_MODEL_FIELDS: dict[RuntimeTaskType, str] = {
     "planning": "planning_model",
     "context_enhancement": "summary_model",
     "future_agent": "planning_model",
+    "agent_planning": "planning_model",
+    "agent_execution_summary": "summary_model",
+    "agent_result_summary": "summary_model",
 }
 
 

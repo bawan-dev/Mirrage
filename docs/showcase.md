@@ -6,8 +6,8 @@ Use this page when explaining Mirrage in a portfolio review or interview.
 
 Mirrage is a privacy-first ambient AI mirror platform. It combines a React mirror
 interface, FastAPI backend, AI runtime, local memory, presence engine, smart-home
-boundary, v2 identity, relationship, and privacy foundations, production
-deployment setup, and physical hardware build planning.
+boundary, v2 identity, relationship, privacy, and bounded-agent foundations,
+production deployment setup, and physical hardware build planning.
 
 ## Why It Is Technically Interesting
 
@@ -27,6 +27,9 @@ deployment setup, and physical hardware build planning.
   permissions, and expose only deliberately visible or shared context.
 - A trusted mirror identifies the appliance; a temporary hash-only session is
   still required before private user data appears.
+- Agent runs persist structured plans but can execute only registered tools.
+  Backend policy rechecks permissions per step, every side effect needs a
+  separate approver, and users can pause or cancel a bounded run.
 - Production docs cover Docker, systemd, health checks, logs, backups, and
   hardware installation planning.
 
@@ -41,6 +44,8 @@ deployment setup, and physical hardware build planning.
   assistant interface.
 - Demo mode is explicit so fake portfolio data cannot be confused with
   production behavior.
+- The AI Runtime proposes plans and summaries; deterministic backend code owns
+  authorization, approval, limits, and tool execution.
 
 ## Honest Limitations
 
@@ -56,6 +61,9 @@ deployment setup, and physical hardware build planning.
 - Mirror user activation is an explicit selection, not human recognition.
 - Existing local memory is still installation-wide and owner-private rather
   than partitioned by relationship.
+- Agents are disabled by default. They do not have live web research, arbitrary
+  computer control, messaging, purchases, bookings, or security-critical home
+  tools.
 
 ## Suggested Walkthrough Order
 
@@ -67,5 +75,6 @@ deployment setup, and physical hardware build planning.
 6. Smart Home boundary
 7. Normal-mode Identity view and default-deny policy
 8. Normal-mode Profile/Relationships workspace and privacy controls
-9. Architecture and deployment docs
-10. Physical mirror build plan
+9. Normal-mode Agent workspace with a read-only bounded task
+10. Architecture and deployment docs
+11. Physical mirror build plan

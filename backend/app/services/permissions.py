@@ -37,6 +37,17 @@ class Permission(StrEnum):
     SHARED_CONTEXT_READ = "shared_context.read"
     SHARED_CONTEXT_MANAGE = "shared_context.manage"
     HUMAN_SESSION_MANAGE = "human_session.manage"
+    AGENTS_USE = "agents.use"
+    AGENTS_PLAN = "agents.plan"
+    AGENTS_EXECUTE_READ_ONLY = "agents.execute_read_only"
+    AGENTS_EXECUTE_LOW_RISK = "agents.execute_low_risk"
+    AGENTS_READ_OWN = "agents.read_own"
+    AGENTS_CANCEL_OWN = "agents.cancel_own"
+    AGENTS_PAUSE_OWN = "agents.pause_own"
+    AGENTS_RESUME_OWN = "agents.resume_own"
+    AGENTS_APPROVE = "agents.approve"
+    AGENTS_READ_HOUSEHOLD = "agents.read_household"
+    AGENTS_ADMIN = "agents.admin"
 
 
 PERMISSION_REGISTRY = frozenset(permission.value for permission in Permission)
@@ -58,12 +69,24 @@ _PERSONAL = {
     Permission.HUMAN_SESSION_MANAGE.value,
 }
 
+_AGENT_SELF_SERVICE = {
+    Permission.AGENTS_USE.value,
+    Permission.AGENTS_PLAN.value,
+    Permission.AGENTS_READ_OWN.value,
+    Permission.AGENTS_CANCEL_OWN.value,
+    Permission.AGENTS_PAUSE_OWN.value,
+    Permission.AGENTS_RESUME_OWN.value,
+}
+
 ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
     "owner": PERMISSION_REGISTRY,
     "family": frozenset(
         {
             *_PUBLIC,
             *_PERSONAL,
+            *_AGENT_SELF_SERVICE,
+            Permission.AGENTS_EXECUTE_READ_ONLY.value,
+            Permission.AGENTS_EXECUTE_LOW_RISK.value,
             Permission.MEDIA_READ.value,
             Permission.MEDIA_CONTROL.value,
             Permission.SMART_HOME_READ.value,
@@ -75,11 +98,12 @@ ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
         {
             *_PUBLIC,
             *_PERSONAL,
+            *_AGENT_SELF_SERVICE,
             Permission.MEDIA_READ.value,
             Permission.SMART_HOME_READ.value,
         }
     ),
-    "guest": frozenset({*_PUBLIC, *_PERSONAL}),
+    "guest": frozenset({*_PUBLIC, *_PERSONAL, *_AGENT_SELF_SERVICE}),
     "service": frozenset(
         {
             Permission.SYSTEM_STATUS_READ.value,

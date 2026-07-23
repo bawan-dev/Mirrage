@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     audit_retention_days: int = 365
     identity_dev_bypass: bool = False
 
+    # Bounded autonomous-agent framework. Disabled until explicitly configured.
+    agents_enabled: bool = False
+    agent_max_steps: int = 10
+    agent_max_runtime_seconds: int = 300
+    agent_max_retries: int = 2
+    agent_max_concurrent_runs: int = 2
+    agent_approval_ttl_seconds: int = 300
+
     # Smart home / Home Assistant configuration.
     smart_home_enabled: bool = False
     smart_home_timeout_seconds: float = 5.0

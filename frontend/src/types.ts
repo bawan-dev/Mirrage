@@ -106,6 +106,126 @@ export interface AssistantReply {
   context_action?: string | null;
 }
 
+export type AgentType =
+  | 'planning'
+  | 'memory'
+  | 'calendar'
+  | 'smart_home'
+  | 'research';
+
+export type AgentRunStatus =
+  | 'draft'
+  | 'planning'
+  | 'awaiting_approval'
+  | 'awaiting_user_input'
+  | 'ready'
+  | 'running'
+  | 'paused'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'expired';
+
+export interface AgentStatus {
+  enabled: boolean;
+  database_status: string;
+  active_run_count: number;
+  awaiting_approval_count: number;
+  failed_run_count: number;
+  queue_status: string;
+  concurrency_limit: number;
+  max_steps: number;
+  max_runtime_seconds: number;
+  message: string;
+}
+
+export interface AgentTypeInfo {
+  name: AgentType;
+  description: string;
+  side_effects_allowed: boolean;
+  live_web_access: boolean;
+}
+
+export interface AgentRun {
+  public_id: string;
+  owner_user_id: string;
+  created_by_device_id: string | null;
+  agent_type: AgentType;
+  goal: string;
+  status: AgentRunStatus;
+  risk_level: string;
+  current_step: number;
+  total_steps: number;
+  max_steps: number;
+  provider: string | null;
+  model: string | null;
+  assumptions: string[];
+  expected_outcome: string | null;
+  stop_conditions: string[];
+  clarification_prompt: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  paused_at: string | null;
+  cancelled_at: string | null;
+  expires_at: string;
+  final_result: string | null;
+  error_summary: string | null;
+  correlation_id: string;
+}
+
+export interface AgentStep {
+  public_id: string;
+  run_id: string;
+  step_number: number;
+  description: string;
+  tool_name: string;
+  status: string;
+  risk_level: string;
+  approval_required: boolean;
+  approval_id: string | null;
+  approval_status: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  retry_count: number;
+  output_summary: string | null;
+  error_summary: string | null;
+}
+
+export interface AgentRunDetail {
+  run: AgentRun;
+  steps: AgentStep[];
+}
+
+export interface AgentEvent {
+  public_id: string;
+  run_id: string;
+  step_id: string | null;
+  sequence: number;
+  event_type: string;
+  message: string;
+  created_at: string;
+}
+
+export interface AgentApproval {
+  approval_id: string;
+  run_id: string;
+  step_id: string;
+  requesting_user_id: string;
+  agent_type: AgentType;
+  tool_name: string;
+  description: string;
+  risk_level: string;
+  expires_at: string;
+}
+
+export interface AgentApprovalDecision {
+  approval_id: string;
+  run_id: string;
+  step_id: string;
+  status: 'approved' | 'denied';
+}
+
 export interface WeatherInfo {
   status: string;
   location: string;

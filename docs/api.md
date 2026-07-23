@@ -1041,6 +1041,57 @@ Playback controls require Spotify authorization, an active Spotify device, and a
 Spotify account that can use player controls. See [spotify.md](spotify.md) for
 setup.
 
+## Bounded Agent API
+
+Agent routes require trusted-device authentication. Run data also requires a
+current human session when the client is a mirror device. Agents are disabled
+until `MIRRAGE_AGENTS_ENABLED=true`.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/agents/status` | Safe runtime and queue status |
+| `GET` | `/api/agents/types` | Supported bounded agent types |
+| `GET` | `/api/agents/tools` | Registered tool metadata and schemas |
+| `POST` | `/api/agents/runs` | Create a user-owned draft run |
+| `GET` | `/api/agents/runs` | List the caller's runs |
+| `GET` | `/api/agents/runs/{run_id}` | Read one caller-owned run and its steps |
+| `POST` | `/api/agents/runs/{run_id}/plan` | Propose and validate a structured plan |
+| `POST` | `/api/agents/runs/{run_id}/start` | Execute ready steps within limits |
+| `POST` | `/api/agents/runs/{run_id}/pause` | Pause later step execution |
+| `POST` | `/api/agents/runs/{run_id}/resume` | Resume a paused bounded run |
+| `POST` | `/api/agents/runs/{run_id}/cancel` | Cancel the run and pending approvals |
+| `GET` | `/api/agents/runs/{run_id}/steps` | Read safe step state |
+| `GET` | `/api/agents/runs/{run_id}/events` | Read persisted safe events |
+| `GET` | `/api/agents/runs/{run_id}/events/stream` | Receive bounded SSE event history |
+| `GET` | `/api/agents/approvals` | Read the safe separate-approver queue |
+| `POST` | `/api/agents/approvals/{id}/approve` | Approve as a different authorized user |
+| `POST` | `/api/agents/approvals/{id}/deny` | Deny as a different authorized user |
+
+Create example:
+
+```json
+{
+  "agent_type": "planning",
+  "goal": "Check the safe Mirrage system status"
+}
+```
+
+Planning normally uses the AI Runtime and a deterministic fallback. Tests and
+controlled clients may supply a `steps` array, but those steps still pass the
+same registry, schema, agent-type, and permission validation.
+
+The event stream does not contain tool arguments. `follow=true` holds the
+connection for at most 30 seconds and emits keep-alives; it is not an infinite
+worker. Clients can reconnect with the last sequence through `after`.
+
+Side-effect steps always wait for a separate approval. The approval decision
+response contains only approval, run, and step IDs plus status, so it does not
+expose another user's goal or arguments.
+
+See [agent-framework.md](agent-framework.md),
+[agent-tools.md](agent-tools.md), and
+[agent-approvals.md](agent-approvals.md).
+
 ## First Backend Target
 
 The first backend version should be able to:

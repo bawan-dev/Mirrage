@@ -58,6 +58,7 @@ import {
   setTrustedDeviceToken,
   updateMyProfile,
 } from './api';
+import { AgentWorkspace } from './components/AgentWorkspace';
 import {
   routeAssistantCommand,
   type AssistantCommandRoute,
@@ -128,7 +129,8 @@ type FocusView =
   | 'context'
   | 'smart-home'
   | 'identity'
-  | 'profile';
+  | 'profile'
+  | 'agents';
 
 const focusViewValues: FocusView[] = [
   'home',
@@ -140,6 +142,7 @@ const focusViewValues: FocusView[] = [
   'smart-home',
   'identity',
   'profile',
+  'agents',
 ];
 
 interface BackendState {
@@ -845,7 +848,10 @@ export default function App() {
   }, [activeView, identitySessionVersion, refreshPersonalization]);
 
   useEffect(() => {
-    if (isMirrorMode && ['identity', 'profile'].includes(activeView)) {
+    if (
+      isMirrorMode &&
+      ['identity', 'profile', 'agents'].includes(activeView)
+    ) {
       setActiveView('home');
     }
   }, [activeView, isMirrorMode]);
@@ -2901,6 +2907,10 @@ export default function App() {
             users={identityUsers}
           />
         )}
+
+        {activeView === 'agents' && !isMirrorMode && (
+          <AgentWorkspace onClose={closeFocus} />
+        )}
       </section>
       {isMirrorMode && (
         <>
@@ -3046,6 +3056,14 @@ function HomeState({
           onClick={() => onOpen('profile')}
         >
           Profile
+        </button>
+
+        <button
+          type="button"
+          className={focusButtonBase}
+          onClick={() => onOpen('agents')}
+        >
+          Agents
         </button>
       </nav>
 

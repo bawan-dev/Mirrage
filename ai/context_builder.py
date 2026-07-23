@@ -40,7 +40,16 @@ def build_runtime_context(
     """Return a small context bundle for a model request."""
 
     selected_task = task_type or classify_task_type(message)
-    if principal is None:
+    agent_task = selected_task in {
+        "agent_planning",
+        "agent_execution_summary",
+        "agent_result_summary",
+    }
+    if agent_task:
+        daily_context = None
+        memory_summary = None
+        proactive_summary = None
+    elif principal is None:
         daily_context = _safe_daily_context()
         memory_summary = _safe_memory_summary()
         proactive_summary = _safe_proactive_summary()
@@ -135,7 +144,14 @@ def build_runtime_context(
 def _privacy_level(
     task_type: RuntimeTaskType, memory_summary: object | None
 ) -> RuntimePrivacyLevel:
-    if task_type in {"memory", "planning", "future_agent"}:
+    if task_type in {
+        "memory",
+        "planning",
+        "future_agent",
+        "agent_planning",
+        "agent_execution_summary",
+        "agent_result_summary",
+    }:
         return "private"
     if memory_summary is not None:
         return "personal"

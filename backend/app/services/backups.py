@@ -141,6 +141,9 @@ def restore_identity_backup(backup_path: str | Path) -> BackupResult:
         validation_connection.execute(
             "SELECT COUNT(*) FROM interaction_sessions"
         ).fetchone()
+        validation_connection.execute("SELECT COUNT(*) FROM agent_runs").fetchone()
+        validation_connection.execute("SELECT COUNT(*) FROM agent_steps").fetchone()
+        validation_connection.execute("SELECT COUNT(*) FROM agent_events").fetchone()
 
     destination = Path(settings.identity_database_path)
     destination.parent.mkdir(parents=True, exist_ok=True)

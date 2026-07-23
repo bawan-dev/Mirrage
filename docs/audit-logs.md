@@ -45,3 +45,18 @@ cleanup must be an explicit audited maintenance operation.
 
 Operational logs and audit logs are separate. Operational logs explain service
 health; audit logs explain security decisions without private payloads.
+
+## Agent Events
+
+The audit store records run creation, planning, plan validation or rejection,
+authorization decisions, approval requests and decisions, tool start and
+result, pause, resume, cancellation, completion, timeout, and denied cross-user
+reads.
+
+Agent audit metadata is limited to public run or step IDs, agent type, tool
+name, step number, status, and safe error summaries. It does not include the
+goal, complete prompt, raw arguments, memory values, Calendar content,
+relationship data, tokens, or model chain-of-thought.
+
+User-facing progress is stored separately in `agent_events`. Those events are
+owner-scoped and also omit raw arguments.

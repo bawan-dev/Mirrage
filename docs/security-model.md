@@ -72,6 +72,22 @@ the matching private permission. Model context can include a safe display name,
 role, or capability summary later, but device identifiers, tokens, and evidence
 must not be sent to a model.
 
+## Agent Boundary
+
+Agents inherit the authenticated principal and never hold independent
+credentials. The AI Runtime may propose typed steps, but only backend policy can
+validate and execute them. Execution is limited to the registered tool list and
+checks both an agent execution permission and the underlying service permission
+before every step.
+
+All side effects require a separate approver. Requesters cannot decide their own
+agent approvals. Relationships do not change this rule. There is no shell,
+Python, filesystem, unrestricted network, raw Home Assistant, identity
+administration, messaging, purchase, booking, or security-critical tool.
+
+Run goals and results are private local records. Approvers and health endpoints
+receive safe metadata only. See [agent-safety.md](agent-safety.md).
+
 ## Known Limitations
 
 - Device bearer tokens are long-lived credentials until revoked. Browser entry
@@ -85,3 +101,7 @@ must not be sent to a model.
   device classes.
 - Real-world phone, UWB, voice, vision, vehicle, and wearable identity evidence
   remains unimplemented.
+- Agent timeout enforcement relies on each registered provider honoring its own
+  request timeout; a process-isolated worker is not implemented.
+- Agent clarification is stored as a run state, but a dedicated answer-and-replan
+  API is still planned.

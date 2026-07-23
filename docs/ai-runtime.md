@@ -96,4 +96,5 @@ MIRRAGE_AI_FALLBACK_PROVIDER=stub
 - richer local model profiles for small vs large tasks
 - explicit opt-in AI-enhanced context summaries
 - encrypted provider credential storage
-- future agent tools behind approval and privacy controls
+- bounded agent planning and safe summaries behind backend-owned tool,
+  permission, approval, and privacy controls

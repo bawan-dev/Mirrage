@@ -12,6 +12,10 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from backend.app.services.agent_migrations import (
+    AGENT_SCHEMA_VERSION,
+    migrate_agent_schema,
+)
 from backend.app.services.identity_models import (
     ApprovalResponse,
     AuditEventResponse,
@@ -26,13 +30,12 @@ from backend.app.services.permissions import (
     is_registered_permission,
 )
 from backend.app.services.relationship_migrations import (
-    RELATIONSHIP_SCHEMA_VERSION,
     migrate_relationship_schema,
 )
 from backend.app.services.relationship_models import default_profile_visibility
 from backend.app.settings import settings
 
-SCHEMA_VERSION = RELATIONSHIP_SCHEMA_VERSION
+SCHEMA_VERSION = AGENT_SCHEMA_VERSION
 _REDACTED_METADATA_KEYS = (
     "api_key",
     "audio",
@@ -190,6 +193,7 @@ class IdentityStore:
                 (1, _now()),
             )
             migrate_relationship_schema(connection)
+            migrate_agent_schema(connection)
 
     def database_path(self) -> Path:
         return Path(settings.identity_database_path)
@@ -583,12 +587,15 @@ class IdentityStore:
         resource_id: str | None,
         risk_level: str,
         reason: str,
+        ttl_seconds: int | None = None,
     ) -> ApprovalResponse:
         if not requester.authenticated or requester.user_id is None:
             raise IdentityValidationError("Approval requests require authentication.")
         public_id = str(uuid4())
         requested_at = datetime.now(UTC)
-        expires_at = requested_at + timedelta(seconds=settings.approval_ttl_seconds)
+        expires_at = requested_at + timedelta(
+            seconds=ttl_seconds or settings.approval_ttl_seconds
+        )
         with self.connect() as connection:
             connection.execute(
                 """INSERT INTO approvals(
@@ -648,23 +655,59 @@ class IdentityStore:
         decider_user_id: str,
         reason: str,
     ) -> ApprovalResponse:
-        approval = self.get_approval(public_id)
-        if approval.status != "pending":
-            raise IdentityConflictError("Only pending approvals can be decided.")
         if status not in {"approved", "denied"}:
             raise IdentityValidationError(
                 "Approval decision must be approved or denied."
             )
+        self.initialize()
+        self.expire_approvals()
+        decided_at = _now()
         with self.connect() as connection:
-            connection.execute(
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                self._approval_select() + " WHERE a.public_id = ?", (public_id,)
+            ).fetchone()
+            if row is None:
+                raise IdentityNotFoundError("Approval request was not found.")
+            approval = _approval_response(row)
+            if approval.status != "pending":
+                raise IdentityConflictError("Only pending approvals can be decided.")
+            if (
+                approval.resource_type == "agent_step"
+                and approval.requester_user_id == decider_user_id
+            ):
+                raise IdentityConflictError(
+                    "Agent requesters cannot approve their own actions."
+                )
+            cursor = connection.execute(
                 """UPDATE approvals
                    SET status = ?, decided_at = ?,
                        decided_by_user_id = (SELECT id FROM users WHERE public_id = ?),
                        decision_reason = ?
-                   WHERE public_id = ? AND status = 'pending'""",
-                (status, _now(), decider_user_id, reason, public_id),
+                   WHERE public_id = ? AND status = 'pending' AND expires_at > ?""",
+                (
+                    status,
+                    decided_at,
+                    decider_user_id,
+                    reason,
+                    public_id,
+                    decided_at,
+                ),
             )
-        return self.get_approval(public_id)
+            if cursor.rowcount != 1:
+                connection.execute(
+                    """UPDATE approvals SET status = 'expired', decided_at = ?
+                       WHERE public_id = ? AND status = 'pending'""",
+                    (decided_at, public_id),
+                )
+                connection.commit()
+                raise IdentityConflictError(
+                    "The approval expired before this decision."
+                )
+            updated = connection.execute(
+                self._approval_select() + " WHERE a.public_id = ?", (public_id,)
+            ).fetchone()
+        return _approval_response(updated)
 
     def cancel_approval(
         self, public_id: str, *, requester_user_id: str, reason: str

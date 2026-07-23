@@ -62,6 +62,22 @@ Do not place a trusted-device token in a `VITE_` variable. The normal-mode
 Identity view accepts a token for the current browser session and keeps it in
 memory only.
 
+## Bounded Agents
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `MIRRAGE_AGENTS_ENABLED` | `false` | Enables planning and execution routes |
+| `MIRRAGE_AGENT_MAX_STEPS` | `10` | Hard maximum steps accepted in a run |
+| `MIRRAGE_AGENT_MAX_RUNTIME_SECONDS` | `300` | Total execution time limit |
+| `MIRRAGE_AGENT_MAX_RETRIES` | `2` | Global retry ceiling; tools may choose less |
+| `MIRRAGE_AGENT_MAX_CONCURRENT_RUNS` | `2` | Active run limit per user and installation |
+| `MIRRAGE_AGENT_APPROVAL_TTL_SECONDS` | `300` | Agent side-effect approval lifetime |
+
+Keep agents disabled until trusted devices, permissions, and a separate
+approver are configured. Enabling agents does not enable arbitrary shell,
+filesystem, web, or Home Assistant access; the registered tool list remains the
+capability boundary.
+
 ## Smart Home
 
 | Variable | Purpose |

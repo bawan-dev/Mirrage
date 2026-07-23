@@ -1,5 +1,67 @@
 # Run Notes
 
+## Phase 40 Bounded Agent Manual Validation
+
+Set `MIRRAGE_AGENTS_ENABLED=true`, restart the backend, and use a trusted
+desktop token. A mirror token also needs `X-Mirrage-Human-Session`.
+
+```powershell
+$headers = @{ Authorization = "Bearer <REQUESTER_DEVICE_TOKEN>" }
+$body = @{
+  agent_type = "planning"
+  goal = "Check safe Mirrage system status"
+} | ConvertTo-Json
+$created = Invoke-RestMethod -Method Post `
+  -Uri http://127.0.0.1:8000/api/agents/runs `
+  -Headers $headers -ContentType "application/json" -Body $body
+$runId = $created.run.public_id
+```
+
+Expected: HTTP 201, status `draft`, zero steps, and a public run UUID.
+
+```powershell
+$planned = Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/api/agents/runs/$runId/plan" `
+  -Headers $headers -ContentType "application/json" -Body '{}'
+$planned.run.status
+$planned.steps
+```
+
+Expected: status `ready`; every step names a registered tool and has a typed
+status. With the default `stub` provider, the deterministic planner supplies a
+safe fallback plan.
+
+```powershell
+$result = Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/api/agents/runs/$runId/start" `
+  -Headers $headers -ContentType "application/json" -Body '{}'
+$result.run.status
+$result.run.final_result
+Invoke-RestMethod -Uri `
+  "http://127.0.0.1:8000/api/agents/runs/$runId/events" -Headers $headers
+```
+
+Expected: `completed`, a concise result, and events including `run_created`,
+`plan_ready`, `running_step`, `step_completed`, and `completed`. Events must not
+contain an `arguments` field.
+
+For an approval test, create a Memory agent with:
+
+```text
+Store memory: goal | phase-40-check | Validate approvals
+```
+
+Expected: the plan waits in `awaiting_approval`. The requester receives HTTP 409
+when trying to approve it. A different owner user, authenticated through that
+user's own trusted device and holding `agents.approve`, can decide it through
+`/api/agents/approvals/{approval_id}/approve`; only then can the requester start
+the run. Delete the test memory afterward.
+
+Also verify pause, resume, cancellation, approval expiry, a backend restart, and
+an identity backup/restore with disposable test data. The automated suite uses
+temporary databases and fake services; it never contacts a real AI provider,
+Calendar, Spotify, Home Assistant, or website.
+
 ## Phase 39 Relationship And Personalization Manual Validation
 
 Use two fictional test users and their trusted-device tokens. Never put real

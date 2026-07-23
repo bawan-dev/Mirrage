@@ -1,4 +1,12 @@
 import type {
+  AgentApproval,
+  AgentApprovalDecision,
+  AgentEvent,
+  AgentRun,
+  AgentRunDetail,
+  AgentStatus,
+  AgentType,
+  AgentTypeInfo,
   AssistantReply,
   ApprovalList,
   AuditEventList,
@@ -104,6 +112,97 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
 
 export function getSystemStatus(): Promise<SystemStatus> {
   return fetchJson<SystemStatus>('/api/system/status');
+}
+
+export function getAgentStatus(): Promise<AgentStatus> {
+  return fetchJson<AgentStatus>('/api/agents/status');
+}
+
+export async function getAgentTypes(): Promise<AgentTypeInfo[]> {
+  const response = await fetchJson<{ items: AgentTypeInfo[] }>(
+    '/api/agents/types',
+  );
+  return response.items;
+}
+
+export async function getAgentRuns(): Promise<AgentRun[]> {
+  const response = await fetchJson<{ items: AgentRun[]; count: number }>(
+    '/api/agents/runs',
+  );
+  return response.items;
+}
+
+export function getAgentRun(runId: string): Promise<AgentRunDetail> {
+  return fetchJson<AgentRunDetail>(
+    `/api/agents/runs/${encodeURIComponent(runId)}`,
+  );
+}
+
+export function createAgentRun(input: {
+  agent_type: AgentType;
+  goal: string;
+}): Promise<AgentRunDetail> {
+  return postJson<AgentRunDetail>('/api/agents/runs', input);
+}
+
+export function planAgentRun(runId: string): Promise<AgentRunDetail> {
+  return postJson<AgentRunDetail>(
+    `/api/agents/runs/${encodeURIComponent(runId)}/plan`,
+    {},
+  );
+}
+
+export function startAgentRun(runId: string): Promise<AgentRunDetail> {
+  return postJson<AgentRunDetail>(
+    `/api/agents/runs/${encodeURIComponent(runId)}/start`,
+    {},
+  );
+}
+
+export function pauseAgentRun(runId: string): Promise<AgentRunDetail> {
+  return postJson<AgentRunDetail>(
+    `/api/agents/runs/${encodeURIComponent(runId)}/pause`,
+    {},
+  );
+}
+
+export function resumeAgentRun(runId: string): Promise<AgentRunDetail> {
+  return postJson<AgentRunDetail>(
+    `/api/agents/runs/${encodeURIComponent(runId)}/resume`,
+    {},
+  );
+}
+
+export function cancelAgentRun(runId: string): Promise<AgentRunDetail> {
+  return postJson<AgentRunDetail>(
+    `/api/agents/runs/${encodeURIComponent(runId)}/cancel`,
+    {},
+  );
+}
+
+export async function getAgentEvents(runId: string): Promise<AgentEvent[]> {
+  const response = await fetchJson<{ items: AgentEvent[]; count: number }>(
+    `/api/agents/runs/${encodeURIComponent(runId)}/events`,
+  );
+  return response.items;
+}
+
+export async function getAgentApprovals(): Promise<AgentApproval[]> {
+  const response = await fetchJson<{ items: AgentApproval[]; count: number }>(
+    '/api/agents/approvals',
+  );
+  return response.items;
+}
+
+export function decideAgentApproval(
+  approvalId: string,
+  decision: 'approve' | 'deny',
+  reason: string,
+): Promise<AgentApprovalDecision> {
+  return postJson<AgentApprovalDecision>(
+    `/api/agents/approvals/${encodeURIComponent(approvalId)}/${decision}`,
+    { reason },
+  );
 }
 
 export function getVoiceStatus(): Promise<VoiceStatus> {

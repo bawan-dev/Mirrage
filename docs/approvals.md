@@ -27,6 +27,20 @@ Rules:
 
 The default TTL is 120 seconds through `MIRRAGE_APPROVAL_TTL_SECONDS`.
 
+## Agent Steps
+
+Every agent side effect creates an approval with
+`resource_type=agent_step`. Agent approvals use the separate
+`MIRRAGE_AGENT_APPROVAL_TTL_SECONDS` setting, default 300 seconds.
+
+The requester cannot approve their own agent step. A second authenticated user
+with `agents.approve` must decide it. Expired approvals cannot execute, denied
+approvals fail the run, and cancelling a run cancels its pending approvals.
+
+Approvers receive a safe description, tool name, risk, run and step IDs, and
+expiry. The approval queue does not expose the other user's complete goal or
+tool arguments. See [agent-approvals.md](agent-approvals.md).
+
 ## Relationship Consent Is Separate
 
 Relationship proposals do not use the approval engine. The named counterpart

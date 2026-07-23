@@ -17,6 +17,10 @@ globally blocked smart-home domains.
 | Own profile and relationships | Yes | Yes | Yes | Yes | No |
 | Shared-context read and management | Yes | Yes | Yes | Yes | No |
 | Start/end own mirror interaction session | Yes | Yes | Yes | Yes | No |
+| Create, plan, read, pause, resume, cancel own agent runs | Yes | Yes | Yes | Yes | No |
+| Execute read-only agent tools | Yes | Yes | No | No | No |
+| Execute low-risk agent tools | Yes | Yes | No | No | No |
+| Decide another user's agent approval | Yes | No | No | No | No |
 | User/device management | Yes | No | No | No | No |
 | Approval decisions and audit read | Yes | No | No | No | No |
 
@@ -44,6 +48,17 @@ relationships.manage
 shared_context.read
 shared_context.manage
 human_session.manage
+agents.use
+agents.plan
+agents.execute_read_only
+agents.execute_low_risk
+agents.read_own
+agents.cancel_own
+agents.pause_own
+agents.resume_own
+agents.approve
+agents.read_household
+agents.admin
 smart_home.read
 smart_home.control_low_risk
 smart_home.request_approval
@@ -66,6 +81,12 @@ These keys authorize API operations, not data visibility. For example,
 `profile.directory.read` permits a directory request, but the relationship and
 privacy layer still removes every field the requester is not allowed to see.
 The `owner` role does not override that filter.
+
+An agent tool needs both its agent execution permission and the underlying
+service permission. For example, a Calendar tool needs
+`agents.execute_read_only` and `calendar.read_private`. A relationship never
+adds either permission. Every side effect still requires a separate approval,
+even when the requester has `agents.execute_low_risk`.
 
 ## Overrides
 

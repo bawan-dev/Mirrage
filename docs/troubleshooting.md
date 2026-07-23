@@ -1,5 +1,52 @@
 # Troubleshooting
 
+## Agent Workspace Is Disabled
+
+This is the safe default. Set `MIRRAGE_AGENTS_ENABLED=true` and restart the
+backend. Check `/api/agents/status` with a trusted-device bearer token.
+
+If the workspace reports authentication failure:
+
+- use a trusted device token;
+- if the device type is `mirror`, start a human session and send
+  `X-Mirrage-Human-Session`;
+- confirm the user has `agents.use`, `agents.plan`, and the relevant execution
+  and service permissions.
+
+## Agent Plan Is Rejected
+
+Plans fail closed when a tool is unknown, arguments do not match its schema, the
+agent type cannot use that tool, the step limit is exceeded, or an effective
+permission is missing. Check the safe run error and audit decision. Do not work
+around rejection by adding a generic shell, file, URL, or Home Assistant tool.
+
+Guests can create a draft but do not receive execution permissions by default.
+Relationships do not change this.
+
+## Agent Is Waiting For Approval
+
+Every write or smart-home action requires a different authenticated user with
+`agents.approve`. The requester cannot approve their own step. In a single-owner
+installation, use read-only agents until a legitimate separate approver is
+configured.
+
+If the approval disappeared, it may have expired after
+`MIRRAGE_AGENT_APPROVAL_TTL_SECONDS` or been cancelled with its run. Create a
+new run rather than modifying the old approval record.
+
+## Agent Timed Out Or Stopped
+
+Check:
+
+- `MIRRAGE_AGENT_MAX_RUNTIME_SECONDS`;
+- the registered tool timeout;
+- provider availability;
+- whether the run was paused or cancelled;
+- whether permissions changed after planning.
+
+The executor rechecks policy before each step. A new explicit deny can stop an
+already planned run. Side effects are not retried.
+
 ## Protected API Returns 401
 
 The route did not receive a valid active trusted-device token. Check that the

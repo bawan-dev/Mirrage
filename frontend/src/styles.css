@@ -35,8 +35,376 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+
+.agent-workspace {
+  width: min(1180px, 100%);
+  min-width: 0;
+  max-height: calc(100vh - 5rem);
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 1rem 0 5rem;
+  overflow-y: auto;
+}
+
+.agent-workspace-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid rgba(203, 220, 226, 0.12);
+}
+
+.agent-workspace-header > div,
+.agent-status-line p,
+.agent-create-form,
+.agent-workspace-body > *,
+.agent-active-run {
+  min-width: 0;
+}
+
+.agent-workspace-header h1 {
+  margin: 0.55rem 0 0;
+  font-size: 5rem;
+  font-weight: 620;
+  line-height: 0.98;
+  overflow-wrap: anywhere;
+}
+
+.agent-workspace-header p:last-child,
+.agent-muted,
+.agent-empty-state,
+.agent-error-text,
+.agent-success-text {
+  max-width: 48rem;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.agent-workspace button,
+.agent-workspace select,
+.agent-workspace textarea {
+  color: var(--color-text);
+}
+
+.agent-workspace button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.agent-workspace button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.agent-workspace-header > button,
+.agent-status-line button,
+.agent-create-form > button,
+.agent-run-actions button,
+.agent-inline-actions button {
+  padding: 0.72rem 1rem;
+  border: 1px solid rgba(203, 220, 226, 0.18);
+  border-radius: 6px;
+}
+
+.agent-status-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 4rem;
+  color: var(--color-muted);
+}
+
+.agent-status-line span {
+  color: var(--color-amber);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.agent-status-line span.is-ready {
+  color: var(--color-green);
+}
+
+.agent-status-line p {
+  flex: 1;
+}
+
+.agent-create-form {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.8rem 1rem;
+  padding: 2.5rem 0;
+  border-block: 1px solid rgba(203, 220, 226, 0.08);
+}
+
+.agent-create-form label {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.agent-create-form label[for='agent-goal'] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.agent-create-form select,
+.agent-create-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid rgba(203, 220, 226, 0.2);
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.agent-create-form select {
+  grid-column: 1;
+  min-height: 3.25rem;
+}
+
+.agent-create-form textarea {
+  grid-column: 2;
+  min-height: 5.25rem;
+  padding: 0.75rem 0;
+  resize: vertical;
+}
+
+.agent-create-form select:focus,
+.agent-create-form textarea:focus {
+  border-color: var(--color-cyan);
+}
+
+.agent-create-form > button {
+  grid-column: 3;
+  min-height: 3.25rem;
+}
+
+.agent-section-label {
+  margin: 0;
+  color: var(--color-cyan);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.agent-success-text {
+  color: var(--color-green);
+}
+
+.agent-error-text {
+  display: block;
+  color: var(--color-amber);
+}
+
+.agent-workspace-body {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.34fr) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  padding-top: 3rem;
+}
+
+.agent-run-list > div {
+  display: grid;
+  margin-top: 1rem;
+}
+
+.agent-run-list button {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(203, 220, 226, 0.08);
+  text-align: left;
+}
+
+.agent-run-list button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-run-list button small,
+.agent-step-timeline p,
+.agent-step-timeline small,
+.agent-approval-panel p {
+  color: var(--color-muted);
+}
+
+.agent-run-list button.is-active span {
+  color: var(--color-cyan);
+}
+
+.agent-run-heading h2 {
+  max-width: 48rem;
+  margin: 0.7rem 0 0;
+  font-size: 3.4rem;
+  font-weight: 560;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.agent-run-heading > span {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--color-green);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.agent-clarification {
+  max-width: 48rem;
+  margin: 2rem 0;
+  color: var(--color-amber);
+  font-size: 1.15rem;
+}
+
+.agent-assumptions {
+  margin: 2.5rem 0;
+}
+
+.agent-assumptions p:not(.agent-section-label),
+.agent-expected {
+  margin: 0.65rem 0;
+  color: var(--color-muted);
+}
+
+.agent-step-timeline {
+  display: grid;
+  gap: 0;
+  margin: 2.5rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-step-timeline li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.2rem 0;
+  border-top: 1px solid rgba(203, 220, 226, 0.1);
+}
+
+.agent-step-number {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-step-timeline strong {
+  font-size: 1.08rem;
+}
+
+.agent-step-timeline p,
+.agent-step-timeline small {
+  display: block;
+  margin: 0.35rem 0 0;
+}
+
+.agent-run-actions,
+.agent-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 2rem 0;
+}
+
+.agent-result-view {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(203, 220, 226, 0.1);
+}
+
+.agent-final-result {
+  max-width: 52rem;
+  white-space: pre-wrap;
+  font-size: 1.2rem;
+  line-height: 1.65;
+}
+
+.agent-event-history {
+  margin-top: 3rem;
+}
+
+.agent-event-history p:not(.agent-section-label) {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.3fr) 1fr;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(203, 220, 226, 0.07);
+  color: var(--color-muted);
+}
+
+.agent-event-history span {
+  color: var(--color-text);
+}
+
+.agent-approval-panel {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(240, 195, 106, 0.22);
+}
+
+.agent-approval-panel > div {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid rgba(203, 220, 226, 0.08);
+}
+
+.agent-approval-panel > div > span {
+  color: var(--color-amber);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 760px) {
+  .agent-workspace {
+    max-height: calc(100vh - 3rem);
+  }
+
+  .agent-workspace-header h1 {
+    font-size: 2.6rem;
+  }
+
+  .agent-run-heading h2 {
+    font-size: 2rem;
+  }
+
+  .agent-workspace-header,
+  .agent-status-line {
+    align-items: flex-start;
+  }
+
+  .agent-workspace-header,
+  .agent-status-line,
+  .agent-approval-panel > div {
+    flex-direction: column;
+  }
+
+  .agent-create-form,
+  .agent-workspace-body,
+  .agent-approval-panel > div {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-create-form label,
+  .agent-create-form label[for='agent-goal'],
+  .agent-create-form select,
+  .agent-create-form textarea,
+  .agent-create-form > button {
+    grid-column: 1;
+    grid-row: auto;
+  }
 }
 
 /* Multi-layer gradients that do not map cleanly to single utilities. */

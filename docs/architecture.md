@@ -54,6 +54,36 @@ Future phone, UWB, voice verification, vision, vehicle, and wearable evidence
 will feed authentication. Evidence providers will not call protected services
 directly.
 
+## Phase 40 Agent Boundary
+
+Phase 40 adds a persistent orchestration layer behind the same principal,
+permission, approval, and audit services:
+
+```text
+User-owned goal
+  -> AI Runtime proposes typed JSON plan
+  -> backend validates registered tool + arguments + agent type
+  -> authorization checks execution and service permissions
+  -> side effect waits for a separate approval
+  -> bounded executor revalidates and runs one tool
+  -> safe event + audit record
+  -> next step or terminal state
+```
+
+The model is not the executor. `agents/registry.py` defines the complete tool
+surface, `agents/policy.py` validates it, and `agents/executor.py` enforces
+runtime, retry, cancellation, and approval state. Registered tools call existing
+service boundaries; they do not expose arbitrary shell, Python, filesystem,
+HTTP, web, or Home Assistant service access.
+
+Schema version 3 stores runs, steps, and events in the identity database. API
+reads remain owner-scoped. A separately authorized approver sees only the safe
+step description and decision metadata, not another user's full run.
+
+Agent planning and summary task types are private and local-first. The context
+builder does not automatically add memory, Calendar, proactive, relationship,
+or shared-context values to an agent planning prompt.
+
 This document explains how Mirrage is planned to fit together.
 
 ## System Overview
@@ -82,6 +112,12 @@ Backend API
   |     +-- Field Visibility
   |     +-- Human Interaction Sessions
   |     +-- Explicit Shared Context
+  |
+  +-- Bounded Agent Framework
+  |     +-- Planner
+  |     +-- Tool Registry + Policy
+  |     +-- Approval-Gated Executor
+  |     +-- Persistent Runs + Events
   |
   +-- Personal Context Layer
   |
@@ -240,7 +276,8 @@ Its job:
 
 - define a common interface for assistant responses
 - build a small context bundle for normal model requests
-- classify request types for conversation, summary, planning, memory, context, and future agent tasks
+- classify request types for conversation, summary, planning, memory, context,
+  bounded agent planning, execution summaries, and result summaries
 - select a provider and task-specific model
 - route to `stub`, Ollama, OpenAI-compatible APIs, or future local models
 - fall back safely when a provider is unavailable
@@ -692,10 +729,12 @@ operator or Docker health check
   -> subsystem checks
 ```
 
-The full health check reports backend, environment, memory, AI runtime,
-providers, presence, wake engine, weather, Calendar, Spotify, and smart home. It does not
-expose secrets, OAuth tokens, Home Assistant tokens, transcripts, assistant
-replies, or memory values.
+The full health check reports backend, environment, identity, relationships,
+agents, memory, AI runtime, providers, presence, wake engine, weather, Calendar,
+Spotify, and smart home. Agent health reports only enabled state, database and
+queue status, counts, and the concurrency limit. It does not expose goals,
+arguments, results, secrets, OAuth tokens, Home Assistant tokens, transcripts,
+assistant replies, or memory values.
 
 Logging is structured JSON by default. Logs include safe operational fields such
 as subsystem, event, state, provider, model, and integration name. Logs should
@@ -715,14 +754,11 @@ To keep the project clean, the first stages should avoid:
 - large abstractions before the project needs them
 - treating planned features as finished features
 
-## First Implementation Target
+## Current Boundary
 
-The first working system should be simple:
-
-1. React dashboard loads in the browser.
-2. FastAPI backend runs locally.
-3. Dashboard calls backend status endpoints.
-4. Backend returns initial status data.
-5. README and docs clearly explain what is real and what is planned.
-
-That gives Mirrage a real full-stack foundation without pretending the advanced features are finished.
+Mirrage has moved beyond the initial full-stack target, but the same separation
+still applies: the frontend presents state, the backend owns policy and
+execution, and integrations stay behind typed services. Phase 40 does not make
+Mirrage fully autonomous. Open-ended scheduling, arbitrary computer control,
+live web research, messaging, purchases, bookings, and security-critical
+actions are not available.

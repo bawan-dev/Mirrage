@@ -10,6 +10,9 @@ RuntimeTaskType = Literal[
     "planning",
     "context_enhancement",
     "future_agent",
+    "agent_planning",
+    "agent_execution_summary",
+    "agent_result_summary",
 ]
 
 RuntimePrivacyLevel = Literal["standard", "personal", "private"]

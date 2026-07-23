@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.app.agent_routes import router as agent_router
 from backend.app.identity_routes import router as identity_router
 from backend.app.logging_config import configure_logging
 from backend.app.relationship_routes import router as relationship_router
@@ -44,3 +45,4 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(identity_router)
 app.include_router(relationship_router)
+app.include_router(agent_router)

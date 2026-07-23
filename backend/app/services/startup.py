@@ -289,6 +289,34 @@ def validate_environment() -> list[StartupIssue]:
             )
         )
 
+    for field, value, minimum in (
+        ("MIRRAGE_AGENT_MAX_STEPS", settings.agent_max_steps, 1),
+        (
+            "MIRRAGE_AGENT_MAX_RUNTIME_SECONDS",
+            settings.agent_max_runtime_seconds,
+            1,
+        ),
+        ("MIRRAGE_AGENT_MAX_RETRIES", settings.agent_max_retries, 0),
+        (
+            "MIRRAGE_AGENT_MAX_CONCURRENT_RUNS",
+            settings.agent_max_concurrent_runs,
+            1,
+        ),
+        (
+            "MIRRAGE_AGENT_APPROVAL_TTL_SECONDS",
+            settings.agent_approval_ttl_seconds,
+            1,
+        ),
+    ):
+        if value < minimum:
+            issues.append(
+                StartupIssue(
+                    level="error",
+                    field=field,
+                    message=f"{field} must be at least {minimum}.",
+                )
+            )
+
     if (
         settings.smart_home_enabled
         and settings.home_assistant_enabled

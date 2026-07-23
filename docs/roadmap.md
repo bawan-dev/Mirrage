@@ -693,6 +693,39 @@ biometric recognition; the Phase 21 memory database remains installation-wide
 and owner-private; sensitive-content filtering is a guardrail rather than a
 complete classifier; and no AI automatically edits profiles or relationships.
 
+## Phase 40: Bounded Agent Foundation
+
+Goal: add persistent multi-step tasks without granting an AI process open-ended
+authority.
+
+- [x] Migrate the identity database from schema version 2 to version 3
+- [x] Persist user-owned runs, typed steps, and privacy-safe events
+- [x] Add planning, memory, Calendar, smart-home, and research-boundary agents
+- [x] Add a central registry with typed inputs, permissions, risk, approval,
+  timeout, retry, idempotence, and agent-type metadata
+- [x] Use the AI Runtime for structured planning and safe result summaries
+- [x] Validate every proposed step in backend policy before persistence
+- [x] Recheck arguments, permissions, approval state, and cancellation before
+  execution
+- [x] Require a separate approver for every memory, shared-context, or
+  smart-home side effect
+- [x] Reject self-approval and expired approval reuse
+- [x] Add step limits, runtime limits, retries, concurrency limits, expiry,
+  pause, resume, cancellation, and safe failure states
+- [x] Add owner-scoped APIs plus bounded SSE event delivery
+- [x] Add a componentized normal-mode Agent workspace
+- [x] Keep Mirror Mode free of agent administration
+- [x] Extend health monitoring, backups, environment validation, Compose, and
+  audit events
+- [x] Add migration, ownership, permission, relationship isolation, approval,
+  timeout, smart-home, SSE, health, backup, privacy, and v1/v2 regression tests
+
+Current limitations: agents are disabled by default and execute only during a
+bounded API request. Research cannot access the live web. Calendar writes,
+messaging, purchases, bookings, arbitrary computer control, security-critical
+smart-home actions, and open-ended autonomy remain disabled. The clarification
+prompt is persisted, but a dedicated answer-and-replan API is still planned.
+
 ## Future: Voice Interaction
 
 - [ ] Hardware-tested local trained wake model
@@ -739,7 +772,7 @@ complete classifier; and no AI automatically edits profiles or relationships.
 - [ ] Add model profiles for small chat, summary, planning, and agent tasks
 - [ ] Add opt-in AI-enhanced context and proactive summaries
 - [ ] Add encrypted provider credential storage
-- [ ] Define future agent tool permissions before adding autonomous actions
+- [x] Define bounded agent tool permissions before adding autonomous actions
 
 ## Future: Smart Home Integration
 
@@ -773,7 +806,7 @@ complete classifier; and no AI automatically edits profiles or relationships.
 
 ## Current Focus
 
-Phase 38 is complete and Phase 39 is the current milestone. `v1.0.0` remains the
-stable portfolio release; `main` now adds private profiles, consent-based
-relationships, explicit shared context, and temporary human sessions on top of
-the v2 identity and authorization boundary.
+Phases 38 and 39 are complete and Phase 40 is the current milestone. `v1.0.0`
+remains the stable portfolio release; `main` now adds bounded,
+permission-controlled agent runs on top of the v2 identity, privacy, and
+relationship boundaries.

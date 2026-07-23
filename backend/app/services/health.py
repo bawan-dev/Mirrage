@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from ai.router import provider_router
 from ai.runtime import assistant_runtime
 from backend.app.schemas import HealthComponentResponse, HealthResponse
+from backend.app.services.agents.service import agent_service
 from backend.app.services.calendar import get_calendar_status
 from backend.app.services.identity import identity_status
 from backend.app.services.memory import memory_health
@@ -32,6 +33,7 @@ def full_health() -> HealthResponse:
         _environment_check(),
         _identity_check(),
         _relationship_check(),
+        _agent_check(),
         _memory_check(),
         _ai_runtime_check(),
         _provider_check(),
@@ -163,6 +165,24 @@ def _relationship_check() -> HealthComponentResponse:
         status="ok",
         message="Private personalization and relationship storage is available.",
         details=status,
+    )
+
+
+def _agent_check() -> HealthComponentResponse:
+    status = agent_service.status()
+    return HealthComponentResponse(
+        name="agents",
+        status="ok" if status.database_status == "ready" else "error",
+        message=status.message,
+        details={
+            "enabled": status.enabled,
+            "database_status": status.database_status,
+            "active_run_count": status.active_run_count,
+            "awaiting_approval_count": status.awaiting_approval_count,
+            "failed_run_count": status.failed_run_count,
+            "queue_status": status.queue_status,
+            "concurrency_limit": status.concurrency_limit,
+        },
     )
 
 

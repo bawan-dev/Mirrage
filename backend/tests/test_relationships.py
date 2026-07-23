@@ -14,7 +14,7 @@ from backend.app.services.authorization import (
     principal_for_device,
 )
 from backend.app.services.backups import create_identity_backup
-from backend.app.services.identity_store import identity_store
+from backend.app.services.identity_store import SCHEMA_VERSION, identity_store
 from backend.app.services.personalization import (
     build_safe_personalization_context,
     greeting_for,
@@ -97,11 +97,20 @@ def test_phase_38_database_migrates_to_profiles_without_data_loss() -> None:
     identity_store.initialize()
     identity_store.initialize()
 
-    assert identity_store.schema_version() == 2
+    assert identity_store.schema_version() == SCHEMA_VERSION
     assert identity_store.get_user("sample-owner").display_name == "Sample Owner"
     profile = relationship_store.get_profile("sample-owner")
     assert profile.preferred_display_name == "Sample Owner"
     assert set(profile.visibility.values()) == {"private"}
+    with identity_store.connect() as connection:
+        tables = {
+            row[0]
+            for row in connection.execute(
+                """SELECT name FROM sqlite_master
+                   WHERE type = 'table' AND name LIKE 'agent_%'"""
+            ).fetchall()
+        }
+    assert tables == {"agent_runs", "agent_steps", "agent_events"}
 
 
 def test_profile_is_owned_and_owner_role_is_not_a_privacy_bypass(

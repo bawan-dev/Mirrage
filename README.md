@@ -21,11 +21,13 @@ are available unless those providers are configured on the machine running it.
 
 ## v2 Development Status
 
-`main` now contains the first two Mirrage v2 foundations: household identity and
-safety, followed by consent-based relationships and privacy-aware
-personalization. Profiles are private by default, relationships never grant
-permissions, shared context must be deliberate, and a trusted mirror still
-requires a temporary human interaction session before showing private data.
+`main` now contains three Mirrage v2 foundations: household identity and safety,
+consent-based relationships and personalization, and a bounded agent framework.
+Profiles are private by default, relationships never grant permissions, shared
+context must be deliberate, and a trusted mirror still requires a temporary
+human interaction session before showing private data. Agent runs are disabled
+by default and can use only registered tools under the same permission,
+approval, and audit controls.
 
 This does not mean Mirrage recognizes who is speaking. Voice, face, UWB, phone
 proximity, vehicle, and wearable identity evidence remain future work.
@@ -105,6 +107,11 @@ What works now:
 - explicit shared context with relationship-scoped access and revocation
 - short-lived, hash-only human interaction sessions bound to a trusted mirror
 - privacy-filtered local and cloud AI context; shared values remain local
+- opt-in bounded agent runs with persistent structured plans, registered tools,
+  per-step authorization, separate approval gates, pause/resume/cancel, safe
+  events, runtime limits, health checks, and backup support
+- a normal-mode Agent workspace split into focused React components; Mirror
+  Mode does not expose agent administration
 - backend-owned smart home foundation for Home Assistant discovery, safe light/switch control, scene activation, and read-only sensors
 - backend tests, frontend lint/type/build checks, and GitHub Actions CI
 - physical build documentation for the first mirror prototype, including
@@ -125,6 +132,9 @@ What is still planned:
 - AI-enhanced context summaries behind explicit privacy controls
 - true provider token streaming
 - richer local model profiles for small, summary, planning, and future agent tasks
+- richer agent clarification and scheduling workflows after the bounded
+  foundation has been exercised with real users
+- approved-source live research tools; unrestricted browsing remains disabled
 - richer smart home permissions, confirmations, and device categories
 - physical mirror installation and real hardware validation
 
@@ -150,6 +160,7 @@ The default assistant provider is still `stub`. Real model replies require confi
 | Identity and safety | v2 local identity store, trusted devices, permissions, approvals, and audit logs |
 | Relationships | Consent-based lifecycle with no permission side effects |
 | Personalization | Private profiles, human sessions, deterministic greetings, and explicit shared context |
+| Agents | Opt-in bounded runs with registered tools, approval gates, limits, persistence, and audit; unrestricted autonomy is disabled |
 | Smart home | Home Assistant foundation with safe domains; real devices require local configuration |
 | Hardware | Physical build plan documented; real parts still need testing |
 | Vision | Not built yet |
@@ -199,6 +210,12 @@ FastAPI Backend
       |
       +-- Explicit Shared Context
       |
+      +-- Bounded Agent Framework
+      |     +-- Structured Planner
+      |     +-- Tool Registry + Policy
+      |     +-- Approval-Gated Executor
+      |     +-- Persistent Runs + Safe Events
+      |
       +-- Personal Context Layer
       |
       +-- Proactive Assistant Layer
@@ -223,7 +240,8 @@ mini PC, microphone, speakers, ventilation, cable routing, and service access
 are documented before buying final parts. The frontend renders the mirror
 experience. The backend owns API boundaries, service state, assistant routing,
 daily context, proactive summaries, local memory, smart home safety rules,
-external data, health checks, structured logs, and local backup utilities. The
+bounded agent execution, external data, health checks, structured logs, and
+local backup utilities. The
 AI runtime builds a small privacy-aware context, chooses a provider, and falls
 back safely if the selected provider is unavailable. AI providers, context
 aggregation, memory storage, smart home control, voice input, and hardware
@@ -251,6 +269,10 @@ More detail:
 - [Permissions](docs/permissions.md)
 - [Trusted devices](docs/trusted-devices.md)
 - [Approvals](docs/approvals.md)
+- [Agent framework](docs/agent-framework.md)
+- [Agent safety](docs/agent-safety.md)
+- [Agent tools](docs/agent-tools.md)
+- [Agent approvals](docs/agent-approvals.md)
 - [Audit logs](docs/audit-logs.md)
 - [Logging](docs/logging.md)
 - [Memory layer](docs/memory.md)
@@ -309,6 +331,7 @@ Hardware notes:
 | Context | Backend aggregation across weather, Calendar, and local memory |
 | Memory | Local SQLite storage for preferences, facts, goals, and routines |
 | Proactive | Deterministic backend summary for non-intrusive daily nudges |
+| Agents | Persistent bounded runs, typed plans, registered tools, permission checks, approval gates, and SSE history |
 | Smart Home | Home Assistant integration through backend safety boundaries |
 | Mirror Mode | Frontend kiosk mode behind `VITE_MIRROR_MODE=true` |
 | Demo | Explicit frontend demo data behind `VITE_MIRRAGE_DEMO_MODE=true` |
@@ -476,6 +499,14 @@ startup rejects that setting. The complete identity walkthrough is in
 - type `what do you remember about me?` and confirm the response includes `favorite drink: coffee`
 - open `http://127.0.0.1:8000/api/memory/summary` and confirm the memory appears under preferences
 - create a local memory backup and confirm a file appears in `backups/`
+- set `MIRRAGE_AGENTS_ENABLED=true`, open the normal-mode Agents view, and
+  create a read-only Planning task
+- confirm the proposed steps contain only registered tools, start the run, and
+  inspect its safe event history
+- create a memory-write task and confirm it waits; verify the requester cannot
+  self-approve and a second identity with `agents.approve` can decide it
+- pause, resume, and cancel separate test runs, then confirm their states survive
+  a backend restart
 - configure Spotify credentials, connect through the Media view, and confirm playback state loads
 - test Spotify play/pause/next/previous with an active Spotify device
 - configure Google Calendar credentials, connect through the Calendar view, and confirm today's events load
@@ -580,11 +611,14 @@ Completed foundation work:
   and identity backup/restore foundation
 - v2 profiles, consent-based relationships, temporary human sessions, explicit
   shared context, and privacy-filtered personalization
+- v2 bounded agents with structured planning, registered tools, per-step
+  authorization, separate approvals, resource limits, persistence, and safe
+  execution history
 
 Current milestone:
 
-- Phase 38 is complete. Phase 39 is the current v2 development milestone on
-  `main`; v1.0.0 remains the stable tagged portfolio release
+- Phases 38 and 39 are complete. Phase 40 is the current v2 development
+  milestone on `main`; v1.0.0 remains the stable tagged portfolio release
 
 Future milestones:
 

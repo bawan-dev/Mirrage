@@ -55,6 +55,9 @@ The response includes checks for:
 
 - backend
 - environment
+- identity
+- relationships
+- agents
 - memory
 - AI runtime
 - providers
@@ -67,6 +70,12 @@ The response includes checks for:
 
 Full health may be `degraded` when optional integrations are not configured. That
 does not mean the backend is down.
+
+The agent component reports enabled state, database status, active,
+approval-waiting, and failed run counts, queue status, and the concurrency
+limit. It never includes goals, step arguments, events, or final results.
+Disabled agents are healthy because the feature is opt-in; an unavailable agent
+database is an error.
 
 The wake engine check reports whether the local engine is enabled, configured,
 running, and whether a model and microphone setting are present. Disabled is
